@@ -1,111 +1,183 @@
-# Hive — Faerie Obsidian Orchestrator (v2.0.0)
+# 🐝 Hive — Cultivate Your Knowledge Garden *Alongside* AI
 
-The vault-side counterpart to the Faerie hive-mind. Turns Obsidian into a
-creative cognitive substrate: blueprint engine, compass-bearings, marginalia
-loop, MCP bridge, plugin-only light sessions, OSINT report generator, and
-a beautifully styled visual language of droplets, charters, anchors, waggles
-and honey.
+> You are not giving your vault to AI. You are giving AI a chair at your table.
 
-Evolution of `hive-pdf` v1 — the PDF export feature is preserved unchanged.
+Hive is an Obsidian plugin that turns your vault into a **collaborative substrate** where you and AI work side-by-side. AI proposes — drafts, mission graphs, evidence trails, evaluations. You curate, annotate, redirect, ignore. Both contributions are first-class. Neither overwrites the other. Every change is forensically tracked.
 
-## Why this exists
+The point isn't to automate your thinking. It's to **see** what AI is doing in your work, **shape** it with your judgement, and **keep** the audit trail forever.
 
-A vault should not be a passive dumping ground. It should be a substrate where
-human and agent stigmergy combine: agents drop manifests as pheromone trails,
-humans annotate them as margin notes, and the loop closes via the MCP bridge
-back into the faerie codebase. This plugin is the membrane.
+---
 
-## Feature list (10 capabilities)
+## What this is NOT
 
-1. **PDF export** — preserved from v1 (mermaid + pandoc + xelatex via WSL).
-2. **Dependency doctor** — checks required plugins; refuses Templater.
-3. **Blueprint engine** — Nunjucks-flavored; markers preserve human edits.
-4. **Trail-refs** — bearing-tagged links (N/S/E/W) + Breadcrumbs threading.
-5. **Marginalia → MCP loop** — margin notes POSTed to `faerie_record_marginalia`.
-6. **Compass overlay** — Juggl filtered to current note's N/S/E/W neighbours.
-7. **Visual language callouts** — droplet, charter, anchor, waggle, honey,
-   brood, propolis (see `styles.css`).
-8. **MCP bridge side panel ("Faerie Live")** — dashboard, metrics, charters.
-9. **File decorator** — 🐝 next to AI-authored files; honey-glow if <1h old.
-10. **QuickAdd macro library** — preset macros for charter/manifest/anchor/
-    honey workflows (no Templater).
+- ❌ A "send my notes to an LLM" plugin
+- ❌ A chat interface bolted onto Obsidian
+- ❌ A system that overwrites your notes with AI output
+- ❌ A black-box assistant you have to trust blindly
 
-Plus a few bonuses that emerged during scoping:
+## What this IS
 
-- **Faerie Chat panel** — full plugin-only light session via MCP; explicit
-  "push to vault" button (nothing leaves automatically).
-- **System-prompt round-trip** — import faerie2's system prompt into vault,
-  annotate, push edits back as a PR via MCP.
-- **SpiderFoot integration** — install/repair via uv venv, run scan, render
-  beautiful OSINT report from blueprint, CSV sidecar (no JSON in Obsidian).
-- **Pollen-lead handling** — unverified OSINT findings thread into the
-  mission graph as dotted edges (`bearing: "?"`).
+- ✅ **A free AI tool with a visible, editable customization layer.** The vault IS the customization. Want to change how the AI thinks? Edit a markdown file. Save. Done.
+- ✅ **Steering, not telling.** Annotate while the AI works (live sync) OR while you read alone at midnight (queues for the next session). Either way, your edits land as first-class steering input.
+- ✅ A **two-layer canvas**: AI artifacts flow in as immutable forensic record; your annotations live in parallel, fully editable
+- ✅ A **compass for thinking**: every connection is typed (North = unblock, South = ship, East = parallel, West = re-validate)
+- ✅ A **glass-box system**: every AI template, formula, system prompt, and decision is a real Obsidian note you can read AND edit
+- ✅ A **knowledge-garden gardener**: blueprints render structured views over your existing notes without rewriting them
+- ✅ **Yours, forever**: the vault is plain markdown. Uninstall the plugin and everything keeps working as plain notes.
 
-## Canonical Blueprints
+---
 
-The repo-root `Blueprints/` folder is the canonical, plugin-bundled blueprint
-library — 74 templates gathered from faerie-vault, CyberOps-UNIFIED, and
-hand-authored creative-output blueprints:
-
-- `Session-Report.njk`, `Eval-Report.njk`, `Narrative-Design-Doc.njk`
-- `Charter.njk`, `Manifest.njk`, `FFFF-Dashboard.njk`
-- `Agent-Output-Prettify.njk` (raw → readable transform)
-- `OSINT-Spiderfoot-Report.njk`, `Pollen-Lead.njk`
-- `System-Prompt-Round-Trip.njk`
-- Plus all OSINT entity templates (`Person`, `Organization`, `Domain`,
-  `IP-Address`, `Investigation-Case`, `Intelligence-Report`, `Network-Map`,
-  `Source-Assessment`, `Shadow-Operation`, `Financial-Trail`, etc.) — these
-  are deliberately preserved as **agent-facing templates**: when an OSINT
-  agent needs to produce a Person dossier, it reads this template and
-  matches its structure.
-
-User overrides live in `vault/00-SHARED/Blueprints/` (same `.njk` filename
-wins over the bundled version).
-
-## Build & install
+## Quickstart (3 commands)
 
 ```bash
-cd faerie-hive-plugin
-npm install
-npm run build        # emits main.js
+# 1. Clone + build
+git clone https://github.com/Persistech/faerie-hive-plugin && cd faerie-hive-plugin && npm install && npm run build
+
+# 2. Symlink into your vault
+ln -s "$(pwd)" /path/to/your/vault/.obsidian/plugins/hive
+
+# 3. Open Obsidian → Settings → Community plugins → enable Hive
 ```
 
-Symlink the built plugin into your vault:
+That's it. Open the command palette and run **`faerie: doctor`** — it'll tell you which companion plugins (Dataview, Meta Bind, QuickAdd, Breadcrumbs, ExcaliBrain) you should add. Click "Install recommended" when offered.
 
-```bash
-ln -s "$(pwd)" "/path/to/vault/.obsidian/plugins/hive"
+Optional (only if you want AI features beyond local templates):
+
+- Get a faerie MCP bearer token from https://faerie.retrofuture.tech (free, GitHub OAuth)
+- Drop it in `<vault>/.faerie-token` (gitignored, stays on your machine)
+- Run **`faerie: install canonical configs`** to drop in linter rules + Breadcrumbs setup + visual-language CSS
+
+---
+
+## What you get
+
+### 🐾 Trail-Refs — Latticework, with bearings
+
+Highlight any passage. Press `CMD+Shift+H`. Pick a bearing. The plugin drops a typed, colored reference link. `CMD+Hover+Click` peeks the destination in an adjacent pane *without* navigating away. Inspired by [Latticework](https://www.matthewsiu.com/Latticework) (Siu & Matuschak, 2024) — extended with compass typing so every reference carries semantic direction.
+
+### 📝 Human/ — Your annotations. Steer anytime. Live or queued.
+
+Annotations land in `<vault>/Human/{date}/` — your own forensic record, separate from the AI's. Hash-tracked, append-only, exactly like the AI's chain-of-custody. If MCP is configured, annotations also post to the faerie server for live-or-queued steering.
+
+**Two steering modes, both first-class:**
+
+- 🔄 **Live** — If an AI session is running while you annotate, your edit syncs in real-time. The agent's next turn sees your note. Pace your reading against the AI's working speed; they read each other as the work unfolds.
+- 🌙 **Queued** — Working alone at midnight? Annotations queue in `00-SHARED/Annotations/{date}/`. The next conversation that starts (yours or another agent's) loads them as steering input via the system prompt template's `{{ human_annotations }}` variable.
+
+You don't have to "tell" the AI — your reading IS the telling.
+
+### 🧭 Compass Overlay — Typed graph view (ExcaliBrain-powered)
+
+Run `faerie: compass overlay for current note`. An [ExcaliBrain](https://github.com/zsviczian/excalibrain) view opens showing the note's N/S/E/W neighborhood as a hierarchical bearing tree — jasper for unblockers, emerald for deliverables, coral for parallels, amber for baselines. The native Obsidian graph can't show typed edges; this can.
+
+### ✏️ Excalidraw — Sketch your topology, commit it back
+
+`faerie: draft excalibrain` opens a new Excalidraw canvas pre-seeded with your current note's bearings hierarchy as labeled, color-coded rectangles. Drag shapes around to brainstorm a new structure. Run `faerie: commit excalibrain draft` — the plugin reads the colors back, writes the new topology into frontmatter. Round-trip closed: see-system → sketch-new-system → commit-new-system. Ships with the **Architect** preset (smooth bold lines, professional sans fonts: Inter, IBM Plex Sans, JetBrains Mono) and 20 curated Excalidraw automation scripts.
+
+### 🍯 Visual Language Callouts
+
+```markdown
+> [!charter] My intent for this week
+> [!droplet] A crystallized insight
+> [!anchor] A baseline I'll defend
+> [!waggle] A waggle dance — direction + magnitude
+> [!honey] Capped knowledge
+> [!brood] Active work
+> [!propolis] Structural seal
 ```
 
-Then in Obsidian: Settings → Community plugins → enable **Hive**.
+Honeybee identity, consistent shape-color-motion language. Every callout types its content as a node in the apiary metaphor.
 
-Run `Faerie: doctor` (command palette) to check that the required peer
-plugins are installed.
+### 📋 Blueprints — Nunjucks templates, applied post-hoc
 
-## MCP server expectations
+Basic Obsidian core templates create the bones. Blueprints (Nunjucks-subset) render structured sections *over* existing notes, between markers (`<!-- BLUEPRINT-BEGIN -->` / `<!-- BLUEPRINT-END -->`). Your edits outside the markers are sacred. The AI's structured content updates between them. **74 blueprints ship out of the box** — charter, manifest, dashboard, FFFF report, OSINT entity, eval report, narrative design doc, financial trail, chronology, and more.
 
-The plugin POSTs to `${mcpUrl}/tools/<tool_name>` with JSON body. Tools it
-calls (all optional; gracefully degrade if absent):
+**No Templater required.** Blueprints render with a vendored 303-LOC Nunjucks subset (`if`/`for`/`set`/filters); everything else uses Meta Bind + QuickAdd + Dataview from the official community registry. **Zero runtime npm dependencies.**
 
-- `faerie_dashboard`, `faerie_metrics`, `faerie_charters` (Live pane)
-- `faerie_chat`, `faerie_session_finalize` (Chat panel)
-- `faerie_record_marginalia` (margin note loop)
-- `faerie_anchor_promote` (QuickAdd macro)
-- `faerie_update_system_prompt` (system-prompt round-trip)
+### 🧵 Breadcrumbs Onboarding — Threading without YAML pain
 
-Bearer token loaded from vault-relative `.faerie-token` (gitignored).
+- **`CMD+Shift+T`** opens a quick-thread modal: fuzzy file picker + bearing dropdown. No YAML editing.
+- **`faerie: suggest threads`** auto-detects parents (folder `_index`/`README`/`MOC`), siblings (mutual links in same folder), children. Confirm with checkboxes.
+- **Inline thread widget** renders bearing-colored clickable pills at the top of every threaded note (↑ up · ↔ same · ↓ next · ＋ thread).
+- **`faerie: breadcrumbs tutorial`** generates a vault-local tutorial in plain English explaining the 4-field model.
 
-## Plugin-only light session
+### 🐝 Faerie Live — Side panel with MCP data
 
-Open the Chat panel (`Faerie: open chat panel`). Talk to Faerie. Every reply
-renders into the panel; nothing touches the vault filesystem until you click
-**Push session to vault**, at which point the conversation graduates into a
-session report via `faerie_session_finalize`. Fully air-gapped chat → vault
-flow, no surprises.
+Refreshes every 60s. Shows the current mission graph, eval dimensions, active charters from the faerie MCP server. Click any charter to open it in the vault.
 
-## Repo
+### 📊 Dependency Doctor
 
-Configured remote: `git@github.com:Persistech/faerie-hive-plugin.git`
-(not yet pushed — `git push -u origin main` when you're ready).
+`faerie: doctor` audits which companion plugins you have, which you should have, and which you should *never* have (Templater is on the don't list — Hive replaces it with vendored Nunjucks + QuickAdd macros + Meta Bind). One-click install for the canonical set.
 
-See `TUTORIAL.md` for end-user usage and `vault/00-SHARED/HELP/hive-plugin-tutorial.md`
-for the long-form walkthrough.
+### 📜 Glass-box Internals — *See it, then edit it*
+
+`00-SHARED/Faerie-System-Internals/` (auto-synced from faerie source) surfaces every AI template, formula, spawn bundle, and system prompt as a real Obsidian note. Inspect variable bindings, formula math, current values, source-of-truth paths. **Nothing hidden, nothing read-only.**
+
+This is the customization layer. Want to change how the queen agent thinks? Open `System-Prompts/queen-system-prompt.md`, edit the markdown, save. The plugin round-trips your edit back into `prompts/system/faerie.njk` (via `faerie_update_system_prompt`). Same for blueprints, formula thresholds, archetype briefs. **The vault is the cockpit.**
+
+If you'd rather not edit the source-of-truth directly, the plugin uses BEGIN/END markers — you author in the vault, the AI re-renders between markers, your edits outside markers are sacred. Either workflow works.
+
+### 📄 Hive PDF Export
+
+Original feature from `hive-pdf` v1, preserved unchanged. Smart-sized mermaid diagrams, hive-styled typography, deterministic pandoc + xelatex pipeline.
+
+### 🛡️ Forensic chain integrity
+
+Every AI artifact carries a sha256 hash. Every human annotation gets the same. Two parallel chains-of-custody (`coc.jsonl` for AI, `coc-human.jsonl` for you), both append-only, hash-linked. The vault is markdown; the audit is forensic.
+
+---
+
+## Philosophy
+
+Most "AI in Obsidian" plugins assume one of two failure modes:
+
+- **Vault-as-input** — your notes become RAG fuel, the AI does the thinking, you read the output.
+- **Vault-as-output** — the AI dumps generated content into your notes, you sift the wheat from the chaff.
+
+Both reduce you to a *role*. Hive picks a third path: **vault-as-substrate**. The AI does the work it's good at (drafts, structured artifacts, mission-graph navigation, evaluation). You do the work you're good at (judgement, curation, redirection, intuition). Both contributions land in the same medium. Both are tracked. Neither overwrites the other.
+
+This is the apiary model — bees forage, the keeper curates, the comb holds both. Workers waggle-dance their bearings; you read the dance and decide whether the next forage should follow it. The hive isn't yours OR theirs. It's the **medium where the work happens**.
+
+The novelty argument is laid out in detail at [`docs/NOVELTY.md`](docs/NOVELTY.md) — *Hive: A Cognitive Substrate for Human–AI Co-Thinking*. If you want the academic framing, read it. If you want to just use the thing, you don't have to.
+
+---
+
+## Deeper docs
+
+- **In-vault tutorial:** `<vault>/00-SHARED/HELP/hive-plugin-tutorial.md` (auto-installed when you first run `faerie: doctor`)
+- **Visual language spec:** [`forensics/glossary/VISUAL-LANGUAGE.md`](https://github.com/Persistech/faerie/blob/main/forensics/glossary/VISUAL-LANGUAGE.md) in the faerie repo — every shape, color, and motion the plugin uses
+- **Canonical paths:** [`CANONICAL-PATHS.md`](https://github.com/Persistech/faerie/blob/main/CANONICAL-PATHS.md) for developers wiring custom integrations
+- **Faerie System Internals:** `<vault>/00-SHARED/Faerie-System-Internals/00-Home.md` after first sync — the inspectable mirror of every template, formula, system prompt, and spawn bundle
+- **Latticework paper:** Siu & Matuschak, [matthewsiu.com/Latticework](https://www.matthewsiu.com/Latticework)
+- **Novelty paper (this work):** [`docs/NOVELTY.md`](docs/NOVELTY.md)
+- **Spawn bundle (for AI verification):** [`docs/SPAWN-BUNDLE.md`](docs/SPAWN-BUNDLE.md) — the 4-agent multi-bearing wave that empirically tests the plugin against a real vault
+- **Companion plugins:** [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) · [Meta Bind](https://github.com/mProjectsCode/obsidian-meta-bind-plugin) · [QuickAdd](https://github.com/chhoumann/quickadd) · [Breadcrumbs](https://breadcrumbs-wiki.netlify.app/) · [ExcaliBrain](https://github.com/zsviczian/excalibrain)
+
+---
+
+## Configuration
+
+Settings → Hive →
+
+- **MCP URL** (default `https://api.retrofuture.tech/mcp`)
+- **MCP token path** (default `.faerie-token` in vault root)
+- **Daily folder** (default `00-SHARED/Daily/`)
+- **Human folder** (default `Human/` — your annotations live here, separate from AI's chain of custody)
+- **Blueprint folder** (default `Blueprints/`)
+- **Visual language** (theme: full / minimal / off)
+
+All settings are optional — the plugin works in a fully local mode (PDF export, blueprints, trail-refs, compass overlay, visual callouts, Excalidraw round-trip) with **zero network calls**.
+
+---
+
+## License
+
+MIT. Use it, fork it, ship your own version. Credit Latticework and any other plugins you build on, like we did.
+
+---
+
+## A note on the name
+
+A *hive* is the structure. *Faerie* is the larger orchestration system this plugin connects to. *Honey* is the crystallized knowledge. *Bees* are the agents — and you, the keeper. The metaphor isn't ornament; it's load-bearing. Read the visual language spec when you have time; the metaphor explains the plugin.
+
+🐝 → 🌼 → 🍯 → 📜 → ⚓
