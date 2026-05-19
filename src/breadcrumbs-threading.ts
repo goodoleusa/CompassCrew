@@ -1,5 +1,5 @@
 import { App, Notice, Plugin, TFile } from "obsidian";
-import { Bearing, BEARING_TO_BC_FIELD } from "./bearings";
+import { Bearing, BEARING_TO_BC_FIELD, BEARINGS, isBearing } from "./bearings";
 
 /**
  * Breadcrumbs threading integration.
@@ -7,38 +7,100 @@ import { Bearing, BEARING_TO_BC_FIELD } from "./bearings";
  * Bearing → field mapping is imported from src/bearings.ts (the canonical
  * NSEW ontology module). Do NOT define mappings locally.
  *
- * Breadcrumbs plugin builds a hierarchy from frontmatter fields:
- *   - up    (parent / north — unblock predecessor)
- *   - down  (children / south — concluded deliverables below)
- *   - next  (south sibling — next-in-thread)
- *   - prev  (north sibling — previous-in-thread)
- *   - same  (east — parallel sister work)
+ * This module writes TWO frontmatter forms on each bearing thread:
+ *   1. Canonical NSEW key (`N`/`S`/`E`/`W`) — the structural truth.
+ *   2. Breadcrumbs alias (`up`/`next`/`same`) — for the Breadcrumbs plugin
+ *      to render trails (only when `emitBreadcrumbsAliases` is enabled).
+ *
+ * W (return-to-baseline) gets canonical W only; no alias is emitted because
+ * Breadcrumbs has no native backtrack semantics and aliasing it to `up`
+ * would conflate it with N.
  */
+
+export interface BreadcrumbsThreadingSettings {
+  /** Emit Breadcrumbs aliases (up/next/same) alongside canonical N/S/E/W. */
+  emitBreadcrumbsAliases: boolean;
+}
+
+export const DEFAULT_BREADCRUMBS_THREADING_SETTINGS: BreadcrumbsThreadingSettings = {
+  emitBreadcrumbsAliases: true,
+};
 
 function basenameNoExt(p: string): string {
   const b = p.split("/").pop() || p;
   return b.endsWith(".md") ? b.slice(0, -3) : b;
 }
 
-async function addBreadcrumbThread(
+function appendLink(fm: Record<string, unknown>, field: string, link: string, target: string) {
+  const existing = fm[field];
+  if (existing == null) fm[field] = [link];
+  else if (Array.isArray(existing)) {
+    if (!existing.includes(link)) (existing as string[]).push(link);
+  } else if (typeof existing === "string") {
+    if (!existing.includes(basenameNoExt(target))) fm[field] = [existing, link];
+  }
+}
+
+/**
+ * Write a bearing thread to a note's frontmatter.
+ *
+ * Always writes the canonical NSEW key. If `emitAlias` is true and the
+ * bearing has a Breadcrumbs alias (N/S/E only), also writes that alias.
+ */
+export async function addBreadcrumbThread(
   app: App,
   file: TFile,
-  field: string,
+  bearing: Bearing,
   targetPath: string,
+  emitAlias = true,
 ): Promise<void> {
-  const linkVal = `[[${basenameNoExt(targetPath)}]]`;
+  const link = `[[${basenameNoExt(targetPath)}]]`;
   await app.fileManager.processFrontMatter(file, (fm) => {
-    const existing = fm[field];
-    if (existing == null) fm[field] = [linkVal];
-    else if (Array.isArray(existing)) {
-      if (!existing.includes(linkVal)) existing.push(linkVal);
-    } else if (typeof existing === "string") {
-      if (!existing.includes(basenameNoExt(targetPath))) fm[field] = [existing, linkVal];
+    // Canonical NSEW (always)
+    appendLink(fm, bearing, link, targetPath);
+    // Breadcrumbs alias (skip W)
+    if (emitAlias && bearing !== "W") {
+      const aliasField = BEARING_TO_BC_FIELD[bearing];
+      appendLink(fm, aliasField, link, targetPath);
     }
   });
 }
 
-export function registerBreadcrumbsThreading(plugin: Plugin) {
+/**
+ * Read NSEW bearing links from a file's frontmatter. Prefers canonical
+ * NSEW keys; falls back to Breadcrumbs aliases (up/next/same) when the
+ * canonical key is absent.
+ *
+ * Returns a partial map keyed by bearing → array of link strings (as
+ * written, e.g. `[[note]]`).
+ */
+export async function readBearingFrontmatter(
+  app: App,
+  file: TFile,
+): Promise<Partial<Record<Bearing, string[]>>> {
+  const out: Partial<Record<Bearing, string[]>> = {};
+  const cache = app.metadataCache.getFileCache(file);
+  const fm: Record<string, unknown> = (cache?.frontmatter as Record<string, unknown>) || {};
+  const toArr = (v: unknown): string[] => {
+    if (v == null) return [];
+    if (Array.isArray(v)) return v.map(String);
+    return [String(v)];
+  };
+  for (const b of BEARINGS) {
+    const direct = toArr(fm[b]);
+    if (direct.length > 0) { out[b] = direct; continue; }
+    if (b === "W") continue; // no alias fallback
+    const alias = BEARING_TO_BC_FIELD[b];
+    const aliased = toArr(fm[alias]);
+    if (aliased.length > 0) out[b] = aliased;
+  }
+  return out;
+}
+
+export function registerBreadcrumbsThreading(
+  plugin: Plugin,
+  getEmitAliases: () => boolean = () => true,
+) {
   plugin.addCommand({
     id: "faerie-thread-add",
     name: "Faerie: add Breadcrumbs thread link (bearing → up/next/same)",
@@ -49,16 +111,17 @@ export function registerBreadcrumbsThreading(plugin: Plugin) {
       const m = cb.match(/\[\[([^\]|#]+)/);
       const target = m ? m[1] : cb.trim();
       if (!target) { new Notice("Clipboard has no [[link]] or page name."); return; }
-      await addBreadcrumbThread(plugin.app, file, BEARING_TO_BC_FIELD.S, target);
-      new Notice(`Breadcrumbs: next → ${target}`);
+      await addBreadcrumbThread(plugin.app, file, "S", target, getEmitAliases());
+      new Notice(`Threaded S → ${target}`);
     },
   });
 
   (plugin as any).faerieAddBreadcrumb = async (file: TFile, bearing: Bearing, dest: string) => {
-    const field = BEARING_TO_BC_FIELD[bearing];
-    if (!field) return;
-    await addBreadcrumbThread(plugin.app, file, field, dest);
+    if (!isBearing(bearing)) return;
+    await addBreadcrumbThread(plugin.app, file, bearing, dest, getEmitAliases());
   };
+
+  (plugin as any).faerieReadBearings = (file: TFile) => readBearingFrontmatter(plugin.app, file);
 
   plugin.addCommand({
     id: "faerie-thread-open",

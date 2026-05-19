@@ -13,7 +13,7 @@ import {
   DEFAULT_ANNOTATION_SETTINGS,
   AnnotationSettings,
 } from "./src/annotations";
-import { registerCompassOverlay } from "./src/compass-overlay";
+import { registerCompassOverlay, registerMermaidCompass } from "./src/compass-overlay";
 import {
   registerMcpBridge,
   DEFAULT_MCP_BRIDGE_SETTINGS,
@@ -38,13 +38,20 @@ import { registerBreadcrumbsOnboarding } from "./src/breadcrumbs-onboarding";
 import { initOntology } from "./src/ontology-loader";
 import { registerOntologyCommands } from "./src/ontology-commands";
 import { registerCanonicalInstaller } from "./src/canonical-installer";
+import { registerCsvPreview } from "./src/csv-preview";
+import { registerTokenGrabber, getTokenFingerprint } from "./src/token-grabber";
+import {
+  DEFAULT_BREADCRUMBS_THREADING_SETTINGS,
+  BreadcrumbsThreadingSettings,
+} from "./src/breadcrumbs-threading";
 
 interface HiveSettings extends
   BlueprintSettings,
   AnnotationSettings,
   McpBridgeSettings,
   SystemPromptSettings,
-  SpiderfootSettings {
+  SpiderfootSettings,
+  BreadcrumbsThreadingSettings {
   // PDF settings live on the parent class.
 }
 
@@ -54,6 +61,7 @@ const DEFAULT_HIVE_SETTINGS: HiveSettings = {
   ...DEFAULT_MCP_BRIDGE_SETTINGS,
   ...DEFAULT_SYSTEM_PROMPT_SETTINGS,
   ...DEFAULT_SPIDERFOOT_SETTINGS,
+  ...DEFAULT_BREADCRUMBS_THREADING_SETTINGS,
 };
 
 /**
@@ -88,7 +96,7 @@ export default class HivePlugin extends HivePdfPlugin {
 
     registerDepOrchestrator(this);
     registerBlueprintEngine(this, getHiveSettings);
-    registerBreadcrumbsThreading(this);
+    registerBreadcrumbsThreading(this, () => this.hiveSettings.emitBreadcrumbsAliases);
     registerTrailRefs(this);
     registerAnnotations(this, getHiveSettings);
     registerCompassOverlay(this);
@@ -105,6 +113,9 @@ export default class HivePlugin extends HivePdfPlugin {
     registerBreadcrumbsOnboarding(this);
     registerOntologyCommands(this);
     registerCanonicalInstaller(this);
+    registerCsvPreview(this);
+    registerTokenGrabber(this);
+    registerMermaidCompass(this);
 
     this.addSettingTab(new HiveSettingTab(this.app, this));
 
@@ -176,6 +187,34 @@ class HiveSettingTab extends PluginSettingTab {
       .setName("System prompts dir (absolute, faerie2 repo)")
       .addText((t) => t.setValue(this.plugin.hiveSettings.promptsDir)
         .onChange(async (v) => { this.plugin.hiveSettings.promptsDir = v; await this.plugin.saveHiveSettings(); }));
+
+    new Setting(containerEl)
+      .setName("Emit Breadcrumbs aliases (up/next/same)")
+      .setDesc("Write canonical N/S/E/W keys AND legacy Breadcrumbs aliases. Disable to keep frontmatter NSEW-only.")
+      .addToggle((t) => t.setValue(this.plugin.hiveSettings.emitBreadcrumbsAliases)
+        .onChange(async (v) => { this.plugin.hiveSettings.emitBreadcrumbsAliases = v; await this.plugin.saveHiveSettings(); }));
+
+    // MCP token grab UI.
+    containerEl.createEl("h3", { text: "MCP Token" });
+    const fpEl = containerEl.createEl("div", { cls: "faerie-token-fingerprint", text: "Loading token fingerprint…" });
+    getTokenFingerprint(this.app).then((fp) => {
+      if (!fp) { fpEl.setText("No token saved."); return; }
+      const when = fp.lastModified ? new Date(fp.lastModified).toISOString().slice(0, 10) : "?";
+      fpEl.setText(`Token: ${fp.short}… sha8=${fp.sha8} (rotated ${when})`);
+    });
+    new Setting(containerEl)
+      .setName("Grab token from faerie")
+      .setDesc("Opens faerie.retrofuture.tech and writes .faerie-token / .faerie-user-key on callback.")
+      .addButton((b) => b.setButtonText("🐝 Grab token from faerie").onClick(() => {
+        (this.app as any).commands.executeCommandById("hive:faerie-token-grab");
+      }));
+    new Setting(containerEl)
+      .setName("Rotate token")
+      .setDesc("Calls faerie_token_rotate via the configured MCP URL.")
+      .addButton((b) => b.setButtonText("Rotate token").onClick(() => {
+        (this.app as any).commands.executeCommandById("hive:faerie-token-rotate");
+      }));
+
   }
 }
 
