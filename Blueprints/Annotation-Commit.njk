@@ -1,0 +1,44 @@
+---
+# Applied to ANY note to add signing structure — retrofittable after the fact.
+# Changes: status → annotating, promotes to annotation workflow.
+type: annotation
+tags: [annotation, coc]
+status: annotating
+memory_lane: annotation-queue
+# --- annotation commit (note_sign.py fills when you run commit) ---
+ann_hash:
+ann_ts:
+# --- researcher signature (optional) ---
+sig:
+sig_fp:
+sig_ts:
+sig_hw: false
+---
+
+{% section "Your Annotations" %}
+<!-- Write your annotations here. note_sign.py commit signs this section. -->
+<!--
+  Hotkeys (Obsidian Shell Commands):
+    Ctrl+Alt+C  → commit annotation (semaphore — protected identity)
+    Ctrl+Alt+Shift+C → commit annotation (Ed25519 — named, court-grade)
+
+  CLI:
+    note_sign.py commit <this-file>
+    note_sign.py commit <this-file> --evidence-ref sha256:<hash> --claim-direction confirms --confidence 0.85
+
+  --evidence-ref links your annotation to a source hash → structural weight > bare assertion
+  --claim-direction: confirms | contradicts | neutral | extends
+  --confidence: 0.0–1.0
+-->
+{% endsection %}
+
+{% section "Signing Status" %}
+<!-- Filled automatically by note_sign.py — do not edit manually. -->
+
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+| Signed by | *(commitments listed in frontmatter)* |
+| Mode | *(semaphore = protected / ed25519 = named)* |
+{% endsection %}

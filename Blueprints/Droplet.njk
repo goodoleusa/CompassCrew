@@ -1,0 +1,51 @@
+---
+type: droplet
+status: live
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+date: {{ moment().format('YYYY-MM-DD') }}
+tags: [droplet, insight, live]
+memory_lane: droplets
+promotion_state: capture
+blueprint: "[[Droplet.blueprint]]"
+---
+
+# Droplets — LIVE {{ moment().format('YYYY-MM-DD') }}
+
+*Append-only. Each droplet is one insight — unfiltered, timestamped, honest.
+Write it BEFORE reasoning about it. The naive moment is the value.*
+
+*Bad droplets cost nothing. Lost insights cost everything.*
+
+---
+
+{% section "How to Add a Droplet" %}
+Append below using this format:
+
+```
+### {YYYY-MM-DDTHH:MM:SSZ} — {your name or agent type}
+**cat:** OBSERVATION | CONNECTION | HYPOTHESIS | TECHNIQUE | FIRST_IMPRESSION
+**pri:** HIGH | MED | LOW
+
+{1–5 sentences. Unfiltered. The seed, not the conclusion.}
+
+---
+```
+
+Or run `/droplet` in the Claude CLI to stream directly from the terminal.
+{% endsection %}
+
+{% section "Promotion Pipeline" %}
+```dataview
+TABLE cat, pri, file.ctime AS "Captured"
+FROM "00-SHARED/Droplets"
+WHERE date = this.date
+SORT file.ctime DESC
+```
+
+*Droplets → NECTAR at /handoff (memory-keeper). NECTAR → HONEY at /crystallize (human-gated).*
+{% endsection %}
+
+---
+
+<!-- DROPLETS BEGIN BELOW — append only, never edit existing entries -->

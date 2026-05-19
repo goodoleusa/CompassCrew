@@ -1,0 +1,78 @@
+---
+type: skill
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [agent, skill]
+skill_name: "{{ file.basename }}"
+skill_category:
+complexity: medium
+input_schema: {}
+output_schema: {}
+quality_criteria: []
+required_context: []
+tools_needed: []
+estimated_tokens:
+last_used:
+use_count: 0
+---
+
+# {{ file.basename }}
+
+{% section "Purpose" %}
+<!-- What does this skill do? One sentence. -->
+{% endsection %}
+
+{% section "Prompt Template" %}
+<!-- The actual prompt an agent will use. Include {placeholders} for dynamic content. -->
+```
+You are [ROLE]. Your task is to [OBJECTIVE].
+
+Context:
+{context}
+
+Input:
+{input}
+
+Output format:
+{output_format}
+
+Quality criteria:
+- [criterion 1]
+- [criterion 2]
+```
+{% endsection %}
+
+{% section "Input Schema" %}
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Output Schema" %}
+| Field | Type | Description |
+|-------|------|-------------|
+| | | |
+{% endsection %}
+
+{% section "Quality Criteria" %}
+<!-- How to evaluate if the output is good enough -->
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
+{% endsection %}
+
+{% section "Context Requirements" %}
+<!-- What memory/context files should be loaded before running this skill? -->
+- `01-Memories/user-preferences.md`
+{% endsection %}
+
+{% section "Example Usage" %}
+<!-- Show a concrete input → output example -->
+{% endsection %}
+
+{% section "Version History" %}
+| Date | Change | Author |
+|------|--------|--------|
+| {{ file.ctime | moment("YYYY-MM-DD") }} | Created | |
+{% endsection %}

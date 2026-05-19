@@ -1,0 +1,37 @@
+---
+type: daily
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD hh:mm a") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD hh:mm a") }}
+tags: [daily, research-log]
+date: {{ moment().format('YYYY-MM-DD') }}
+investigator:
+focus_areas: []
+---
+
+# Research Log — {{ moment().format('YYYY-MM-DD') }}
+
+{% section "Today's Focus" %}
+<!-- What are you investigating today? -->
+{% endsection %}
+
+{% section "Findings" %}
+<!-- Key discoveries, with sources -->
+{% endsection %}
+
+{% section "New Entities Identified" %}
+<!-- List any new IPs, domains, people, organizations discovered today -->
+- [ ] Created entity note for:
+{% endsection %}
+
+{% section "Questions Raised" %}
+<!-- New questions that emerged from today's research -->
+{% endsection %}
+
+{% section "Tasks Generated" %}
+<!-- New tasks to put in 00-Inbox -->
+{% endsection %}
+
+{% section "Context Snapshot" %}
+<!-- End-of-day summary for async handoff to agents or collaborators -->
+{% endsection %}

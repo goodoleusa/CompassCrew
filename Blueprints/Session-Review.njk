@@ -1,0 +1,77 @@
+---
+type: session-review
+status: draft
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [session, review, eval]
+title: "{{ file.basename }}"
+session_id:
+eval_composite_before: null
+eval_composite_after: null
+eval_delta: null
+tasks_completed: 0
+agents_launched: 0
+waves_fired: 0
+crystallization_candidates: []
+honey_entries_added: 0
+parent: []
+blueprint: "[[Session-Review]]"
+---
+
+# {{ file.basename }}
+
+{% section "What Moved" %}
+<!-- What actually changed in the system by the end of this session? -->
+
+**Features shipped:**
+**Scripts archived/merged:**
+**Memory promoted:**
+**Eval delta:**
+{% endsection %}
+
+{% section "Piston Health" %}
+<!-- Did compound momentum work? Did main stay lean? -->
+
+**Waves fired before first user response:**
+**Agents in flight at first response:**
+**Main stayed as switchboard:** [ ] yes [ ] mostly [ ] no — did inline work
+
+**Where main did heavy inference (should have been a subagent):**
+{% endsection %}
+
+{% section "Stigmergy Check" %}
+<!-- Did agents self-orient from trails, or did they need human relay? -->
+
+**Manifests written:**
+**Trail reads that worked:**
+**Times an agent asked main instead of reading trail:**
+
+**Gap in trail coverage (what would have helped):**
+{% endsection %}
+
+{% section "Failure-to-Gold" %}
+<!-- What broke or surprised you? What did it produce? -->
+
+| Failure | Gold | Planned? |
+|---|---|---|
+|  |  | no |
+{% endsection %}
+
+{% section "Crystallization Pressure" %}
+<!-- What's ready to move up the memory stack? -->
+
+**NECTAR → HONEY candidates:**
+**Scratch → NECTAR (membot handles at /handoff):**
+**Dead HONEY entries (not cited this session, not cited last 3 sessions):**
+{% endsection %}
+
+{% section "Open Threads" %}
+<!-- What's unresolved, blocked, or needs the next session to pick up? -->
+{% endsection %}
+
+{% section "Eval Score" %}
+**Composite:** (run: `python3 ~/.claude/scripts/eval_harness.py --report`)
+**Baseline established:** [ ] yes (run ≥3) [ ] still calibrating
+**Dimension that moved most:**
+**Next target:**
+{% endsection %}

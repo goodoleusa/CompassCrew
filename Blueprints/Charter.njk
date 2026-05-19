@@ -1,0 +1,38 @@
+---
+type: charter
+charter_id: {{ frontmatter.charter_id | default(file.basename) }}
+created: {{ now }}
+status: {{ frontmatter.status | default("active") }}
+---
+
+> [!charter] {{ frontmatter.title | default(file.basename) }}
+> **Intent:** {{ frontmatter.intent | default("—") }}
+> **Success criteria:** {{ frontmatter.success | default("—") }}
+
+## Scope
+
+{{ frontmatter.scope | default("_What is IN this charter; what is explicitly OUT._") }}
+
+## Anchors
+
+{% for a in frontmatter.anchors | default([]) %}> [!anchor] {{ a.name | default("anchor") }}
+> {{ a.text }}
+
+{% endfor %}
+
+## Compass
+
+- **N (must unblock first):** {{ frontmatter.compass.N | default("—") }}
+- **S (ships when done):** {{ frontmatter.compass.S | default("—") }}
+- **E (parallel sisters):** {{ frontmatter.compass.E | default("—") }}
+- **W (baseline check):** {{ frontmatter.compass.W | default("—") }}
+
+## Linked manifests (dataview)
+
+```dataview
+TABLE bearing, mission, dashboard_line
+FROM "forensics/manifests"
+WHERE charter_ref = "{{ file.path }}"
+SORT file.ctime DESC
+LIMIT 20
+```

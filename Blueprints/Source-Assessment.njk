@@ -1,0 +1,53 @@
+---
+type: source
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, source]
+source_name: "{{ file.basename }}"
+source_type:
+url:
+reliability_rating:
+information_rating:
+access_method:
+last_verified:
+citation_count: 0
+notes_citing: []
+blueprint: "[[Source-Assessment.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What is this source? Website, database, human source, FOIA response, etc. -->
+{% endsection %}
+
+{% section "Assessment" %}
+| Dimension | Rating | Justification |
+|-----------|--------|---------------|
+| **Source Reliability** | A-F | |
+| **Information Quality** | 1-6 | |
+| **Timeliness** | Current / Dated / Historical | |
+| **Access** | Open / Restricted / Classified | |
+| **Bias** | None / Low / Moderate / High | |
+| **Corroboration** | Independent / Dependent / Uncorroborated | |
+{% endsection %}
+
+{% section "Reliability History" %}
+<!-- Has this source been accurate in the past? -->
+| Date | Claim | Verified? | Notes |
+|------|-------|-----------|-------|
+| | | | |
+{% endsection %}
+
+{% section "Access Details" %}
+<!-- How to access this source. Login required? API? FOIA? -->
+{% endsection %}
+
+{% section "Notes Citing This Source" %}
+```dataview
+LIST
+WHERE contains(file.outlinks, this.file.link)
+SORT file.mtime DESC
+```
+{% endsection %}

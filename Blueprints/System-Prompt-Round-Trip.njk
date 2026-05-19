@@ -1,0 +1,50 @@
+---
+type: system-prompt-round-trip
+prompt_file: {{ frontmatter.prompt_file | default("prompts/system/faerie.njk") }}
+round: {{ frontmatter.round | default(1) }}
+created: {{ now }}
+---
+
+> [!charter] System prompt — round-trip review
+> **File:** `{{ frontmatter.prompt_file | default("prompts/system/faerie.njk") }}` · **Round:** {{ frontmatter.round | default(1) }}
+
+## Flow
+
+```mermaid
+flowchart LR
+  A[faerie2 repo<br/>prompts/system/faerie.njk] -->|hive plugin imports| B[Obsidian note<br/>00-SHARED/SystemPrompts/]
+  B -->|human edits + annotates<br/>via margin notes| C[Annotated prompt]
+  C -->|Faerie: push prompt back| D[MCP: faerie_update_system_prompt]
+  D -->|writes branch + PR| A
+  A -->|next session reads<br/>updated prompt| E((Loop closed))
+```
+
+## Current prompt (read-only mirror)
+
+> [!propolis] Source of truth
+> The canonical file lives at `{{ frontmatter.prompt_file }}` in the **faerie2** repo. This note is a mirror — direct edits here are captured as **margin notes**, not as edits to the prompt. Use `Faerie: push prompt back` to commit your annotations as an actual edit.
+
+```
+{{ frontmatter.prompt_body | default("# (load via Faerie: import system prompt)") }}
+```
+
+## Margin notes on this prompt
+
+```dataview
+LIST
+FROM "00-SHARED/Marginalia"
+WHERE contains(string(references_ai_artifact.path), "{{ frontmatter.prompt_file }}")
+SORT file.ctime DESC
+LIMIT 20
+```
+
+## Diff vs. last shipped
+
+> [!waggle] Diff
+> {{ frontmatter.diff | default("_Run `Faerie: diff system prompt` to populate._") }}
+
+## Verdict
+
+- [ ] Ship as-is
+- [ ] Iterate (annotate more)
+- [ ] Reject (rollback)

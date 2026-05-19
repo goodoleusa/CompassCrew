@@ -1,0 +1,200 @@
+/* ==========================================================================
+   Hive v2.0.0 — visual language stylesheet
+   Sections:
+     1. Trail-ref bearings (N/S/E/W) — colored link styles
+     2. Visual-language callouts — droplet, charter, anchor, waggle, honey,
+        brood, propolis
+     3. File-decorator — bee icon, honey-glow
+     4. Live + Chat panes
+     5. Existing PDF export styles (preserved)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Trail-ref bearings
+   -------------------------------------------------------------------------- */
+/* Bearing colors carried in the Markdown link's title attribute. */
+a[title="N"] { color: #C73E1D !important; border-bottom: 2px solid #C73E1D; }   /* north — unblock predecessor */
+a[title="S"] { color: #2E8540 !important; border-bottom: 2px solid #2E8540; }   /* south — conclude / downstream */
+a[title="E"] { color: #FF8E3C !important; border-bottom: 2px solid #FF8E3C; }   /* east  — parallel sister */
+a[title="W"] { color: #FFB300 !important; border-bottom: 2px solid #FFB300; }   /* west  — baseline / return */
+
+a[title="N"]::before { content: "↑ "; opacity: 0.6; }
+a[title="S"]::before { content: "↓ "; opacity: 0.6; }
+a[title="E"]::before { content: "→ "; opacity: 0.6; }
+a[title="W"]::before { content: "← "; opacity: 0.6; }
+
+.faerie-trail-refs-collapsed a[title="N"],
+.faerie-trail-refs-collapsed a[title="S"],
+.faerie-trail-refs-collapsed a[title="E"],
+.faerie-trail-refs-collapsed a[title="W"] {
+  text-decoration: none;
+  color: var(--text-muted) !important;
+  border-bottom: 1px dotted var(--text-muted);
+}
+
+a.faerie-collapsed {
+  font-size: 0.75em;
+  opacity: 0.5;
+}
+
+/* Compass overlay flag — Juggl picks up bearing colors via these vars. */
+body.faerie-compass-overlay-active {
+  --faerie-bearing-n: #C73E1D;
+  --faerie-bearing-s: #2E8540;
+  --faerie-bearing-e: #FF8E3C;
+  --faerie-bearing-w: #FFB300;
+}
+
+/* --------------------------------------------------------------------------
+   2. Visual-language callouts
+   -------------------------------------------------------------------------- */
+.callout[data-callout="droplet"] {
+  --callout-color: 255, 191, 0;
+  --callout-icon: lucide-droplet;
+  background-color: rgba(255, 191, 0, 0.10);
+  border-left: 4px solid #FFBF00;
+  border-radius: 12px 12px 12px 28px; /* teardrop bottom-left */
+}
+
+.callout[data-callout="charter"] {
+  --callout-color: 184, 134, 11;
+  --callout-icon: lucide-scroll-text;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 220, 0.45), rgba(245, 222, 179, 0.25));
+  border: 1px solid #B8860B;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(184, 134, 11, 0.2);
+  position: relative;
+}
+.callout[data-callout="charter"]::after {
+  content: "✶";
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  color: #DAA520;
+  font-size: 1.2em;
+}
+
+.callout[data-callout="anchor"] {
+  --callout-color: 110, 110, 110;
+  --callout-icon: lucide-anchor;
+  background-color: rgba(110, 110, 110, 0.06);
+  border-left: 4px double #6E6E6E;
+}
+.callout[data-callout="anchor"] .callout-title::before { content: "⚓ "; }
+
+.callout[data-callout="waggle"] {
+  --callout-color: 52, 120, 246;
+  --callout-icon: lucide-activity;
+  background: linear-gradient(90deg, rgba(52, 120, 246, 0.10), transparent);
+  border-left: 4px solid #3478F6;
+}
+.callout[data-callout="waggle"] .callout-title::before { content: "💃 "; }
+
+.callout[data-callout="honey"] {
+  --callout-color: 255, 191, 0;
+  --callout-icon: lucide-hexagon;
+  background-color: rgba(255, 191, 0, 0.18);
+  border: 1px solid #DAA520;
+  border-radius: 8px;
+  clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+}
+
+.callout[data-callout="brood"] {
+  --callout-color: 200, 100, 50;
+  --callout-icon: lucide-egg;
+  background-color: rgba(200, 100, 50, 0.06);
+  border: 2px solid #C86432;
+  border-radius: 6px;
+  animation: faerie-brood-pulse 2.5s ease-in-out infinite;
+}
+@keyframes faerie-brood-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 100, 50, 0.3); }
+  50%      { box-shadow: 0 0 0 6px rgba(200, 100, 50, 0); }
+}
+
+.callout[data-callout="propolis"] {
+  --callout-color: 90, 60, 30;
+  --callout-icon: lucide-shield;
+  background: repeating-linear-gradient(
+    45deg, rgba(90, 60, 30, 0.05), rgba(90, 60, 30, 0.05) 8px,
+    rgba(90, 60, 30, 0.10) 8px, rgba(90, 60, 30, 0.10) 16px);
+  border-left: 6px solid #5A3C1E;
+}
+
+/* --------------------------------------------------------------------------
+   3. File decorator — bee icon + honey-glow
+   -------------------------------------------------------------------------- */
+.faerie-bee-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.9em;
+  filter: drop-shadow(0 0 2px rgba(255, 191, 0, 0.6));
+}
+
+.nav-file-title.faerie-honey-glow {
+  background: linear-gradient(90deg,
+    rgba(255, 191, 0, 0.15), rgba(255, 191, 0, 0));
+  border-radius: 4px;
+  animation: faerie-honey-shimmer 3s ease-in-out infinite;
+}
+@keyframes faerie-honey-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* --------------------------------------------------------------------------
+   4. Live + Chat panes
+   -------------------------------------------------------------------------- */
+.faerie-live-pane h2 { margin-top: 0; }
+.faerie-live-pane .faerie-live-status {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-bottom: 1em;
+}
+.faerie-live-pane .faerie-live-section {
+  max-height: 240px;
+  overflow-y: auto;
+  font-size: 0.85em;
+  background-color: var(--background-secondary);
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.faerie-chat-pane { display: flex; flex-direction: column; height: 100%; padding: 8px; }
+.faerie-chat-pane h2 { margin-top: 0; }
+.faerie-chat-log {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background-color: var(--background-secondary);
+}
+.faerie-chat-msg { margin-bottom: 10px; }
+.faerie-chat-msg strong { display: block; font-size: 0.8em; color: var(--text-muted); }
+.faerie-chat-user > strong  { color: #2E8540; }
+.faerie-chat-assistant > strong { color: #FFBF00; }
+.faerie-chat-input {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 6px;
+  font-family: inherit;
+}
+.faerie-chat-buttons { display: flex; gap: 8px; margin-top: 6px; }
+
+/* --------------------------------------------------------------------------
+   5. PDF export — preserved from hive-pdf v1
+   -------------------------------------------------------------------------- */
+.hive-pdf-modal h2 { font-family: var(--font-text); }
+.hive-pdf-modal .log-box {
+  background-color: var(--background-secondary);
+  padding: 8px;
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  max-height: 300px;
+  overflow-y: auto;
+}

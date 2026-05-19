@@ -1,0 +1,138 @@
+---
+type: investigation
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD hh:mm a") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD hh:mm a") }}
+tags: [osint, investigation, active]
+case_id: CASE-{{ moment().format('YYYYMMDD') }}-001
+lead_source:
+investigator:
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+hypotheses: []
+threat_level: unassessed
+classification: internal
+deadline:
+last_update: {{ moment().format('YYYY-MM-DD') }}
+---
+
+# {{ file.basename }}
+
+{% section "Executive Summary" %}
+<!-- 2-3 sentence overview for quick reference by journalists, lawyers, or colleagues -->
+{% endsection %}
+
+{% section "Hypotheses" %}
+<!-- Which H1-H5 does this investigation test? What are we trying to prove/disprove? -->
+
+| ID | Hypothesis | Status | Confidence |
+|----|-----------|--------|------------|
+| | | | |
+
+{% endsection %}
+
+{% section "Objectives" %}
+- [ ]
+- [ ]
+- [ ]
+{% endsection %}
+
+{% section "Timeline" %}
+| Date | Event | Source | Significance |
+|------|-------|--------|--------------|
+| | | | |
+{% endsection %}
+
+{% section "Entities Under Investigation" %}
+```dataview
+TABLE entity_type, confidence_level, priority
+FROM "20-Entities"
+WHERE contains(parent, this.file.link)
+SORT priority ASC
+```
+{% endsection %}
+
+{% section "Intelligence Gathered" %}
+
+### Verified Facts
+<!-- Corroborated by 2+ independent sources -->
+
+### Unverified Leads
+<!-- Single-source, needs corroboration -->
+
+### Contradictory Information
+<!-- Evidence that conflicts — note both sides -->
+
+{% endsection %}
+
+{% section "Methodology" %}
+<!-- Tools used, data sources queried, techniques applied -->
+{% endsection %}
+
+{% section "Analysis" %}
+<!-- Interpretive work: connections, patterns, anomalies, statistical findings -->
+{% endsection %}
+
+{% section "Child investigations / threads" %}
+<!-- Sub-investigations or threads that belong under this investigation. Add them to child in frontmatter. -->
+```dataview
+LIST file.link
+FROM "10-Investigations"
+WHERE contains(parent, this.file.link)
+SORT file.mtime DESC
+```
+{% endsection %}
+
+{% section "Evidence Chain" %}
+```dataview
+TABLE confidence_level, source_quality, hypothesis_support
+FROM "30-Evidence"
+WHERE contains(parent, this.file.link)
+SORT confidence_level DESC
+```
+{% endsection %}
+
+{% section "Agent questions (for reviewer)" %}
+<!-- Open questions agents need human input on. Review and answer or triage. -->
+- 
+{% endsection %}
+
+{% section "Interesting discoveries / scratchpad" %}
+<!-- Mini-findings, "might be relevant," connections spotted. Don't lose insights. -->
+- 
+{% endsection %}
+
+{% section "New questions raised" %}
+<!-- Questions that arose from this work (for follow-up or new threads). -->
+| Question | Source / context | Priority |
+|----------|------------------|----------|
+| | | |
+{% endsection %}
+
+{% section "Data needed to answer" %}
+<!-- What data or sources would be needed to answer the open questions? -->
+| Question / gap | Data or source needed | Where to get it |
+|----------------|------------------------|------------------|
+| | | |
+{% endsection %}
+
+{% section "Connections to other work" %}
+<!-- Link to related investigations, entities, or evidence. Thread into other work. -->
+- 
+{% endsection %}
+
+{% section "Recommendations" %}
+<!-- Next steps, resource needs, escalation paths, publication readiness -->
+{% endsection %}
+
+{% section "Appendix" %}
+
+### Raw Data Links
+### Tool Outputs
+### Chain of Custody Notes
+
+{% endsection %}

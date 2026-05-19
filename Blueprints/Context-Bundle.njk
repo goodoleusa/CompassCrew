@@ -1,0 +1,80 @@
+---
+type: context-bundle
+agent_type: workflow-orchestrator
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+task_id:
+task_goal:
+built_by: faerie
+tags: [context, bundle, faerie, async]
+doc_hash: sha256:pending
+promotion_state: awaiting-annotation
+ann_hash: ""
+ann_synced: false
+---
+
+# Context Bundle — {{ task_goal }}
+
+*Built by faerie from cross-session memory. Passed verbatim to every subagent that claims this task.*
+
+{% section "Session Bridge" %}
+**Last session sprint:**
+<!-- From last-session-handoff.md -->
+
+**Ended:** <!-- timestamp -->
+**Turns:** <!-- N --> | **Ctx:** <!-- N% -->
+{% endsection %}
+
+{% section "Key Facts" %}
+<!-- From KNOWLEDGE-BASE.md — filtered to this task's topic -->
+<!--
+- fact 1
+- fact 2
+- fact 3
+- fact 4
+- fact 5
+-->
+{% endsection %}
+
+{% section "Open Flags" %}
+<!-- From REVIEW-INBOX.md — HIGH priority only, relevant to this task -->
+<!--
+- FLAG: ...
+-->
+{% endsection %}
+
+{% section "Prior Run" %}
+<!-- From run-benchmarks.json for this task_type -->
+score: — | turns: — | agents: — | outcome: —
+{% endsection %}
+
+{% section "Queue Context" %}
+<!-- What other sessions are currently working on (claimed tasks) -->
+<!-- Prevents duplication -->
+{% endsection %}
+
+{% section "Agent Instructions" %}
+**Add follow-up tasks discovered during work:**
+```bash
+python3 ~/.claude/hooks/state/queue_ops.py add \
+  --goal "..." --priority MED --source [agent-type] --project [project]
+```
+
+**Leave discoveries for other sessions:**
+```bash
+python3 ~/.claude/hooks/state/drops.py write \
+  --to all --type DISCOVERY --payload "..."
+```
+
+**Write scratchpad before returning:**
+File: `.claude/memory/scratch-$SESSION_ID.md`
+Minimum: one `<!-- MEM -->` block with OBSERVATION or FLAG.
+{% endsection %}
+
+---
+
+### Annotation Status
+**Ann Hash:** {{ann_hash}} | **Synced:** {{ann_synced}}
+
+*Vault path: `03-Agents/sessions/context-[task-id].md`*
+*Also stored in: `~/.claude/hooks/state/sprint-queue/context-[task-id].md`*

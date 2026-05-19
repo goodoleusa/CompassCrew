@@ -1,0 +1,107 @@
+---
+type: report
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD hh:mm a") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD hh:mm a") }}
+tags: [osint, report, draft]
+report_id: RPT-{{ moment().format('YYYYMMDD') }}-001
+title: "{{ file.basename }}"
+author:
+reviewer:
+classification: internal
+audience: journalist
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+publish_date:
+version: 1
+---
+
+# {{ file.basename }}
+
+{% section "TLP Marking" %}
+**TLP:AMBER** — Limited disclosure, restricted to participants' organizations.
+{% endsection %}
+
+{% section "Executive Summary" %}
+<!-- 3-5 sentences. Written for a non-technical reader (journalist, congressional staffer).
+     Answer: What happened? Who was affected? Why does it matter? -->
+{% endsection %}
+
+{% section "Key Findings" %}
+<!-- Numbered list, most important first. Each finding = one sentence + evidence citation -->
+1.
+2.
+3.
+{% endsection %}
+
+{% section "Background" %}
+<!-- Context needed to understand the findings. Timeline of relevant events. -->
+{% endsection %}
+
+{% section "Technical Analysis" %}
+<!-- Detailed technical evidence. Use tables, code blocks, diagrams where helpful. -->
+{% endsection %}
+
+{% section "Statistical Evidence" %}
+<!-- Pre-registered hypotheses, test results, effect sizes, Bayesian posteriors.
+     Follow anti-p-hacking protocol: dual methods, report ALL tests. -->
+{% endsection %}
+
+{% section "Impact Assessment" %}
+<!-- Who/what is affected? Scope of exposure? Financial/security/political implications? -->
+{% endsection %}
+
+{% section "Recommendations" %}
+<!-- Actionable next steps for the intended audience -->
+{% endsection %}
+
+{% section "Methodology" %}
+<!-- How was this analysis conducted? What tools, what data sources, what limitations? -->
+{% endsection %}
+
+{% section "Limitations and Caveats" %}
+<!-- What we don't know. What could change our conclusions. Alternative explanations. -->
+{% endsection %}
+
+{% section "Agent questions (for reviewer)" %}
+<!-- Open questions from drafters. Review and answer or triage. -->
+- 
+{% endsection %}
+
+{% section "Interesting discoveries / scratchpad" %}
+<!-- Mini-findings while drafting. Don't lose insights. -->
+- 
+{% endsection %}
+
+{% section "New questions raised" %}
+| Question | Source / context | Priority |
+|----------|------------------|----------|
+| | | |
+{% endsection %}
+
+{% section "Data needed to answer" %}
+| Question / gap | Data or source needed | Where to get it |
+|----------------|------------------------|------------------|
+| | | |
+{% endsection %}
+
+{% section "Connections to other work" %}
+- 
+{% endsection %}
+
+{% section "Appendix" %}
+
+### Data Sources
+### Tool Chain
+### Glossary
+### Revision History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1 | | | Initial draft |
+
+{% endsection %}

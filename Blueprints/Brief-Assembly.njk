@@ -1,0 +1,158 @@
+---
+type: brief
+brief_type: {{ brief_type }}
+schema_version: "1.0"
+status: unreviewed
+created: {{ moment().format('YYYY-MM-DD') }}
+ts: {{ moment().format('YYYY-MM-DDTHH:mm:ss') }}Z
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [brief, {{ brief_type }}, {{ run_id }}]
+investigation_id: {{ investigation_id }}
+sprint_id: {{ sprint_id }}
+session_id: {{ session_id }}
+run_id: {{ run_id }}
+phase: {{ phase }}
+pipeline_stage: {{ pipeline_stage }}
+agent_author: {{ agent_author }}
+agent_version: "{{ agent_version }}"
+git_commit: {{ git_commit }}
+coc_session_file: "{{ coc_session_file }}"
+coc_entry_hashes: []
+source_files: []
+hypothesis_touched: []
+evidence_tier_touched: []
+confidence_delta: {}
+blockers: []
+parent:
+  - "[[{{ sprint_id }}-plan]]"
+  - "[[{{ investigation_id }}-index]]"
+sibling: []
+child: []
+memory_lane: inbox
+promotion_state: capture
+chain_id: {{ investigation_id | replace("inv-", "") }}
+content_hash: ""
+atom_file: ""
+agent_hash: ""
+review_status: unreviewed
+promoted_at: ""
+promotion_chain: []
+ann_hash: ""
+ann_ts: ""
+sig: ""
+sig_fp: ""
+sig_ts: ""
+sig_hw: false
+blueprint: "[[Brief-Assembly.blueprint]]"
+---
+
+# {{ run_id }} {{ brief_type | replace("-", " ") | title }} — {{ phase }}
+
+*Generated {{ moment().format('YYYY-MM-DD HH:mm') }} · Agent: `{{ agent_author }}`*
+*Blueprint: [[Brief-Assembly.blueprint]] · Schema: [[VAULT-SCHEMA]]*
+
+---
+
+{% section "Session Briefs (Auto-Assembled)" %}
+<!-- Dataview pulls all brief atoms for this run/session -->
+
+```dataview
+TABLE WITHOUT ID
+  file.link AS "Brief",
+  brief_type AS "Type",
+  phase AS "Phase",
+  agent_author AS "Agent",
+  hypothesis_touched AS "Hypotheses",
+  review_status AS "Status"
+FROM "00-SHARED/Session-Briefs"
+WHERE type = "brief"
+  AND (run_id = this.run_id OR session_id = this.session_id)
+SORT ts ASC
+```
+{% endsection %}
+
+{% section "Hypothesis Movement" %}
+<!-- Confidence changes across all briefs in this session -->
+
+```dataview
+TABLE WITHOUT ID
+  file.link AS "Brief",
+  confidence_delta AS "Delta",
+  hypothesis_touched AS "Hypotheses",
+  evidence_tier_touched AS "Tiers"
+FROM "00-SHARED/Session-Briefs"
+WHERE type = "brief"
+  AND (run_id = this.run_id OR session_id = this.session_id)
+  AND length(hypothesis_touched) > 0
+SORT ts ASC
+```
+{% endsection %}
+
+{% section "Blockers" %}
+<!-- Blockers flagged across session briefs -->
+
+```dataview
+TABLE WITHOUT ID
+  file.link AS "Brief",
+  blockers AS "Blockers",
+  agent_author AS "Agent"
+FROM "00-SHARED/Session-Briefs"
+WHERE type = "brief"
+  AND (run_id = this.run_id OR session_id = this.session_id)
+  AND length(blockers) > 0
+SORT ts ASC
+```
+{% endsection %}
+
+{% section "COC Linkage" %}
+<!-- Forensic chain-of-custody references -->
+
+| Field | Value |
+|---|---|
+| COC Session File | `{{ coc_session_file }}` |
+| Agent Version | `{{ agent_version }}` |
+| Git Commit | `{{ git_commit }}` |
+| Atom File | `{{ atom_file }}` |
+
+*Full forensic detail: see session COC .jsonl file (local, not in vault).*
+{% endsection %}
+
+{% section "Related Briefs (Siblings)" %}
+<!-- Other briefs from same sprint/investigation -->
+
+```dataview
+TABLE WITHOUT ID
+  file.link AS "Brief",
+  brief_type AS "Type",
+  phase AS "Phase",
+  created AS "Date"
+FROM "00-SHARED/Session-Briefs"
+WHERE type = "brief"
+  AND investigation_id = this.investigation_id
+  AND sprint_id = this.sprint_id
+  AND file.name != this.file.name
+SORT ts DESC
+LIMIT 10
+```
+{% endsection %}
+
+{% section "Your Notes" %}
+<!-- Your analysis of this session's output. Questions. What to follow up on. -->
+<!-- This section preserved when blueprint is re-applied. -->
+<!-- Commit annotations: Ctrl+Alt+C -->
+
+**What stood out:**
+
+**Questions for next sprint:**
+-
+
+**What to ignore:**
+-
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+{% endsection %}

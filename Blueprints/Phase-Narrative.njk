@@ -1,0 +1,252 @@
+---
+type: phase-narrative
+status: in-progress
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [pipeline, phase-narrative, data-ingest]
+pipeline_run:
+investigation_id:
+# --- progressive disclosure ---
+disclosure_stage: SEED
+# SEED | DEEPEN | EXTEND | FULL
+disclosure_run_number: 1
+disclosure_total_estimated:
+coverage_pct_before: 0.0
+coverage_pct_after: 0.0
+convergence_status: CONTINUE
+# CONTINUE | LIKELY_CONVERGED | CONVERGED
+first_impression_written: false
+agent_state_version: V1
+# V1=seed, V2=deepen, V3+ subsequent
+# --- phase completion map ---
+phase_ingest: pending
+phase_clean: pending
+phase_transform: pending
+phase_curate: pending
+phase_analyze: pending
+phase_publish: pending
+# --- run stats ---
+files_processed: 0
+entities_extracted: 0
+ips_found: 0
+domains_found: 0
+emails_found: 0
+# --- evidence tiers ---
+tier1_count: 0
+tier2_count: 0
+tier3_count: 0
+tier4_count: 0
+# --- publication ---
+ipfs_cid:
+bitcoin_ts:
+git_commit:
+# --- hypothesis impact ---
+hypothesis_support: []
+# --- memory ---
+memory_lane: inbox
+promotion_state: capture
+blueprint: "[[Phase-Narrative.blueprint]]"
+# --- chain (agent writes at creation — do not edit) ---
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author: data-ingest-orchestrator
+agent_signed:
+# --- annotation ---
+ann_hash:
+ann_ts:
+---
+
+# Phase Narrative — `{{ pipeline_run }}` — {{ moment().format('YYYY-MM-DD') }}
+
+*Pipeline run narrative written by data-ingest orchestrator. Apply this blueprint at run start.*
+*Update each phase section as agents complete. Promotes to 30-Evidence/ after human review.*
+
+---
+
+{% section "Progressive Disclosure Context" %}
+<!-- Where does this run sit in the disclosure sequence? -->
+<!-- Run run_planner.py to see full schedule: python3 scripts/run_planner.py --status -->
+
+| Field | Value |
+|---|---|
+| Disclosure stage | `{{ disclosure_stage }}` |
+| Run number in sequence | `{{ disclosure_run_number }}` of `{{ disclosure_total_estimated }}` est. |
+| Coverage before this run | `{{ coverage_pct_before }}`% |
+| Coverage after this run | `{{ coverage_pct_after }}`% |
+| Agent state version | `{{ agent_state_version }}` |
+| First impression written | `{{ first_impression_written }}` |
+| Convergence status | `{{ convergence_status }}` |
+
+**Stage purpose:**
+- SEED: Agent sees ~15% of data. FIRST_IMPRESSION blocks are written here — timestamped *before* confirming data is introduced.
+- DEEPEN: Agent reads V1 state assumptions, then sees new data and updates to V2. Tests whether seed impressions hold.
+- EXTEND / FULL: Progressively more data. Convergence check: if hypothesis confidence deltas < 0.05 and coverage > 70%, stop.
+
+**Convergence check (fill after run):**
+- H1 Δ: · H2 Δ: · H3 Δ: · H4 Δ: · H5 Δ: *(add/remove columns to match your hypotheses)*
+- Verdict: `{{ convergence_status }}`
+- Run: `python3 scripts/run_planner.py --converged [h1_delta h2_delta ...]` *(one delta per hypothesis)*
+{% endsection %}
+
+{% section "Run Summary" %}
+<!-- Filled by orchestrator at run start and updated at close -->
+
+| Metric | Value |
+|---|---|
+| Run ID | `{{ pipeline_run }}` |
+| Investigation | `{{ investigation_id }}` |
+| Date | {{ moment().format('YYYY-MM-DD HH:mm') }} UTC |
+| Files in | `{{ files_processed }}` |
+| Entities found | `{{ entities_extracted }}` (IPs: `{{ ips_found }}`, Domains: `{{ domains_found }}`, Emails: `{{ emails_found }}`) |
+| Tier 1 (smoking gun) | `{{ tier1_count }}` |
+| Tier 2 (strong) | `{{ tier2_count }}` |
+| Tier 3 (contextual) | `{{ tier3_count }}` |
+| Tier 4 (catalog) | `{{ tier4_count }}` |
+| IPFS CID | `{{ ipfs_cid }}` |
+| Bitcoin timestamp | `{{ bitcoin_ts }}` |
+| Git commit | `{{ git_commit }}` |
+
+**Hypothesis movements this run:**
+*(Which H-codes moved and in which direction — filled at run close)*
+{% endsection %}
+
+{% section "Phase 1 — Ingest" %}
+<!-- data-engineer (Ingestor subagent) -->
+<!-- Status: pending / running / complete / skipped / failed -->
+**Status:** `{{ phase_ingest }}`
+
+**What ran:**
+- Script: `scripts/ingest_*.py`
+- Output: `scripts/audit_results/{pipeline_run}_*.json`
+
+**Files processed:**
+| Type | Count | Notes |
+|---|---|---|
+| CSV / XLSX | | |
+| JSON | | |
+| PDF | | |
+| MHTML | | |
+| Images / Video | | |
+
+**Hash manifest written:** *(link or `none`)*
+**COC entry:** *(link to forensic log entry)*
+
+**Gaps found at ingest:**
+-
+{% endsection %}
+
+{% section "Phase 2 — Clean & Transform" %}
+<!-- data-engineer (Cleaner + Transformer subagents) -->
+**Status:** `{{ phase_clean }}` / `{{ phase_transform }}`
+
+**Normalization decisions:**
+-
+
+**Entities extracted:**
+- IPs: `{{ ips_found }}`
+- Domains: `{{ domains_found }}`
+- Emails: `{{ emails_found }}`
+- Organizations:
+- People:
+
+**Key transform output files:**
+- `scripts/audit_results/{pipeline_run}_cleaned.json`
+- `scripts/audit_results/{pipeline_run}_entities.json`
+
+**Data quality issues:**
+-
+{% endsection %}
+
+{% section "Phase 3 — Curate" %}
+<!-- evidence-curator (Gap Analyst + Evidence Assessor subagents) -->
+**Status:** `{{ phase_curate }}`
+
+**Tier decisions:**
+
+| Tier | Count | Criterion met |
+|---|---|---|
+| T1 — Smoking gun | `{{ tier1_count }}` | Direct, specific, hard-to-fabricate evidence |
+| T2 — Strong | `{{ tier2_count }}` | Corroborating with clear significance |
+| T3 — Contextual | `{{ tier3_count }}` | Background / pattern support |
+| T4 — Catalog | `{{ tier4_count }}` | Raw record, not analyzed |
+
+**Gap analysis — what's missing:**
+- [ ]
+- [ ]
+
+**Evidence promoted to vault:** *(files written to Agent-Outbox)*
+-
+{% endsection %}
+
+{% section "Phase 4 — Analyze" %}
+<!-- data-scientist (Stat Analyst subagent) -->
+**Status:** `{{ phase_analyze }}`
+
+**Statistical findings:**
+| Finding | Test | p-value | Effect | H-code |
+|---|---|---|---|---|
+| | | | | |
+
+**Pre-registered hypotheses tested:**
+-
+
+**Hypothesis confidence updates:**
+| Hypothesis | Before | After | Delta | Why |
+|---|---|---|---|---|
+| H1 — *(your hypothesis)* | | | | |
+| H2 — *(your hypothesis)* | | | | |
+| H3 — *(your hypothesis)* | | | | |
+| H4 — *(your hypothesis)* | | | | |
+| H5 — *(your hypothesis)* | | | | |
+<!-- Add or remove rows to match your investigation's hypotheses. -->
+
+**What didn't pan out:**
+-
+{% endsection %}
+
+{% section "Phase 5 — Publish" %}
+<!-- ipfs-publisher subagent -->
+**Status:** `{{ phase_publish }}`
+
+**IPFS:**
+- CID: `{{ ipfs_cid }}`
+- Gateway: *(link)*
+- Pinned: *(date)*
+
+**Bitcoin timestamp:**
+- OTS file: `scripts/audit_results/{pipeline_run}.ots`
+- TX: `{{ bitcoin_ts }}`
+- Block: *(filled after confirmation)*
+
+**Guardian registry update:** *(yes / no / pending)*
+{% endsection %}
+
+{% section "Open Questions" %}
+<!-- Unresolved after this run. Each becomes a candidate sprint task. -->
+- [ ]
+- [ ]
+{% endsection %}
+
+{% section "Gaps for Next Run" %}
+<!-- What should the next /data-ingest run target? -->
+<!-- These auto-queue as sprint tasks if promotion_state is set to promoted -->
+
+| Gap | Priority | Suggested agent | Why |
+|---|---|---|---|
+| | HIGH | | |
+| | MED | | |
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Write here. Signs the content to prove you reviewed. Ctrl+Alt+C in Obsidian. -->
+
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+{% endsection %}

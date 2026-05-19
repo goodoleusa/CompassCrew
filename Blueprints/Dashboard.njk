@@ -1,0 +1,68 @@
+---
+type: dashboard
+status: live
+phase: live
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+date: {{ moment().format('YYYY-MM-DD') }}
+generated: {{ moment().format('YYYY-MM-DD') }}
+tags: [dashboard]
+title: "{{ file.basename }}"
+investigation_label: "{{ file.basename | lower | replace(' ', '-') }}"
+priority: MED
+agent_id: fullstack-developer
+agent_type: fullstack-developer
+session_id:
+parent: "00-SHARED/Dashboards"
+sibling:
+  -
+child:
+  -
+refresh_cadence: per-session
+dataview_queries: true
+cssclasses: [wide-page, dashboard-home]
+quality_score: 0.50
+belief_index: 0.50
+doc_hash: sha256:pending
+hash_ts:
+hash_method: body-sha256-v1
+blueprint: "[[Dashboard.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Status" %}
+<!-- Current state snapshot. One table or 3-5 bullets. Updated each session by owning agent. -->
+{% endsection %}
+
+{% section "Queue / Active" %}
+<!-- What is in flight or pending. Dataview (dynamic) or static table. -->
+
+```dataviewjs
+dv.table(
+  ["Task", "Priority", "Status", "Age"],
+  dv.pages('"00-SHARED/Queue"')
+    .where(p => p.status !== "completed" && p.status !== "archived")
+    .sort(p => p.priority, "desc")
+    .map(p => [p.file.link, p.priority, p.status,
+               Math.floor((Date.now() - p.file.ctime) / 86400000) + "d"])
+)
+```
+{% endsection %}
+
+{% section "Recent Sessions" %}
+```dataviewjs
+const sessions = dv.pages('"00-SHARED/Dashboards/session-briefs"')
+  .where(p => p.type === "session-manifest")
+  .sort(p => p.date, "desc")
+  .limit(10);
+dv.table(
+  ["Session", "Date", "Agents", "Findings"],
+  sessions.map(s => [s.file.link, s.date, s.agents_spawned, s.findings_produced])
+)
+```
+{% endsection %}
+
+{% section "Notes" %}
+<!-- Free-form notes. Humans may edit directly. -->
+{% endsection %}

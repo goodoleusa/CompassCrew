@@ -1,0 +1,97 @@
+---
+type: threat-actor
+status: stub
+created: {{ file.ctime | moment("YYYY-MM-DD hh:mm a") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD hh:mm a") }}
+tags: [osint, entity, threat-actor]
+aliases: []
+entity_name: "{{ file.basename }}"
+entity_type: threat-actor
+actor_type:
+motivation:
+sophistication:
+country_of_origin:
+known_ttps: []
+known_targets: []
+associated_malware: []
+associated_infrastructure: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+confidence_level: unassessed
+source_quality: unverified
+mitre_groups: []
+first_seen:
+last_active:
+priority: high
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- Who is this actor? Nation-state, criminal, hacktivist? Known operations? -->
+{% endsection %}
+
+{% section "Attribution" %}
+| Field | Value |
+|-------|-------|
+| **Actor Type** | |
+| **Country of Origin** | |
+| **Motivation** | |
+| **Sophistication** | |
+| **Confidence in Attribution** | |
+| **MITRE ATT&CK Group** | |
+{% endsection %}
+
+{% section "Known TTPs" %}
+<!-- Tactics, Techniques, and Procedures — use MITRE ATT&CK IDs where possible -->
+
+| Tactic | Technique | ATT&CK ID | Evidence |
+|--------|-----------|-----------|----------|
+| | | | |
+
+{% endsection %}
+
+{% section "Infrastructure" %}
+<!-- Known C2 servers, domains, IPs, hosting providers -->
+
+| Indicator | Type | First Seen | Last Seen | Status |
+|-----------|------|------------|-----------|--------|
+| | | | | |
+
+{% endsection %}
+
+{% section "Known Targets" %}
+<!-- Sectors, organizations, geographies targeted -->
+{% endsection %}
+
+{% section "Associated Malware" %}
+<!-- Malware families, tools, exploits -->
+{% endsection %}
+
+{% section "Timeline of Operations" %}
+| Date | Operation/Campaign | Targets | Impact |
+|------|-------------------|---------|--------|
+| | | | |
+{% endsection %}
+
+{% section "OSINT Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Connections" %}
+```dataview
+LIST file.link
+FROM "20-Entities"
+WHERE contains(sibling, this.file.link)
+SORT file.mtime DESC
+```
+{% endsection %}
+
+{% section "Notes" %}
+{% endsection %}

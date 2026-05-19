@@ -1,0 +1,74 @@
+---
+type: crystallization-candidate
+status: evaluating
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [crystallization, honey, memory]
+title: "{{ file.basename }}"
+source: nectar
+target_destination:
+sessions_seen: 0
+agent_types_cited_by: []
+eval_impact: null
+ready: false
+parent: []
+blueprint: "[[Crystallization-Candidate]]"
+---
+
+# {{ file.basename }}
+
+{% section "The Candidate" %}
+<!-- The insight, preference, or method being considered for crystallization. -->
+
+**One-line statement:**
+
+**Source (where did this emerge):**
+**First seen:**
+**Most recent:**
+{% endsection %}
+
+{% section "Gauntlet" %}
+<!-- Every criterion must pass before promoting to HONEY. -->
+
+**Recurrence** — appeared in 3+ distinct sessions:
+- [ ] Session 1: (date)
+- [ ] Session 2: (date)
+- [ ] Session 3: (date)
+
+**Cross-agent reach** — cited by ≥2 distinct agent types:
+- [ ] Agent type 1:
+- [ ] Agent type 2:
+
+**Human review** — confirmed by human:
+- [ ] Confirmed on: (date)
+- [ ] Notes:
+
+**Eval impact** — sessions where this was active scored higher:
+- [ ] Eval delta observed: (before/after)
+
+**Universality** — true for ALL future sessions, not just this investigation:
+- [ ] Investigation-specific content removed: yes / n/a
+- [ ] Would apply to a different investigation: yes / no
+{% endsection %}
+
+{% section "Crystallized Form" %}
+<!-- Write the final HONEY-ready statement. Dense, rich, no fluff. Every word earns its place. -->
+
+**Draft:**
+
+**Token count (target <50 tokens per entry):**
+{% endsection %}
+
+{% section "What Gets Archived When This Promotes" %}
+<!-- What NECTAR entries, scratch blocks, or design docs does this replace? List them. -->
+<!-- Crystallization integrates — it doesn't just add. Something must be retired. -->
+{% endsection %}
+
+{% section "Target Destination" %}
+- [ ] HONEY.md (universal prefs/methods)
+- [ ] AGENTS.md (cross-agent techniques)
+- [ ] Agent card: (which type)
+- [ ] rules/ file: (which file)
+
+**Budget check before writing:** (chars ÷ 4 = tokens, must be under budget)
+{% endsection %}

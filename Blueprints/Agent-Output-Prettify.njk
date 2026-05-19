@@ -1,0 +1,43 @@
+---
+type: agent-output-prettified
+source_path: {{ frontmatter.source_path | default(file.path) }}
+prettified: {{ now }}
+agent_type: {{ frontmatter.agent_type | default("?") }}
+---
+
+> [!brood] Raw agent output — prettified
+> **Source:** [[{{ frontmatter.source_path | default(file.path) }}]] · **Agent:** {{ frontmatter.agent_type | default("?") }} · **At:** {{ now }}
+
+## TL;DR
+
+> [!honey] Dashboard line
+> `{{ frontmatter.dashboard_line | default("—") }}`
+
+## What happened
+
+{{ frontmatter.summary | default("_One paragraph of human-readable summary. Strip the JSON noise, keep the meaning._") }}
+
+## Findings
+
+{% for f in frontmatter.findings | default([]) %}### {{ loop.index }}. {{ f.title }}
+
+> [!droplet] Finding
+> {{ f.body }}
+
+{% endfor %}
+
+## Evidence cited
+
+{% for e in frontmatter.evidence | default([]) %}- [[{{ e }}]]
+{% endfor %}
+
+## Bearing
+
+> [!anchor] {{ frontmatter.bearing | default("S") }} — {{ frontmatter.next_mission_node | default("(set next node)") }}
+
+## Raw output (collapsed)
+
+> [!example]- Raw JSON / log
+> ```json
+> {{ frontmatter.raw | default("// raw output goes here") }}
+> ```

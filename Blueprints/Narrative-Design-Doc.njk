@@ -1,0 +1,43 @@
+---
+type: narrative-design
+created: {{ now }}
+title: {{ frontmatter.title | default(file.basename) }}
+---
+
+# {{ frontmatter.title | default(file.basename) }}
+
+> [!charter] Design Charter
+> {{ frontmatter.intent | default("The intent of this design — what we are trying to make real, and why.") }}
+
+## The picture
+
+```mermaid
+{{ frontmatter.diagram | default("flowchart TB
+  A[Problem] --> B{Decision}
+  B -->|yes| C[Path A]
+  B -->|no| D[Path B]
+  C --> E([Outcome])
+  D --> E") }}
+```
+
+## The story
+
+{{ frontmatter.story | default("_Tell the design as a narrative. Start with the human moment that motivated it. End with the changed reality once it ships. Use vivid, specific language. Cite the user. Cite the metric. Cite the constraint._") }}
+
+## Anchors
+
+> [!anchor] Constraint 1
+> {{ frontmatter.constraints[0] | default("—") }}
+
+> [!anchor] Constraint 2
+> {{ frontmatter.constraints[1] | default("—") }}
+
+## Honey we hope to crystallize
+
+{% for h in frontmatter.honey | default([]) %}- {{ h }}
+{% endfor %}
+
+## Waggle dance — how to act on this
+
+> [!waggle] Direction
+> {{ frontmatter.direction | default("Vector + distance to the resource. Be specific.") }}

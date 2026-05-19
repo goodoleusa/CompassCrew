@@ -1,0 +1,55 @@
+---
+type: dead-drop
+status: pending
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD HH:mm") }}
+tags: [drop, async, comms]
+drop_type: DISCOVERY
+from: human
+to: all
+read: false
+read_at:
+priority: MED
+memory_lane: drops
+promotion_state: capture
+vault_path: "00-Inbox/drops/{{ file.basename }}.md"
+faerie_session:
+blueprint: "[[Dead-Drop.blueprint]]"
+chain_id:
+agent_hash:
+agent_signed:
+---
+
+# DROP [{{ drop_type }}] — {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+
+{% section "Message" %}
+<!-- Write your message. Agents read this verbatim on their next turn. -->
+<!--
+  DISCOVERY  — what was found, where, why it matters
+  ALERT      — what NOT to do, and why
+  HANDOFF    — what was completed; which output file to look at
+  REQUEST    — exactly what you need checked or done
+  QUESTION   — open question for another researcher or agent
+-->
+{% endsection %}
+
+{% section "Related Files" %}
+-
+{% endsection %}
+
+{% section "Routing" %}
+- [ ] Any available agent
+- [ ] evidence-curator
+- [ ] data-engineer
+- [ ] research-analyst
+- [ ] data-scientist
+- [ ] specific session:
+{% endsection %}
+
+{% section "Response" %}
+<!-- Agent or collaborator writes here after reading. Append only. -->
+{% endsection %}
+
+---
+*Save to `00-Inbox/drops/` — presend hook delivers to agents on their next turn.*
+*Agents: `python3 ~/.claude/hooks/state/drops.py read` to consume.*

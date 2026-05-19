@@ -1,0 +1,45 @@
+---
+type: pollen-lead
+status: unverified
+confidence: {{ frontmatter.confidence | default(0.2) }}
+source: {{ frontmatter.source | default("spiderfoot") }}
+target_hint: {{ frontmatter.target_hint | default("?") }}
+created: {{ now }}
+bearing: "?"
+mission: {{ frontmatter.mission | default("osint-leads") }}
+---
+
+> [!waggle] Pollen lead — _potential, not truth_
+> **Source:** {{ frontmatter.source }} · **Confidence:** {{ frontmatter.confidence | default(0.2) }} · **Status:** unverified
+
+## The lead
+
+{{ frontmatter.summary | default("_What this lead suggests, without claiming it. Use hedged language: \"appears to,\" \"may be,\" \"co-occurs with.\" Avoid \"is.\"_") }}
+
+## Why this might NOT be the same entity
+
+> [!brood] Disambiguation hazards
+> {{ frontmatter.hazards | default("- Common name / common attribute\n- Geographic mismatch\n- Time-period mismatch") }}
+
+## Evidence (raw, structured)
+
+| Field | Value | Source row |
+|---|---|---|
+{% for e in frontmatter.evidence | default([]) %}| {{ e.field }} | `{{ e.value }}` | {{ e.row_ref }} |
+{% endfor %}
+
+## To promote to a verified entity
+
+- [ ] Cross-reference with at least one independent source
+- [ ] Verify time period alignment
+- [ ] Confirm unique identifier (not just name)
+- [ ] Human review sign-off
+
+When verified → run `Faerie: promote anchor` to graduate this pollen into a [[Person]] / [[Organization]] / [[Domain]] / [[IP-Address]] entity in the mission graph.
+
+## Compass
+
+Pollen leads carry `bearing: "?"` by design. They join the mission graph as **dotted edges** until promoted. They cluster under the parent mission via `mission` field.
+
+> [!anchor] Parent mission
+> {{ frontmatter.mission | default("osint-leads") }}

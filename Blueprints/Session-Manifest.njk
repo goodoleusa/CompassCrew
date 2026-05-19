@@ -1,0 +1,86 @@
+---
+type: session-manifest
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+date: {{ moment().format('YYYY-MM-DD') }}
+session_id:
+plan:
+tags: [manifest, session, auto-sync]
+parent:
+  -
+sibling:
+  -
+child:
+  -
+memory_lane: session
+promotion_state: capture
+faerie_session: {{ file.basename }}
+blueprint: "[[Session-Manifest.blueprint]]"
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author: session_manifest.py
+agent_signed:
+ann_hash:
+ann_ts:
+---
+
+# Session Manifest — {{ file.basename }}
+
+*Cross-repo record of all artifacts created/modified this session.*
+*Source: `~/.claude/hooks/state/session-manifests/` — written at session end.*
+
+---
+
+{% section "Artifacts by Repo" %}
+<!-- Auto-filled by session_manifest.py. Shows commits and uncommitted changes per repo. -->
+
+```dataview
+TABLE WITHOUT ID
+  file.link AS "Session",
+  date AS "Date",
+  plan AS "Plan"
+FROM "00-SHARED/Dashboards/session-manifests"
+WHERE type = "session-manifest" AND date = this.date
+SORT ts DESC
+LIMIT 5
+```
+{% endsection %}
+
+{% section "Decisions Crystallized" %}
+<!-- HONEY entries added this session — the permanent knowledge that emerged. -->
+{% endsection %}
+
+{% section "Memory Files Touched" %}
+<!-- Which memory, hooks/state, and forensic files were modified. -->
+{% endsection %}
+
+{% section "Pipeline Phase" %}
+<!-- Which investigation, sprint, and pipeline phase this session advanced. -->
+
+| Scope | Value |
+|---|---|
+| Investigation | |
+| Sprint | |
+| Pipeline Phase | |
+| Gate Status | [[Pipeline-Gates]] |
+| Sessions Remaining (est.) | |
+{% endsection %}
+
+{% section "Open Threads" %}
+<!-- What's unfinished, what should the next session pick up. -->
+- [ ]
+{% endsection %}
+
+{% section "Your Notes" %}
+<!-- Researcher notes on this session. What stood out. What to follow up on. -->
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+{% endsection %}

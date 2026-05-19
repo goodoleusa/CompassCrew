@@ -1,0 +1,75 @@
+---
+type: finding-review
+status: draft
+cat: {{ cat }}
+priority: {{ priority }}
+agent: {{ agent }}
+ts: {{ ts }}
+review_status: reviewed
+reviewed_by: human
+reviewed_at: {{ date | moment("YYYY-MM-DD") }}
+decision: ""
+review_verdict: ""
+promote_to_tier: ""
+ann_hash: ""
+ann_ts: ""
+ann_synced: ""
+tags: [review, finding, human-inbox]
+blueprint: "[[Blueprints/Finding-Review.blueprint]]"
+---
+
+# {{ title }}
+
+> *Agent finding — human review checkpoint.*
+> *Original agent: `{{ agent }}` · Recorded: `{{ ts }}`*
+
+---
+
+{% section "Agent Finding" %}
+<!-- Agent's finding — read-only, do not edit -->
+
+{{ body }}
+
+{% endsection %}
+
+{% section "Your Assessment" %}
+
+**Does this finding hold up?**
+- [ ] YES — finding is accurate as stated
+- [ ] PARTIALLY — accurate with caveats (note below)
+- [ ] NO — factual error (correct below)
+- [ ] NEEDS MORE EVIDENCE — gaps to fill (note below)
+
+**Your notes:**
+
+
+{% endsection %}
+
+{% section "Corrections" %}
+<!-- Factual corrections only — not conclusions, not interpretations -->
+<!-- These flow back to repo via vault_annotation_sync.py -->
+
+| What agent got wrong | Correct fact | Source |
+|---------------------|--------------|--------|
+| | | |
+
+{% endsection %}
+
+{% section "Promotion Decision" %}
+
+**Promote to Tier 1 (smoking gun)?**
+- [ ] YES → `promote_to_tier: 1`
+- [ ] NO — keep as supporting evidence
+- [ ] RED-TEAM first — needs adversarial check
+
+**Hypothesis link:** <!-- H1 / H2 / H3 / H4 / H5 -->
+
+**Confidence:** <!-- 0.0–1.0 -->
+
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Private — agents never read this section -->
+<!-- Commit with Ctrl+Alt+C → ann_hash fills in frontmatter -->
+
+{% endsection %}

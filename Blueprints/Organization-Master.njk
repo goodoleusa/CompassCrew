@@ -1,0 +1,164 @@
+---
+type: entity
+entity_type: organization
+org_subtype:
+status: stub
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, entity, organization]
+entity_name: "{{ file.basename }}"
+aliases: []
+org_type:
+jurisdiction:
+registration_number:
+date_incorporated:
+date_dissolved:
+parent_org:
+subsidiaries: []
+key_personnel: []
+financial_summary: {}
+risk_indicators: []
+group_type:
+founded:
+founder:
+current_leader:
+estimated_membership:
+headquarters:
+jurisdictions_active: []
+front_organizations: []
+financial_entities: []
+recruitment_methods: []
+control_mechanisms: []
+legal_actions: []
+bite_model_score: {}
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+confidence_level: unassessed
+source_quality: unverified
+priority: medium
+blueprint: "[[Organization-Master.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What is this organization? Company, NGO, agency, cult, HCG? Why is it relevant? -->
+{% endsection %}
+
+{% section "Identity & Registration" %}
+| Field | Value |
+|-------|-------|
+| **Legal Name** | {{ file.basename }} |
+| **Type** | Company / NGO / Agency / High-Control Group / Other |
+| **Subtype** | (e.g. cult, MLM, religious sect — for HCGs) |
+| **Jurisdiction** | |
+| **Registration #** | |
+| **Incorporated** | |
+| **Founded** | (for groups) |
+| **Founder** | |
+| **Current Leader** | |
+| **Est. Membership** | (for groups) |
+| **Headquarters** | |
+| **Active In** | |
+| **Status** | Active / Dissolved / Suspended |
+| **Registered Agent** | |
+| **Registered Address** | |
+{% endsection %}
+
+{% section "Key Personnel" %}
+| Name | Role | Period | Source |
+|------|------|--------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Corporate Structure" %}
+<!-- Parent → Subsidiary, beneficial ownership chain -->
+| Entity | Relationship | Ownership % | Source |
+|--------|-------------|-------------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Financial Profile" %}
+| Metric | Value | Period | Source |
+|--------|-------|--------|--------|
+| Revenue | | | |
+| Government contracts | | | |
+| Notable transactions | | | |
+{% endsection %}
+
+{% section "Financial Network (groups)" %}
+<!-- For HCGs: tithes, businesses, real estate, tax exemptions -->
+| Flow | Amount/Frequency | Method | Source |
+|------|-----------------|--------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Risk Indicators" %}
+<!-- Shell company markers, sanctions, adverse media, PEP -->
+- [ ] No physical office at registered address
+- [ ] Nominee directors/shareholders
+- [ ] Circular ownership structure
+- [ ] Sanctions list appearance
+- [ ] Adverse media coverage
+- [ ] Rapid directorship changes
+{% endsection %}
+
+{% section "BITE Model (high-control groups)" %}
+<!-- Steven Hassan: Behavior, Information, Thought, Emotional Control -->
+### Behavior Control
+- [ ] Regulate diet, sleep, grooming
+- [ ] Financial exploitation (tithes, fees, donations)
+- [ ] Restrict leisure; require permission; punish dissent
+
+### Information Control
+- [ ] Deception / withholding; restrict outside media; compartmentalize; propaganda
+
+### Thought Control
+- [ ] Loaded language; us-vs-them; reject rational analysis; memory manipulation
+
+### Emotional Control
+- [ ] Fear of leaving; shunning; guilt/shame; love bombing; phobia indoctrination
+{% endsection %}
+
+{% section "Front Organizations" %}
+<!-- Legal entities, charities, businesses connected (for HCGs) -->
+| Entity | Type | Jurisdiction | Role | Evidence |
+|--------|------|-------------|------|----------|
+| | | | | |
+{% endsection %}
+
+{% section "Recruitment & Retention" %}
+<!-- How do they get and keep members? (for groups) -->
+{% endsection %}
+
+{% section "Legal Actions & Controversies" %}
+| Date | Type | Jurisdiction | Outcome | Source |
+|------|------|-------------|---------|--------|
+| | | | | |
+{% endsection %}
+
+{% section "Survivor Accounts" %}
+<!-- Anonymous/public testimonies (for HCGs) -->
+{% endsection %}
+
+{% section "OSINT Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Connections" %}
+```dataview
+LIST
+FROM "20-Entities"
+WHERE contains(sibling, this.file.link)
+SORT file.mtime DESC
+```
+{% endsection %}
+
+{% section "Notes" %}
+{% endsection %}

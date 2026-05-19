@@ -1,0 +1,135 @@
+---
+type: investigation
+entity_type: shadow-operation
+status: stub
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, investigation, shadow-op]
+operation_name: "{{ file.basename }}"
+agency:
+official_policy:
+actual_policy:
+contradiction_type:
+time_period_start:
+time_period_end:
+key_personnel: []
+oversight_bodies: []
+whistleblowers: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+confidence_level: unassessed
+source_quality: unverified
+priority: high
+classification_level:
+blueprint: "[[Shadow-Operation.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What is this operation? What agency? How does it contradict official policy? -->
+{% endsection %}
+
+{% section "Policy Contradiction" %}
+| Dimension | Official Position | Actual Activity | Evidence |
+|-----------|------------------|-----------------|----------|
+| **Stated Goal** | | | |
+| **Legal Authority** | | | |
+| **Oversight** | | | |
+| **Funding** | | | |
+| **Personnel** | | | |
+{% endsection %}
+
+{% section "Key Personnel" %}
+| Name | Role | Agency | Period | Clearance | Evidence |
+|------|------|--------|--------|-----------|----------|
+| | | | | | |
+{% endsection %}
+
+{% section "Authorization Chain" %}
+<!-- Who authorized this? Was it legal? Which laws/EOs apply? -->
+| Level | Authority | Document | Date |
+|-------|-----------|----------|------|
+| | | | |
+{% endsection %}
+
+{% section "Funding Sources" %}
+<!-- Black budget, diverted funds, unacknowledged appropriations -->
+| Source | Amount | Period | Authorization |
+|--------|--------|--------|--------------|
+| | | | |
+{% endsection %}
+
+{% section "Oversight Gaps" %}
+<!-- Which oversight bodies were bypassed, deceived, or uninformed? -->
+| Body | Was Informed? | How Bypassed | Evidence |
+|------|--------------|--------------|----------|
+| Congressional committee | | | |
+| IG / Inspector General | | | |
+| FISA Court | | | |
+| GAO | | | |
+{% endsection %}
+
+{% section "Whistleblower Reports" %}
+| Source | Date | Claims | Corroborated? | Status |
+|--------|------|--------|--------------|--------|
+| | | | | |
+{% endsection %}
+
+{% section "Timeline" %}
+| Date | Event | Significance | Source |
+|------|-------|--------------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Legal Analysis" %}
+<!-- Which laws were potentially violated? -->
+{% endsection %}
+
+{% section "OSINT Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Related Investigations" %}
+```dataview
+LIST file.link
+FROM "10-Investigations"
+WHERE contains(child, this.file.link)
+SORT file.mtime DESC
+```
+{% endsection %}
+
+{% section "Agent questions (for reviewer)" %}
+<!-- Open questions agents need human input on. -->
+- 
+{% endsection %}
+
+{% section "Interesting discoveries / scratchpad" %}
+<!-- Mini-findings, connections spotted. -->
+- 
+{% endsection %}
+
+{% section "New questions raised" %}
+| Question | Source / context | Priority |
+|----------|------------------|----------|
+| | | |
+{% endsection %}
+
+{% section "Data needed to answer" %}
+| Question / gap | Data or source needed | Where to get it |
+|----------------|------------------------|------------------|
+| | | |
+{% endsection %}
+
+{% section "Connections to other work" %}
+- 
+{% endsection %}
+
+{% section "Notes" %}
+{% endsection %}

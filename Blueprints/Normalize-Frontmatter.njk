@@ -1,0 +1,35 @@
+---
+type:
+status: needs-review
+created: {{ file.ctime | moment("YYYY-MM-DD hh:mm a") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD hh:mm a") }}
+tags: [imported, needs-review]
+needs_processing: true
+normalized_date: {{ moment().format('YYYY-MM-DD') }}
+original_file: "{{ file.basename }}"
+confidence_level: unassessed
+source_quality: unverified
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+---
+
+# {{ file.basename }}
+
+{% section "Content" %}
+<!-- Paste or keep your existing note content here. Blueprint preserves this section. -->
+{% endsection %}
+
+{% section "Processing Checklist" %}
+- [ ] Frontmatter normalized
+- [ ] Tags standardized (use osint/* hierarchy)
+- [ ] Entity type assigned
+- [ ] Confidence level assessed
+- [ ] Parent/sibling/child linked (Breadcrumbs hierarchy)
+- [ ] Source quality rated
+- [ ] Correct blueprint assigned (Entity-Stub, Investigation-Case, etc.)
+- [ ] Moved to correct folder
+{% endsection %}

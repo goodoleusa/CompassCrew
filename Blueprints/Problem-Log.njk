@@ -1,0 +1,52 @@
+---
+type: problem-log
+status: open
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [problem, log, system]
+title: "{{ file.basename }}"
+severity: medium
+system_area:
+first_observed:
+recurrence_count: 1
+triggered_feature: false
+parent: []
+blueprint: "[[Problem-Log]]"
+---
+
+# {{ file.basename }}
+
+{% section "The Failure" %}
+<!-- Specific, named. "Recovery required a 5-step human relay" not "recovery was hard." -->
+
+**What broke or felt wrong:**
+
+**When it happens:**
+
+**How often:**
+{% endsection %}
+
+{% section "Root Cause Hypothesis" %}
+<!-- Why does this happen? Not the symptom — the structure underneath. -->
+
+**Surface symptom:**
+
+**Structural cause:**
+
+**What would have to be true for this NOT to happen:**
+{% endsection %}
+
+{% section "Impact" %}
+<!-- What does this cost? Token budget? Agent flow? Human time? COC integrity? -->
+{% endsection %}
+
+{% section "What Gold Might Come From This" %}
+<!-- Failure-to-gold pre-flight. If solving this, what unexpected benefits might emerge? -->
+{% endsection %}
+
+{% section "Proposed Next Step" %}
+<!-- One action. Not a full solution. What would you learn first? -->
+
+**Action:**
+**Spawns feature proposal:** [ ] yes [ ] no
+{% endsection %}

@@ -1,0 +1,76 @@
+---
+type: task
+status: queued
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+priority: MED
+task_type: session_sprint
+project: cybertemplate
+claimed_by:
+claimed_at:
+completed_at:
+tags: [task, queue, async]
+---
+
+# Task — {{ file.basename }}
+
+{% section "Goal" %}
+<!-- One sentence: what needs to be done -->
+
+{% endsection %}
+
+{% section "Context Bundle" %}
+<!-- This is what agents receive verbatim when they claim this task. -->
+<!-- Fill in as much as you know — faerie will enrich it further. -->
+
+**Last relevant session:**
+<!-- What happened most recently that's relevant to this task? -->
+
+**Key facts:**
+<!--
+- fact 1
+- fact 2
+- fact 3
+-->
+
+**Open flags (from REVIEW-INBOX):**
+<!-- Any outstanding alerts or unresolved items that affect this task -->
+
+**Prior run:**
+<!-- score, turns, agents, outcome — or "no prior run" -->
+
+**Constraints:**
+<!-- Stack, scope, what NOT to do, deadline -->
+
+{% endsection %}
+
+{% section "Done Looks Like" %}
+<!-- What specific output proves this task is complete? -->
+- [ ] Output file: ___
+- [ ] Committed to git: yes/no
+- [ ] Published / synced: yes/no
+- [ ] Follow-up tasks added to queue: yes/no
+{% endsection %}
+
+{% section "Team Suggestion" %}
+<!-- Which agent type should lead this? -->
+- Lead: ___
+- Support: memory-keeper (always)
+- Eval: performance-eval (always)
+{% endsection %}
+
+{% section "Spawn Instructions" %}
+<!-- For /new: how should this task be spawned? -->
+
+```
+Spawn [agent-type] with:
+- Goal: [one line]
+- Input: [files/paths to read]
+- Output: [where to write results]
+- Context: [paste Context Bundle above]
+```
+{% endsection %}
+
+---
+
+*Save to `00-Inbox/tasks/` — agents claim via queue_ops.py on next /new.*
+*Or add to sprint queue: `python3 ~/.claude/hooks/state/queue_ops.py add --goal "..." --priority MED --context-file [this file]`*

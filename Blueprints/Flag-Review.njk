@@ -1,0 +1,64 @@
+---
+type: flag-review
+status: draft
+cat: {{ cat }}
+priority: {{ priority }}
+agent: {{ agent }}
+ts: {{ ts }}
+review_status: reviewed
+reviewed_by: human
+reviewed_at: {{ date | moment("YYYY-MM-DD") }}
+decision: ""
+review_verdict: ""
+action_taken: ""
+ann_hash: ""
+ann_ts: ""
+ann_synced: ""
+tags: [review, flag, human-inbox]
+blueprint: "[[Blueprints/Flag-Review.blueprint]]"
+---
+
+# {{ title }}
+
+> *Agent flag — human triage checkpoint.*
+> *Original agent: `{{ agent }}` · Recorded: `{{ ts }}`*
+
+---
+
+{% section "Agent Flag" %}
+<!-- Agent's flag — read-only, do not edit -->
+
+{{ body }}
+
+{% endsection %}
+
+{% section "Triage Decision" %}
+
+**Action:**
+- [ ] QUEUE IT — add to sprint queue for agent follow-up
+- [ ] DISMISS — not worth pursuing, note why
+- [ ] ESCALATE — urgent, jump queue
+- [ ] CORRECT — agent had wrong facts (fill corrections below)
+- [ ] HOLD — wait for other findings to resolve this
+
+**Queue task if applicable:**
+- Agent type: <!-- research-analyst / data-engineer / security-auditor / etc -->
+- Priority: <!-- HIGH / MED / LOW -->
+- Goal: <!-- one-line task goal -->
+
+{% endsection %}
+
+{% section "Corrections" %}
+<!-- Only if agent has wrong facts -->
+
+| Field | Agent stated | Correct value | Source |
+|-------|-------------|---------------|--------|
+| | | | |
+
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Private — agents never read this section -->
+<!-- Commit with Ctrl+Alt+C → ann_hash fills in frontmatter -->
+
+{% endsection %}

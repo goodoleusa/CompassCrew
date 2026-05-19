@@ -1,0 +1,200 @@
+---
+type: system-design
+status: draft
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [system-design, architecture, {{ project_name }}]
+parent:
+  - "[[{{ parent_doc }}]]"
+sibling: []
+child: []
+memory_lane: inbox
+promotion_state: capture
+blueprint: "[[System-Design.blueprint]]"
+chain_id: ""
+agent_hash: ""
+ann_hash: ""
+ann_ts: ""
+---
+
+# {{ title }}
+
+> *System Design Document — {{ moment().format('YYYY-MM-DD') }}*
+> *Status: Draft | Author: Researcher*
+
+---
+
+## Table of Contents
+
+> [!tip] Auto-TOC
+> Click headers below or use Obsidian Outline (right panel) for nav.
+> **Generate diagram**: Click the QuickAdd button or run `/design-diagram` macro.
+
+- [[#1 Problem Statement]]
+- [[#2 Goals and Non-Goals]]
+  - [[#2.1 Goals]]
+  - [[#2.2 Non-Goals]]
+- [[#3 Architecture Overview]]
+- [[#4 Components]]
+  - [[#4.1 Component A]]
+  - [[#4.2 Component B]]
+  - [[#4.3 Component C]]
+- [[#5 Data Flow]]
+- [[#6 Integration Points]]
+- [[#7 Security and COC]]
+- [[#8 Open Questions]]
+- [[#9 Decision Log]]
+- [[#10 Diagram]]
+
+---
+
+## 1 Problem Statement
+
+*What problem does this system solve? Why now?*
+
+
+
+---
+
+## 2 Goals and Non-Goals
+
+### 2.1 Goals
+
+- [ ]
+- [ ]
+- [ ]
+
+### 2.2 Non-Goals
+
+-
+-
+
+---
+
+## 3 Architecture Overview
+
+*High-level description of the system. What are the main moving parts?*
+
+
+
+---
+
+## 4 Components
+
+### 4.1 Component A
+
+**Purpose:**
+**Inputs:**
+**Outputs:**
+**Dependencies:**
+
+### 4.2 Component B
+
+**Purpose:**
+**Inputs:**
+**Outputs:**
+**Dependencies:**
+
+### 4.3 Component C
+
+**Purpose:**
+**Inputs:**
+**Outputs:**
+**Dependencies:**
+
+---
+
+## 5 Data Flow
+
+*How does data move through the system? What transforms happen at each stage?*
+
+
+
+---
+
+## 6 Integration Points
+
+| System | Protocol | Direction | Notes |
+|--------|----------|-----------|-------|
+| | | | |
+
+---
+
+## 7 Security and COC
+
+*How does this system maintain chain-of-custody? What are the trust boundaries?*
+
+- **COC integration:**
+- **Trust boundaries:**
+- **Forensic requirements:**
+
+---
+
+## 8 Open Questions
+
+- [ ]
+- [ ]
+- [ ]
+
+---
+
+## 9 Decision Log
+
+| Date | Decision | Rationale | Alternatives Considered |
+|------|----------|-----------|------------------------|
+| {{ moment().format('YYYY-MM-DD') }} | | | |
+
+---
+
+## 10 Diagram
+
+> [!note] Generate Diagram
+> Run the QuickAdd macro **Design Diagram** (Ctrl+Shift+D) to auto-generate
+> a MermaidJS diagram from this document's headers and components.
+> Or paste your own diagram below.
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'primaryColor': '#93C572',
+  'primaryTextColor': '#1a1a2e',
+  'primaryBorderColor': '#D4A843',
+  'lineColor': '#4ECDC4',
+  'secondaryColor': '#4ECDC4',
+  'tertiaryColor': '#2d2d44',
+  'background': '#1a1a2e',
+  'mainBkg': '#93C572',
+  'secondBkg': '#4ECDC4',
+  'border1': '#D4A843',
+  'border2': '#D4A843',
+  'arrowheadColor': '#D4A843',
+  'fontFamily': 'Inter, system-ui',
+  'fontSize': '14px',
+  'textColor': '#1a1a2e',
+  'nodeTextColor': '#1a1a2e'
+}}}%%
+graph TD
+    classDef pistachio fill:#93C572,stroke:#D4A843,stroke-width:2px,color:#1a1a2e
+    classDef teal fill:#4ECDC4,stroke:#D4A843,stroke-width:2px,color:#1a1a2e
+    classDef gold fill:#D4A843,stroke:#1a1a2e,stroke-width:2px,color:#1a1a2e
+    classDef dark fill:#2d2d44,stroke:#D4A843,stroke-width:2px,color:#e8e8e8
+
+    A["{{ title }}"]:::gold
+    B["Component A"]:::pistachio
+    C["Component B"]:::teal
+    D["Component C"]:::pistachio
+    E["Output"]:::dark
+
+    A --> B
+    A --> C
+    B --> D
+    C --> D
+    D --> E
+```
+
+---
+
+{% section "Your Annotations" %}
+<!-- Private researcher notes — agents never read this section -->
+<!-- Commit with Ctrl+Alt+C -->
+
+{% endsection %}

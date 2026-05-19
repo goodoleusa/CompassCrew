@@ -1,0 +1,100 @@
+---
+type: entity
+entity_type: organization
+status: stub
+maturity: stub
+human-approved: true
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, entity, organization]
+entity_name: "{{ file.basename }}"
+aliases: []
+org_type:
+jurisdiction:
+registration_number:
+date_incorporated:
+date_dissolved:
+parent_org:
+subsidiaries: []
+key_personnel: []
+financial_summary: {}
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+confidence_level: unassessed
+source_quality: unverified
+priority: medium
+risk_indicators: []
+blueprint: "[[Organization.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What is this organization? Why is it relevant? Front company? NGO? Government agency? -->
+{% endsection %}
+
+{% section "Registration" %}
+| Field | Value |
+|-------|-------|
+| **Legal Name** | {{ file.basename }} |
+| **Type** | |
+| **Jurisdiction** | |
+| **Registration #** | |
+| **Incorporated** | |
+| **Status** | Active / Dissolved / Suspended |
+| **Registered Agent** | |
+| **Registered Address** | |
+{% endsection %}
+
+{% section "Key Personnel" %}
+| Name | Role | Period | Source |
+|------|------|--------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Corporate Structure" %}
+<!-- Parent → Subsidiary relationships, beneficial ownership chain -->
+| Entity | Relationship | Ownership % | Source |
+|--------|-------------|-------------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Financial Profile" %}
+| Metric | Value | Period | Source |
+|--------|-------|--------|--------|
+| Revenue | | | |
+| Government contracts | | | |
+| Notable transactions | | | |
+{% endsection %}
+
+{% section "Risk Indicators" %}
+<!-- Shell company markers, sanctions hits, adverse media, PEP connections -->
+- [ ] No physical office at registered address
+- [ ] Nominee directors/shareholders
+- [ ] Circular ownership structure
+- [ ] Sanctions list appearance
+- [ ] Adverse media coverage
+- [ ] Rapid directorship changes
+{% endsection %}
+
+{% section "OSINT Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Connections" %}
+```dataview
+LIST file.link
+FROM "20-Entities"
+WHERE contains(sibling, this.file.link)
+SORT file.mtime DESC
+```
+{% endsection %}
+
+{% section "Notes" %}
+{% endsection %}

@@ -1,0 +1,86 @@
+---
+type: osint-report
+source: spiderfoot
+target: {{ frontmatter.target | default("?") }}
+run_id: {{ frontmatter.run_id | default("?") }}
+scanned_at: {{ frontmatter.scanned_at | default(now) }}
+modules: {{ frontmatter.modules | default([]) | length }}
+events_total: {{ frontmatter.events_total | default(0) }}
+---
+
+# OSINT Report — {{ frontmatter.target | default("?") }}
+
+> [!charter] Scan summary
+> **Target:** `{{ frontmatter.target }}`  ·  **Run ID:** `{{ frontmatter.run_id }}`  ·  **Scanned:** {{ frontmatter.scanned_at }}
+> **Modules:** {{ frontmatter.modules | default([]) | length }}  ·  **Events:** {{ frontmatter.events_total | default(0) }}
+
+## TL;DR — what we found
+
+{{ frontmatter.narrative | default("_One paragraph: who/what is this target, what's the surface area, what stands out._") }}
+
+## Risk surface
+
+```mermaid
+mindmap
+  root(({{ frontmatter.target }}))
+    Subdomains
+      {{ frontmatter.counts.subdomain | default(0) }} found
+    IPs
+      {{ frontmatter.counts.ip | default(0) }} resolved
+    Emails
+      {{ frontmatter.counts.email | default(0) }} discovered
+    Tech
+      {{ frontmatter.counts.tech | default(0) }} fingerprints
+    Leaks
+      {{ frontmatter.counts.leak | default(0) }} hits
+```
+
+## Key findings
+
+{% for f in frontmatter.findings | default([]) %}### {{ loop.index }}. {{ f.title }}
+
+> [!droplet] Severity: {{ f.severity | default("info") }}
+> {{ f.summary }}
+
+- **Module:** `{{ f.module }}`
+- **Event type:** `{{ f.event_type }}`
+- **First seen:** {{ f.first_seen }}
+- **Evidence:** `{{ f.evidence }}`
+
+{% endfor %}
+
+## Subdomain graph
+
+```mermaid
+flowchart LR
+{% for s in frontmatter.subdomains | default([]) %}  ROOT[{{ frontmatter.target }}] --> S{{ loop.index }}[{{ s }}]
+{% endfor %}
+```
+
+## Cross-referenced entities
+
+| Entity | Type | Sources | Notes |
+|---|---|---|---|
+{% for e in frontmatter.entities | default([]) %}| `{{ e.value }}` | {{ e.type }} | {{ e.sources | join(", ") }} | {{ e.notes | default("") }} |
+{% endfor %}
+
+## Structured outputs (attached)
+
+> [!anchor] Sidecar folder
+> Machine-readable exports are co-located in `{{ frontmatter.sidecar_dir | default("./_spiderfoot-data/") }}`. CSV files are previewable in Obsidian via the Dataview plugin (csvjs) or by opening externally.
+
+- [📄 events.csv]({{ frontmatter.sidecar_dir | default("./_spiderfoot-data/") }}events.csv) — all raw events, one row per finding
+- [📄 entities.csv]({{ frontmatter.sidecar_dir | default("./_spiderfoot-data/") }}entities.csv) — deduplicated entities
+- [📄 subdomains.csv]({{ frontmatter.sidecar_dir | default("./_spiderfoot-data/") }}subdomains.csv)
+- [📄 ips.csv]({{ frontmatter.sidecar_dir | default("./_spiderfoot-data/") }}ips.csv)
+- [📄 emails.csv]({{ frontmatter.sidecar_dir | default("./_spiderfoot-data/") }}emails.csv)
+
+> [!propolis] JSON intentionally omitted from the report view
+> Raw JSON exports are NOT linked in this report (they are ugly in Obsidian). The CSV files above contain the same data, sorted and deduplicated. If you need JSON for tooling, find `_raw.json` inside the sidecar folder.
+
+## Compass — what to chase next
+
+- **N (unblock):** {{ frontmatter.next.N | default("Verify any leaked credential pairs against current systems") }}
+- **S (conclude):** {{ frontmatter.next.S | default("Produce executive briefing from findings ≥ medium severity") }}
+- **E (parallel):** {{ frontmatter.next.E | default("Run companion scan on parent organization") }}
+- **W (baseline):** {{ frontmatter.next.W | default("Re-validate any assumptions about target ownership") }}

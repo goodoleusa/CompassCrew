@@ -1,0 +1,85 @@
+---
+type: feature-eval
+status: evaluating
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [feature, eval, defense-score]
+title: "{{ file.basename }}"
+system_area:
+shipped_date:
+eval_run_before: null
+eval_run_after: null
+composite_delta: null
+problems_closed: 0
+unexpected_benefits: 0
+defense_score: null
+crystallize_candidate: false
+parent: []
+blueprint: "[[Feature-Eval]]"
+---
+
+# {{ file.basename }}
+
+{% section "What Was Built" %}
+<!-- Concrete. Link to Feature-Proposal if exists. -->
+
+**Feature:**
+**Proposal:** [[]]
+**Shipped:**
+{% endsection %}
+
+{% section "Eval Score Delta" %}
+<!-- Run eval_harness.py before and after. Paste results. -->
+
+**Before (eval run #):**
+**After (eval run #):**
+**Delta:**
+**Dimension that moved most:**
+
+> Note: comparisons only valid after eval run #3 (baseline established)
+{% endsection %}
+
+{% section "Problems Closed" %}
+<!-- Every problem this closes. Planned AND unplanned. -->
+
+| Problem | Planned? | Category |
+|---|---|---|
+|  | yes / no | throughput / memory / resilience / quality / piston / COC |
+
+**Total problems closed:**
+**Categories touched:**
+{% endsection %}
+
+{% section "Failure-to-Gold" %}
+<!-- What failure triggered this? What gold came from it? What wasn't planned? -->
+
+**The failure:**
+**The gold:**
+**Unexpected benefits (post-deployment discoveries):**
+{% endsection %}
+
+{% section "Defense Score" %}
+<!-- Formula: benchmark_delta + 0.1 * problems_closed + 0.15 * unexpected_benefits -->
+<!-- ≥1.5 = strong | 0.5–1.5 = acceptable | <0.5 = narrow, reconsider -->
+
+**benchmark_delta:**
+**problems_closed:**
+**unexpected_benefits:**
+**defense_score:**
+
+**Verdict:** strong / acceptable / narrow
+{% endsection %}
+
+{% section "What This Did NOT Fix" %}
+<!-- Scope what this deliberately doesn't address. Prevents over-claiming. -->
+{% endsection %}
+
+{% section "Crystallization Check" %}
+- [ ] Recurrence: principle appeared in 3+ sessions
+- [ ] Cross-agent: useful to ≥2 agent types
+- [ ] Human confirmed
+- [ ] Eval delta proven
+- [ ] Universal (not investigation-specific)
+
+**Promote to:** HONEY / AGENTS.md / rules/ / agent card / not yet
+{% endsection %}

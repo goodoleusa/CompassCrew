@@ -1,0 +1,199 @@
+---
+type: faerie-brief
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+date: {{ moment().format('YYYY-MM-DD') }}
+session_id:
+tags: [faerie, brief, session, queue, roundup]
+# --- scope (faerie fills at session start) ---
+scope_repos: []
+scope_investigation:
+scope_worktrees: []
+roundup_sources: []
+# --- queue snapshot ---
+queue_high: 0
+queue_med: 0
+queue_low: 0
+queue_running: 0
+next_task:
+# --- hypothesis vector (add/remove h-codes to match your investigation) ---
+h1_confidence: 0.0
+h2_confidence: 0.0
+h3_confidence: 0.0
+h4_confidence: 0.0
+h5_confidence: 0.0
+# --- memory ---
+memory_lane: session
+promotion_state: capture
+faerie_session: {{ file.basename }}
+blueprint: "[[Faerie-Brief.blueprint]]"
+# --- chain (agent writes at creation — do not edit) ---
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author: faerie
+agent_signed:
+# --- annotation ---
+ann_hash:
+ann_ts:
+---
+
+# Faerie Brief — {{ moment().format('YYYY-MM-DD') }}
+
+*Auto-generated at session start by faerie. Edit "Your Notes" section only.*
+*Source: `~/.claude/hooks/state/faerie-brief.json` — written by membot at last session end.*
+
+---
+
+{% section "Roundup Scope" %}
+<!-- faerie fills this — which repos and investigation paths were scanned -->
+
+**Repos in scope:**
+- *(faerie fills)*
+
+**Investigation link:** `{{ scope_investigation }}`
+**Worktrees discovered:** *(faerie fills)*
+**Scratch files merged:** *(faerie fills)*
+**Fragmented .claude/projects paths unified:** *(faerie fills)*
+
+> Faerie stitches together scratch files from all repos sharing this investigation_id,
+> plus orphaned .claude/projects/ fragments from the same folder opened different ways
+> (WSL path vs Windows path). All are merged into a single roundup before launch.
+{% endsection %}
+
+{% section "Queue State" %}
+<!-- live queue snapshot at session start -->
+
+| Priority | Count | Next |
+|---|---|---|
+| 🔴 HIGH | `{{ queue_high }}` | `{{ next_task }}` |
+| 🟡 MED | `{{ queue_med }}` | |
+| 🟢 LOW | `{{ queue_low }}` | |
+| ⚡ Running | `{{ queue_running }}` | |
+
+```dataview
+TABLE priority, assignee, skill_required, status
+FROM "00-Inbox/tasks"
+WHERE status = "claimed" OR status = "in-progress"
+SORT priority ASC
+LIMIT 5
+```
+{% endsection %}
+
+{% section "Top Flags — Review Needed" %}
+<!-- HIGH flags from REVIEW-INBOX promoted this session -->
+<!-- Full list: 00-Inbox/AGENT-REVIEW-INBOX.md -->
+
+```dataview
+TABLE drop_type, from, priority, file.ctime AS "Flagged"
+FROM "00-SHARED/00-Human-Inbox"
+WHERE priority = "HIGH" AND read = false
+SORT file.ctime DESC
+LIMIT 8
+```
+
+*See [[00-SHARED/00-Human-Inbox/]] for full inbox.*
+{% endsection %}
+
+{% section "Hypothesis Confidence Vector" %}
+<!-- faerie reads from HONEY.md + last session's hypothesis movements -->
+
+| Hypothesis | Confidence | Delta | Movement This Session |
+|---|---|---|---|
+| H1 — *(your hypothesis)* | `{{ h1_confidence }}` | | |
+| H2 — *(your hypothesis)* | `{{ h2_confidence }}` | | |
+| H3 — *(your hypothesis)* | `{{ h3_confidence }}` | | |
+| H4 — *(your hypothesis)* | `{{ h4_confidence }}` | | |
+| H5 — *(your hypothesis)* | `{{ h5_confidence }}` | | |
+<!-- Add or remove rows. Update frontmatter h-codes to match. -->
+
+*Updated by: data-scientist, evidence-curator, membot.*
+*Source: `~/.claude/memory/NECTAR.md` hypothesis section.*
+{% endsection %}
+
+{% section "Session Handoff (from last session)" %}
+<!-- Written by /handoff at last session end. Key context for picking up. -->
+<!-- Source: ~/.claude/hooks/state/last-session-handoff.md -->
+
+**Last sprint:**
+*(faerie fills from handoff)*
+
+**Done last session:**
+-
+
+**Hottest open items:**
+-
+
+**Key files modified:**
+-
+{% endsection %}
+
+{% section "Suggested Sprint" %}
+<!-- faerie's recommendation based on queue, flags, and hypothesis state -->
+
+**Recommended next task:**
+*(faerie fills from sprint-queue.json)*
+
+**Why:**
+*(why this moves the investigation forward)*
+
+**Suggested team:**
+*(agents to spawn)*
+
+**Launch with:**
+```
+/run
+```
+or queue directly if you have a different priority.
+{% endsection %}
+
+{% section "Agent Performance (last run)" %}
+<!-- scores from last performance-eval run -->
+<!-- Source: ~/.claude/hooks/state/run-benchmarks.json -->
+
+| Agent | Last Score | Delta | Context |
+|---|---|---|---|
+| evidence-curator | | | |
+| data-scientist | | | |
+| data-engineer | | | |
+| research-analyst | | | |
+| memory-keeper | | | |
+
+*Redemptions (agents who improved on real work):*
+-
+{% endsection %}
+
+{% section "Cross-Repo Connections" %}
+<!-- CONNECTION-tagged observations spanning multiple repos in this investigation -->
+
+```dataview
+TABLE file.folder AS "Repo", file.ctime AS "Found"
+FROM ""
+WHERE type = "connection" AND contains(tags, "cross-repo")
+  AND file.ctime >= date(today) - dur(7 day)
+SORT file.ctime DESC
+LIMIT 6
+```
+{% endsection %}
+
+{% section "Your Notes" %}
+<!-- Your session notes. What you want to focus on. Questions for agents. -->
+<!-- This section is preserved when blueprint is re-applied. -->
+
+**Today's focus:**
+
+**Questions for agents:**
+-
+
+**What to ignore this session:**
+-
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+{% endsection %}

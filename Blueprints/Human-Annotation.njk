@@ -1,0 +1,36 @@
+---
+type: annotation
+status: unverified
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD HH:mm") }}
+tags: [annotation, human-review]
+annotator:
+annotation_type:
+target_note:
+target_evidence:
+hypothesis_affected: []
+confidence_change:
+annotation_hash:
+ann_synced: ""
+blueprint: "[[Human-Annotation.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Annotation" %}
+<!-- Your observation, correction, or assessment -->
+{% endsection %}
+
+{% section "Evidence Reference" %}
+| Field | Value |
+|-------|-------|
+| **Target** | |
+| **Hypothesis affected** | |
+| **Confidence before** | |
+| **Confidence after** | |
+| **Reasoning** | |
+{% endsection %}
+
+{% section "Context" %}
+<!-- Why you're making this annotation — what you know that the agent doesn't -->
+{% endsection %}

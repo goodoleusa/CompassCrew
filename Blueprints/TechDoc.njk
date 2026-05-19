@@ -1,0 +1,90 @@
+---
+type: tech-doc
+doc_class: {{ doc_class | default("architecture") }}
+status: draft
+created: {{ date }}
+tags: [tech, {{ doc_class | default("architecture") }}]
+blueprint: "[[Blueprints/TechDoc.blueprint]]"
+---
+
+# {{ title }}
+
+> *One sentence: what this document explains and why it matters.*
+
+---
+
+{% section "Table of Contents" %}
+```dataview
+LIST WITHOUT ID link(heading.subpath, heading.text)
+FLATTEN file.headings AS heading
+WHERE file.path = this.file.path AND heading.level > 1
+SORT heading.position ASC
+```
+{% endsection %}
+
+{% section "Architecture Map" %}
+> *Auto-generated from headings. Run QuickAdd → Regen Mermaid after editing headers.*
+
+```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#1E6B5A",
+    "primaryTextColor": "#E8FFF8",
+    "primaryBorderColor": "#4BC8A8",
+    "secondaryColor": "#8FBE9B",
+    "secondaryTextColor": "#0D2B20",
+    "tertiaryColor": "#0D2B2B",
+    "tertiaryTextColor": "#A8EED8",
+    "background": "#0D1F1A",
+    "mainBkg": "#1E3A30",
+    "nodeBorder": "#4BC8A8",
+    "clusterBkg": "#0D2B2B",
+    "lineColor": "#4BC8A8",
+    "edgeLabelBackground": "#1A4A3A",
+    "fontFamily": "monospace"
+  }
+}}%%
+flowchart TD
+    ROOT["# Document Title"]:::h1
+
+    classDef h1 fill:#1E6B5A,stroke:#4BC8A8,color:#E8FFF8,font-weight:bold,font-size:14px
+    classDef h2 fill:#2D9B83,stroke:#4BC8A8,color:#E8FFF8,font-size:13px
+    classDef h3 fill:#3AAA90,stroke:#4BC8A8,color:#E8FFF8,font-size:12px
+    classDef h4 fill:#8FBE9B,stroke:#2D9B83,color:#0D2B20,font-size:11px
+```
+
+> *Paste `QuickAdd: Regen Mermaid` output here after adding sections.*
+
+{% endsection %}
+
+---
+
+## Overview
+
+> H2 — top-level section. Use for major components or phases.
+
+---
+
+## Section Name
+
+> H2 — another top-level section.
+
+### Subsection
+
+> H3 — nested under the nearest H2. Required before using H4.
+
+#### Detail
+
+> H4 — deepest level. Only under an H3, never directly under H2.
+
+---
+
+{% section "Heading Rules" %}
+> **Enforced by QuickAdd → Validate Headers:**
+> - Exactly 1 H1 (the document title, auto-set by this blueprint)
+> - H2 → top-level sections
+> - H3 → subsections under H2 only
+> - H4 → details under H3 only
+> - No jumps (H2 → H4 without H3)
+{% endsection %}

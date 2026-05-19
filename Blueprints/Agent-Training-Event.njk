@@ -1,0 +1,101 @@
+---
+type: brief
+brief_type: training-event
+schema_version: "1.0"
+status: unreviewed
+created: {{ moment().format('YYYY-MM-DD') }}
+ts: {{ moment().format('YYYY-MM-DDTHH:mm:ss') }}Z
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [brief, training, agent-evolution, {{ agent_name }}]
+investigation_id: ""
+sprint_id: ""
+session_id: {{ session_id }}
+run_id: {{ run_id }}
+phase: ad-hoc
+pipeline_stage: training
+agent_author: {{ agent_name }}
+agent_version: "{{ agent_version }}"
+git_commit: ""
+coc_session_file: ""
+coc_entry_hashes: []
+source_files: []
+hypothesis_touched: []
+evidence_tier_touched: []
+confidence_delta: {}
+blockers: []
+parent:
+  - "[[agent-history]]"
+  - "[[03-Agents/evolution/{{ agent_name }}]]"
+sibling: []
+child: []
+memory_lane: inbox
+promotion_state: capture
+chain_id: ""
+content_hash: ""
+atom_file: ""
+agent_hash: ""
+review_status: unreviewed
+promoted_at: ""
+promotion_chain: []
+ann_hash: ""
+ann_ts: ""
+blueprint: "[[Agent-Training-Event.blueprint]]"
+
+# Training-specific fields
+training_type: autotune | deployment | otj | baseline
+prev_score: 0.0
+new_score: 0.0
+score_delta: 0.0
+score_track: training | deployment
+redeemed: false
+technique_learned: ""
+failure_mode: ""
+---
+
+# {{ agent_name }} Training Event — {{ moment().format('YYYY-MM-DD') }}
+
+*Agent: `{{ agent_name }}` · Type: {{ training_type }} · Score: {{ prev_score }} → {{ new_score }} ({{ score_delta }})*
+
+---
+
+{% section "What Changed" %}
+<!-- What specifically improved or was learned -->
+
+**Score track:** {{ score_track }}
+**Previous:** {{ prev_score }}
+**New:** {{ new_score }}
+**Delta:** {{ score_delta }}
+
+{% endsection %}
+
+{% section "Technique Learned" %}
+<!-- Process insight — NO case-specific data (court defensibility) -->
+<!-- Examples: "Apply Bonferroni correction" = OK. "Raindrop bookmarks are metadata" = FORBIDDEN -->
+
+{{ technique_learned }}
+
+{% endsection %}
+
+{% section "What Worked" %}
+<!-- Approaches that led to the score improvement -->
+
+{% endsection %}
+
+{% section "What Didn't Work" %}
+<!-- Approaches tried that failed — this is training data for future runs -->
+
+{{ failure_mode }}
+
+{% endsection %}
+
+{% section "Agent Card Diff" %}
+<!-- Key changes to the agent card's Last Training section -->
+<!-- Compare 03-Agents/evolution/{agent}.md (snapshot) vs ~/.claude/agents/{agent}.md (live) -->
+
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Did this improvement actually help on real work? -->
+<!-- Is the technique generalizable to other agents? -->
+
+{% endsection %}

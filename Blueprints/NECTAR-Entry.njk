@@ -1,0 +1,87 @@
+---
+type: nectar-entry
+status: awaiting-annotation
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [nectar, finding, memory]
+# --- finding metadata ---
+date_found:
+sprint_id:
+pipeline_run:
+source_agent:
+category: finding
+# finding | connection | method | gap | stat | observation
+# --- hypothesis ---
+hypothesis_support: []
+confidence_level: 0.0
+confidence_delta: 0.0
+# --- memory pipeline ---
+memory_lane: inbox
+promotion_state: capture
+# inbox → annotation-queue → promoted → crystallized
+# crystallized = ready for membot to distill into HONEY.md
+# --- chain ---
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author:
+agent_signed:
+# --- annotation ---
+ann_hash:
+ann_ts:
+blueprint: "[[NECTAR-Entry.blueprint]]"
+---
+
+# {{ file.basename }}
+
+*Single finding extracted from NECTAR.md by `vault_nectar_atomize.py` or written directly by agent.*
+*To promote to HONEY: set `promotion_state: crystallized` → membot picks up at session end.*
+
+---
+
+{% section "Finding" %}
+<!-- The core fact. One paragraph. Court-readable plain English. -->
+
+{% endsection %}
+
+{% section "Why It Matters" %}
+<!-- Which hypothesis does this move? How much? Why is this significant? -->
+
+| Hypothesis | Direction | Delta | Reasoning |
+|---|---|---|---|
+| H1 — *(your hypothesis)* | | | |
+| H2 — *(your hypothesis)* | | | |
+| H3 — *(your hypothesis)* | | | |
+| H4 — *(your hypothesis)* | | | |
+| H5 — *(your hypothesis)* | | | |
+<!-- Add or remove rows to match your investigation's hypotheses. -->
+{% endsection %}
+
+{% section "Source & Evidence" %}
+<!-- Where did this come from? Which pipeline run / script / file? -->
+
+- **Sprint:** `{{ sprint_id }}`
+- **Pipeline run:** `{{ pipeline_run }}`
+- **Agent:** `{{ source_agent }}`
+- **Source files:**
+- **NECTAR.md section:** *(link or heading)*
+{% endsection %}
+
+{% section "Open Questions" %}
+- [ ]
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Write here. note_sign.py commit signs this section. Ctrl+Alt+C in Obsidian. -->
+<!-- PROMOTE TO HONEY: set promotion_state: crystallized in frontmatter above -->
+<!-- NEEDS MORE WORK: set promotion_state: annotation-queue + assign next sprint -->
+
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+{% endsection %}

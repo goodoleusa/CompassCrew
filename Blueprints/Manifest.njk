@@ -1,0 +1,34 @@
+---
+type: manifest
+task_id: {{ frontmatter.task_id | default(file.basename) }}
+charter_ref: {{ frontmatter.charter_ref | default("?") }}
+mission: {{ frontmatter.mission | default("?") }}
+bearing: {{ frontmatter.bearing | default("S") }}
+agent_type: {{ frontmatter.agent_type | default("?") }}
+session_id: {{ frontmatter.session_id | default("?") }}
+created: {{ now }}
+---
+
+> [!propolis] Manifest — {{ frontmatter.task_id | default(file.basename) }}
+> **Charter:** [[{{ frontmatter.charter_ref | default("?") }}]] · **Mission:** `{{ frontmatter.mission | default("?") }}` · **Bearing:** **{{ frontmatter.bearing | default("S") }}**
+
+## Dashboard line
+
+`{{ frontmatter.dashboard_line | default("(≤80 chars — what shipped, in plain language)") }}`
+
+## Next mission node
+
+> [!anchor] {{ frontmatter.next_mission_node.bearing | default("S") }} → {{ frontmatter.next_mission_node.to_label | default("?") }}
+> {{ frontmatter.next_mission_node.rationale | default("—") }}
+
+## Discovered work
+
+| task_id | bearing | rationale |
+|---|---|---|
+{% for w in frontmatter.discovered_work | default([]) %}| {{ w.to_label }} | {{ w.bearing }} | {{ w.rationale }} |
+{% endfor %}
+
+## Artifacts
+
+{% for a in frontmatter.artifacts | default([]) %}- [[{{ a }}]]
+{% endfor %}

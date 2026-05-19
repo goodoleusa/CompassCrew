@@ -1,0 +1,77 @@
+---
+type: network-map
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [analysis, network-map]
+network_name: "{{ file.basename }}"
+network_type:
+entity_count: 0
+edge_count: 0
+central_nodes: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+hypothesis_support: []
+confidence_level: unassessed
+last_update: {{ file.mtime | moment("YYYY-MM-DD") }}
+blueprint: "[[Network-Map.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What network is being mapped? What's the hypothesis? -->
+{% endsection %}
+
+{% section "Node Registry" %}
+<!-- Every entity in this network -->
+| Node | Type | Role in Network | Centrality | Evidence |
+|------|------|----------------|------------|----------|
+| | | | | |
+{% endsection %}
+
+{% section "Edge Registry" %}
+<!-- Connections between nodes -->
+| From | To | Relationship | Strength | Direction | Evidence |
+|------|-----|-------------|----------|-----------|----------|
+| | | | | | |
+{% endsection %}
+
+{% section "Central Nodes" %}
+<!-- Most connected or influential entities -->
+{% endsection %}
+
+{% section "Clusters" %}
+<!-- Identified subgroups within the network -->
+| Cluster | Members | Connecting Theme |
+|---------|---------|-----------------|
+| | | |
+{% endsection %}
+
+{% section "Gaps & Missing Links" %}
+<!-- Where are the holes? What connections are suspected but unproven? -->
+{% endsection %}
+
+{% section "Temporal Evolution" %}
+<!-- How has this network changed over time? -->
+| Period | Change | Significance |
+|--------|--------|--------------|
+| | | |
+{% endsection %}
+
+{% section "Visualization Notes" %}
+<!-- Instructions for graph rendering — D3, Obsidian Graph, etc. -->
+{% endsection %}
+
+{% section "Related Entities" %}
+```dataview
+LIST
+FROM "20-Entities"
+WHERE contains(file.outlinks, this.file.link)
+SORT entity_type ASC
+```
+{% endsection %}

@@ -1,0 +1,94 @@
+---
+type: research-brief
+agent_type: research-analyst
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+date: {{ moment().format('YYYY-MM-DD') }}
+investigator:
+focus_areas: []
+tags: [brief, daily, session-start]
+memory_lane: session
+promotion_state: awaiting-annotation
+faerie_session:
+blueprint: "[[Research-Brief.blueprint]]"
+doc_hash: sha256:pending
+ann_hash: ""
+ann_synced: false
+---
+
+# Research Brief — {{ moment().format('YYYY-MM-DD') }}
+
+{% section "Queue — Annotate These First" %}
+```dataview
+TABLE tier, confidence_level, source_type, date_collected
+FROM "30-Evidence"
+WHERE annotation_status = null AND tier <= 2
+SORT tier ASC, confidence_level DESC
+LIMIT 10
+```
+{% endsection %}
+
+{% section "Unread Drops" %}
+```dataview
+LIST "[" + drop_type + "] " + file.name + " from " + from
+FROM "00-Inbox/drops"
+WHERE read = false
+SORT created DESC
+```
+{% endsection %}
+
+{% section "Pending Agent Tasks" %}
+```dataview
+TABLE priority, assignee, skill_required
+FROM "00-Inbox/tasks"
+WHERE status = "pending" OR status = "awaiting-agent"
+SORT priority ASC, created DESC
+LIMIT 8
+```
+{% endsection %}
+
+{% section "Open Threads — Need Your Response" %}
+```dataview
+LIST thread_title
+FROM "00-Inbox" OR "10-Investigations"
+WHERE type = "thread" AND contains(needs_response_from, "human")
+SORT updated DESC
+```
+{% endsection %}
+
+{% section "Today's Focus" %}
+<!-- What are you investigating today? Which hypotheses? -->
+
+<!-- List your investigation's hypotheses below (H1, H2, etc.) and your current thinking on each. -->
+**H1 — :**
+**H2 — :**
+**H3 — :**
+<!-- Add rows as needed to match your investigation's hypothesis set. -->
+{% endsection %}
+
+{% section "Findings This Session" %}
+<!-- Key discoveries — link to notes you create or annotate. -->
+-
+{% endsection %}
+
+{% section "New Entities" %}
+<!-- IPs, domains, people, orgs discovered today that need entity notes. -->
+- [ ]
+{% endsection %}
+
+{% section "Questions for Agents" %}
+<!-- What do you want an agent to research? Drop in 00-Inbox/drops/ or 00-Inbox/tasks/ -->
+-
+{% endsection %}
+
+{% section "Session Handoff" %}
+<!-- What should the next session (you or an agent) know? -->
+<!-- This section is read by vault_narrative_sync.py and session_stop_hook. -->
+
+**Hottest open item:**
+**Files to look at:**
+**Hypothesis confidence moves:**
+{% endsection %}
+
+### Annotation Status
+**Ann Hash:** {{ann_hash}} | **Synced:** {{ann_synced}}

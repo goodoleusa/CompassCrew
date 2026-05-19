@@ -1,0 +1,58 @@
+---
+type: dashboard
+date: {{ today }}
+generated: {{ now }}
+---
+
+> [!honey] FFFF Dashboard — {{ today }}
+
+## At a glance
+
+| Metric | Value | Meaning |
+|---|---|---|
+| In-flight agents | {{ frontmatter.in_flight | default(0) }} | ≤ 10 per index-first rule |
+| Active missions | {{ frontmatter.missions | default(0) }} | clustered via `mission` field |
+| Mutations on deck | {{ frontmatter.mutations | default(0) }} | classified beneficial/neutral/harmful |
+| Honey droplets today | {{ frontmatter.droplets | default(0) }} | crystallized to forensics/honey/ |
+| Context fill | {{ frontmatter.ctx_pct | default("?") }}% | piston wave gating threshold |
+
+## Compass frontier
+
+```mermaid
+mindmap
+  root(({{ today }}))
+    N — unblock
+      {{ frontmatter.frontier.N | default("—") }}
+    S — conclude
+      {{ frontmatter.frontier.S | default("—") }}
+    E — parallel
+      {{ frontmatter.frontier.E | default("—") }}
+    W — baseline
+      {{ frontmatter.frontier.W | default("—") }}
+```
+
+## Active charters
+
+```dataview
+TABLE status, file.mtime AS "updated"
+FROM "forensics/charters"
+WHERE status = "active"
+SORT file.mtime DESC
+```
+
+## Today's manifests
+
+```dataview
+TABLE bearing, mission, dashboard_line
+FROM "forensics/manifests"
+WHERE startswith(file.folder, "forensics/manifests/{{ today }}")
+SORT file.ctime DESC
+```
+
+## Honey crystallized today
+
+```dataview
+LIST
+FROM "forensics/honey/{{ today }}"
+SORT file.ctime DESC
+```

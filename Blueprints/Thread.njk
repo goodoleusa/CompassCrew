@@ -1,0 +1,59 @@
+---
+type: thread
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD HH:mm") }}
+tags: [thread, collaboration]
+thread_title: "{{ file.basename }}"
+started_by:
+participants: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+priority: medium
+needs_response_from:
+last_activity: {{ file.mtime | moment("YYYY-MM-DD HH:mm") }}
+---
+
+# {{ file.basename }}
+
+{% section "Context" %}
+<!-- What is this thread about? Link to the investigation, entity, or evidence that sparked it. -->
+{% endsection %}
+
+{% section "Discussion" %}
+<!--
+ASYNC THREAD FORMAT — append replies at the bottom, never edit previous entries.
+
+Each reply uses this format:
+
+---
+**[name]** — YYYY-MM-DD HH:MM [timezone]
+
+Your message here. Link to [[entities]], [[evidence]], or external sources.
+
+If you want the other person to look at something specific:
+> @[name] check out [[this thing]] — I think it connects to [[that thing]]
+
+If you want an agent to investigate:
+> @agent research [[topic]] using [[skill-name]]
+
+---
+-->
+{% endsection %}
+
+{% section "Action Items" %}
+<!-- Things that came out of this thread that need doing -->
+- [ ]
+{% endsection %}
+
+{% section "Linked Evidence" %}
+```dataview
+LIST
+FROM "30-Evidence"
+WHERE contains(file.outlinks, this.file.link)
+```
+{% endsection %}

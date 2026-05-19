@@ -1,0 +1,137 @@
+---
+type: entity
+entity_type: high-control-group
+status: stub
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, entity, hcg, cult]
+entity_name: "{{ file.basename }}"
+aliases: []
+group_type:
+founded:
+founder:
+current_leader:
+estimated_membership:
+headquarters:
+jurisdictions_active: []
+front_organizations: []
+financial_entities: []
+recruitment_methods: []
+control_mechanisms: []
+legal_actions: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+confidence_level: unassessed
+source_quality: unverified
+priority: medium
+bite_model_score: {}
+blueprint: "[[High-Control-Group.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What is this group? Classification: cult, MLM, political extremist, religious sect, etc. -->
+{% endsection %}
+
+{% section "Identity" %}
+| Field | Value |
+|-------|-------|
+| **Name** | {{ file.basename }} |
+| **Aliases** | |
+| **Type** | Cult / MLM / Political / Religious / Other |
+| **Founded** | |
+| **Founder** | |
+| **Current Leader** | |
+| **Est. Membership** | |
+| **Headquarters** | |
+| **Active In** | |
+{% endsection %}
+
+{% section "BITE Model Assessment" %}
+<!-- Steven Hassan's BITE Model: Behavior, Information, Thought, Emotional Control -->
+
+### Behavior Control
+- [ ] Regulate diet, sleep, grooming
+- [ ] Financial exploitation (tithes, fees, donations)
+- [ ] Restrict leisure activities
+- [ ] Require permission for major decisions
+- [ ] Punish dissent or deviation
+
+### Information Control
+- [ ] Deception / withholding information
+- [ ] Restrict access to outside media
+- [ ] Compartmentalize information
+- [ ] Use propaganda extensively
+- [ ] Discourage critical thinking
+
+### Thought Control
+- [ ] Loaded language / thought-terminating clichés
+- [ ] Black-and-white / us-vs-them thinking
+- [ ] Reject rational analysis
+- [ ] Label alternative beliefs as evil/wrong
+- [ ] Memory manipulation
+
+### Emotional Control
+- [ ] Instill irrational fears about leaving
+- [ ] Shunning / disconnection from critics
+- [ ] Guilt/shame manipulation
+- [ ] Love bombing during recruitment
+- [ ] Phobia indoctrination
+{% endsection %}
+
+{% section "Leadership Structure" %}
+| Name | Role | Period | Notes |
+|------|------|--------|-------|
+| | | | |
+{% endsection %}
+
+{% section "Front Organizations" %}
+<!-- Legal entities, charities, businesses connected to the group -->
+| Entity | Type | Jurisdiction | Role | Evidence |
+|--------|------|-------------|------|----------|
+| | | | | |
+{% endsection %}
+
+{% section "Financial Network" %}
+<!-- How does money flow? Tithes, businesses, real estate, tax exemptions -->
+| Flow | Amount/Frequency | Method | Source |
+|------|-----------------|--------|--------|
+| | | | |
+{% endsection %}
+
+{% section "Recruitment & Retention" %}
+<!-- How do they get and keep members? -->
+{% endsection %}
+
+{% section "Legal Actions & Controversies" %}
+| Date | Type | Jurisdiction | Outcome | Source |
+|------|------|-------------|---------|--------|
+| | | | | |
+{% endsection %}
+
+{% section "Survivor Accounts" %}
+<!-- Anonymous/public testimonies, organized chronologically -->
+{% endsection %}
+
+{% section "Connections to Other Groups" %}
+```dataview
+LIST file.link
+FROM "20-Entities"
+WHERE contains(sibling, this.file.link) AND (entity_type = "high-control-group" OR entity_type = "organization")
+SORT file.mtime DESC
+```
+{% endsection %}
+
+{% section "OSINT Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Notes" %}
+{% endsection %}

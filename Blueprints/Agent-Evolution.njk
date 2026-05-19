@@ -1,0 +1,61 @@
+---
+type: agent-evolution
+status: active
+phase: training
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+date: {{ moment().format('YYYY-MM-DD') }}
+generated: {{ moment().format('YYYY-MM-DD') }}
+tags: [agent-evolution, performance, self-improvement]
+title: "{{ file.basename }} Evolution"
+investigation_label: "agent-evolution-{{ file.basename | lower | replace(' ', '-') }}"
+priority: MED
+agent_id: "{{ file.basename }}"
+agent_type: "{{ file.basename }}"
+session_id:
+parent: "00-SHARED/Agent-Outbox/agent-evolution"
+sibling:
+  -
+child:
+  -
+latest_score: 0.00
+latest_deployment_score: 0.00
+tier: BASELINE
+redeemed_on_the_job: false
+coc_ref: ~/.claude/memory/forensics/
+promotion_state: raw
+quality_score: 0.00
+belief_index: 0.50
+doc_hash: sha256:pending
+hash_ts:
+hash_method: body-sha256-v1
+blueprint: "[[Agent-Evolution.blueprint]]"
+---
+
+# {{ file.basename }} — Evolution Story
+
+{% section "Current State" %}
+<!-- Format: Score: {N} | Deployment: {N} ({date}) | Tier: {tier} -->
+{% endsection %}
+
+{% section "Last Training" %}
+<!--
+Score: {score} (prev: {prev}, delta: +{delta})
+Context: {training|deployment|baseline}
+Deployment: {score} (from {date})
+-->
+{% endsection %}
+
+{% section "Training Timeline" %}
+| Date | Score | Delta | Context | Key Learning |
+|---|---|---|---|---|
+| | | | | |
+{% endsection %}
+
+{% section "What It Learned (Process Only)" %}
+<!-- Transferable techniques. NO case data. Court-defensibility test required. -->
+{% endsection %}
+
+{% section "Performance Trajectory" %}
+<!-- 1-3 paragraph narrative for a future instance. What drove improvements. ELITE path. -->
+{% endsection %}

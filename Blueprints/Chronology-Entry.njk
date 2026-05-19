@@ -1,0 +1,60 @@
+---
+type: chronology
+status: verified
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [chronology, timeline]
+event_name: "{{ file.basename }}"
+event_date:
+event_end_date:
+event_type:
+significance: medium
+actors: []
+locations: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+hypothesis_support: []
+source_count: 0
+confidence_level: unassessed
+blueprint: "[[Chronology-Entry.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Event Summary" %}
+<!-- What happened? One paragraph. -->
+{% endsection %}
+
+{% section "Details" %}
+| Field | Value |
+|-------|-------|
+| **Date** | |
+| **End Date** | |
+| **Type** | |
+| **Location** | |
+| **Key Actors** | |
+| **Significance** | Low / Medium / High / Critical |
+{% endsection %}
+
+{% section "Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Temporal Context" %}
+<!-- What happened before and after? Why does the timing matter? -->
+{% endsection %}
+
+{% section "Related Events" %}
+```dataview
+TABLE event_date, event_type, significance
+FROM "60-Chronology"
+WHERE event_date >= this.event_date - dur(7 days) AND event_date <= this.event_date + dur(7 days) AND file.name != this.file.name
+SORT event_date ASC
+```
+{% endsection %}

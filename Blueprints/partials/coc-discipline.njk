@@ -1,0 +1,6 @@
+## Chain-of-custody (COC) discipline
+- Every action emits a forensic entry to `forensics/coc.jsonl`.
+- Manifests written to `forensics/ephemeral/{date}/{task_id}/`; promotion
+  to `forensics/manifests/{date}/` is automatic via PostToolUse hooks.
+- Never write to canonical forensics paths directly — only via promotion.
+- Hash before + after every durable write (belt + suspenders).

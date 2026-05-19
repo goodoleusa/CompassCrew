@@ -1,0 +1,87 @@
+---
+type: design-insight
+status: open
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [design, insight, system]
+title: "{{ file.basename }}"
+category:
+priority: medium
+system_area:
+related_features: []
+problems_closed: 0
+unexpected_benefits: []
+defense_score: null
+crystallize_candidate: false
+parent: []
+sibling: []
+child: []
+blueprint: "[[Design-Insight]]"
+---
+
+# {{ file.basename }}
+
+{% section "One-Line Insight" %}
+<!-- The core idea in a single sentence. If you can't write it in one sentence, it's not crystallized yet. -->
+{% endsection %}
+
+{% section "Problem This Addresses" %}
+<!-- What failure, gap, or friction triggered this? Be specific. "Recovery required a 5-step human relay" not "recovery was hard." -->
+
+**Original trigger:**
+
+**Root cause (not symptom):**
+{% endsection %}
+
+{% section "What Was Working Well" %}
+<!-- Don't skip this. Acknowledge what the existing system got right before this change. -->
+{% endsection %}
+
+{% section "Proposed or Implemented Solution" %}
+<!-- Concrete: what was built, changed, or decided. Not just concept. -->
+
+**Status:** [ ] thinking | [ ] proposed | [ ] implemented | [ ] validated
+
+**Implementation:**
+{% endsection %}
+
+{% section "Problems It Closes" %}
+<!-- Be exhaustive. Count them. The multi-benefit count matters. -->
+
+| Problem | Category | Was this planned? |
+|---|---|---|
+|  | throughput / memory / resilience / quality / piston / COC |  |
+
+**Problems closed:**
+**Categories touched:**
+**Unexpected benefits discovered post-deployment:**
+{% endsection %}
+
+{% section "Failure-to-Gold" %}
+<!-- What failure or gap spawned this? What gold came out of it? Did it solve anything you didn't anticipate? -->
+
+**The failure:**
+**The gold:**
+**Unplanned wins:**
+{% endsection %}
+
+{% section "Crystallization Check" %}
+<!-- Should this become HONEY? Run the gauntlet. -->
+
+- [ ] Recurrence: appeared in 3+ sessions
+- [ ] Cross-agent: useful to ≥2 distinct agent types
+- [ ] Human reviewed and confirmed
+- [ ] Proven impact on eval score
+- [ ] Universal: true for all future sessions, not just this investigation
+
+**Ready for crystallization:** no / maybe / yes
+**Crystallize to:** HONEY / AGENTS.md / rules/ / agent card
+{% endsection %}
+
+{% section "Open Questions" %}
+<!-- What don't you know yet? What would change your mind? -->
+{% endsection %}
+
+{% section "Links" %}
+<!-- Related notes, evidence, prior art -->
+{% endsection %}

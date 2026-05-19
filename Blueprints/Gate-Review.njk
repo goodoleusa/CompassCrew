@@ -1,0 +1,120 @@
+---
+type: gate-review
+status: pending
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+gate:
+gate_num:
+pipeline_phase:
+run_id:
+tags: [gate, pipeline, scientific-rigor, pre-registration]
+parent:
+  - "[[Pipeline-Gates]]"
+sibling:
+  -
+child:
+  -
+corrections_count: 0
+hypothesis_sealed: false
+hypothesis_count: 0
+memory_lane: annotation-queue
+promotion_state: capture
+faerie_session:
+blueprint: "[[Gate-Review.blueprint]]"
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author:
+agent_signed:
+ann_hash:
+ann_ts:
+ann_synced: ""
+review_verdict: ""
+sig:
+sig_fp:
+sig_ts:
+sig_hw: false
+---
+
+# Gate {{ gate_num }} Review — {{ gate }}
+
+*Pipeline gate: human checkpoint between progressive disclosure phases.*
+*Run: `{{ run_id }}` | Phase: `{{ pipeline_phase }}`*
+
+---
+
+{% section "Agent First Impressions" %}
+<!-- What did agents conclude at this phase? Copy key FIRST_IMPRESSION blocks here. -->
+<!-- Source: scripts/audit_results/ or vault Agent-Outbox/ -->
+
+```dataview
+TABLE WITHOUT ID
+  file.link AS "Finding",
+  confidence_level AS "Conf",
+  hypothesis_support AS "H",
+  source_quality AS "Quality"
+FROM "00-SHARED/Agent-Outbox"
+WHERE pipeline_run = this.run_id
+SORT confidence_level DESC
+LIMIT 10
+```
+{% endsection %}
+
+{% section "Your Assessment" %}
+<!-- Do the agent's impressions match your understanding of the data? -->
+<!-- Flag factual errors here — NOT conclusions, just facts. -->
+
+**Overall impression:**
+
+**Factual concerns:**
+-
+
+**What surprised you:**
+-
+{% endsection %}
+
+{% section "Corrections Submitted" %}
+<!-- Factual corrections only. No conclusion steering. -->
+<!-- Source: scripts/audit_results/gates/gate_N_corrections.json -->
+
+| Type | What Agent Got Wrong | Correct Fact | Evidence |
+|------|---------------------|--------------|----------|
+| | | | |
+
+*Submit via: `python3 scripts/gate_pass.py correct {{ gate_num }}`*
+{% endsection %}
+
+{% section "Hypothesis Seal" %}
+<!-- At GATE 1: did you seal your private hypotheses? -->
+<!-- At GATE 4: reveal and compare. -->
+
+| Status | Value |
+|--------|-------|
+| Sealed? | `{{ hypothesis_sealed }}` |
+| Count | `{{ hypothesis_count }}` |
+| Seal hash | *(from hypothesis_seal.json)* |
+
+*Seal: `python3 scripts/hypothesis_seal.py seal`*
+*Reveal: `python3 scripts/hypothesis_seal.py reveal`*
+*Verify: `python3 scripts/hypothesis_seal.py verify`*
+{% endsection %}
+
+{% section "Gate Decision" %}
+<!-- Your decision: pass, block, or request more analysis. -->
+
+- [ ] **PASS** — proceed to next phase (`python3 scripts/gate_pass.py pass {{ gate_num }}`)
+- [ ] **BLOCK** — stop pipeline, needs investigation (`python3 scripts/gate_pass.py block {{ gate_num }}`)
+- [ ] **RED-TEAM** — request adversarial analysis on specific hypothesis
+
+**Reasoning:**
+
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+| sig | *(YubiKey signature if court-grade)* |
+{% endsection %}

@@ -1,0 +1,126 @@
+---
+type: financial-trail
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, financial, investigation]
+trail_name: "{{ file.basename }}"
+financial_type:
+amount_range:
+currency:
+jurisdictions: []
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+time_period_start:
+time_period_end:
+parent:
+  - 
+sibling:
+  - 
+child:
+  - 
+hypothesis_support: []
+confidence_level: unassessed
+source_quality: unverified
+aml_flags: []
+blueprint: "[[Financial-Trail.blueprint]]"
+---
+
+# {{ file.basename }}
+
+{% section "Overview" %}
+<!-- What financial activity is being tracked? Why is it suspicious? -->
+{% endsection %}
+
+{% section "Transaction Chain" %}
+<!-- Follow the money -->
+| # | Date | From | To | Amount | Method | Source |
+|---|------|------|----|--------|--------|--------|
+| 1 | | | | | | |
+| 2 | | | | | | |
+{% endsection %}
+
+{% section "Entities Involved" %}
+| Entity | Role | Jurisdiction | Risk Level |
+|--------|------|-------------|------------|
+| | Sender | | |
+| | Receiver | | |
+| | Intermediary | | |
+| | Beneficial Owner | | |
+{% endsection %}
+
+{% section "AML Red Flags" %}
+<!-- Anti-Money Laundering indicators -->
+- [ ] Structuring / smurfing (transactions just under reporting thresholds)
+- [ ] Round-dollar amounts with no business justification
+- [ ] Rapid movement through multiple jurisdictions
+- [ ] Shell company involvement
+- [ ] Nominee/proxy actors
+- [ ] Crypto mixing/tumbling
+- [ ] Trade-based laundering indicators
+- [ ] Real estate price manipulation
+- [ ] Layering through multiple accounts
+{% endsection %}
+
+{% section "Corporate Structure" %}
+<!-- If shell companies are involved, map the ownership chain -->
+```
+Ultimate Beneficial Owner
+└── Holding Company (Jurisdiction)
+    └── Operating Entity (Jurisdiction)
+        └── Bank Account / Crypto Wallet
+```
+{% endsection %}
+
+{% section "Crypto Analysis" %}
+<!-- If crypto is involved -->
+| Wallet | Chain | First Seen | Last Active | Volume | Mixer? |
+|--------|-------|------------|-------------|--------|--------|
+| | | | | | |
+{% endsection %}
+
+{% section "Regulatory Filings" %}
+<!-- SARs, CTRs, sanctions, OFAC, FinCEN -->
+| Filing Type | Agency | Date | Reference |
+|------------|--------|------|-----------|
+| | | | |
+{% endsection %}
+
+{% section "OSINT Sources" %}
+| Source | URL | Date | Reliability |
+|--------|-----|------|-------------|
+| | | | |
+{% endsection %}
+
+{% section "Agent questions (for reviewer)" %}
+<!-- Open questions agents need human input on. -->
+- 
+{% endsection %}
+
+{% section "Interesting discoveries / scratchpad" %}
+<!-- Mini-findings, connections spotted. -->
+- 
+{% endsection %}
+
+{% section "New questions raised" %}
+| Question | Source / context | Priority |
+|----------|------------------|----------|
+| | | |
+{% endsection %}
+
+{% section "Data needed to answer" %}
+| Question / gap | Data or source needed | Where to get it |
+|----------------|------------------------|------------------|
+| | | |
+{% endsection %}
+
+{% section "Connections to other work" %}
+- 
+{% endsection %}
+
+{% section "Notes" %}
+{% endsection %}

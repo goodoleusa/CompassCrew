@@ -1,0 +1,48 @@
+---
+type: session-report
+session_id: {{ frontmatter.session_id | default(file.basename) }}
+created: {{ now }}
+duration_min: {{ frontmatter.duration_min | default("?") }}
+mission: {{ frontmatter.mission | default("?") }}
+agents_spawned: {{ frontmatter.agents_spawned | default(0) }}
+---
+
+> [!propolis] Session Report — {{ frontmatter.session_id | default(file.basename) }}
+> **Mission:** {{ frontmatter.mission | default("—") }}  **Duration:** {{ frontmatter.duration_min | default("?") }}m  **Agents:** {{ frontmatter.agents_spawned | default(0) }}
+
+## Narrative
+
+{% if frontmatter.narrative %}{{ frontmatter.narrative }}{% else %}_What happened, in human language. Frame the arc: what was the question, what did we discover, what shifted?_{% endif %}
+
+## Mutations on deck
+
+| Mutation | Classification | Δ-fitness | Status |
+|---|---|---|---|
+{% for m in frontmatter.mutations | default([]) %}| {{ m.name }} | {{ m.classification }} | {{ m.delta_fitness | default("—") }} | {{ m.status }} |
+{% endfor %}
+
+## Compass bearings observed
+
+- **N (unblock):** {{ frontmatter.bearings.N | default("—") }}
+- **S (conclude):** {{ frontmatter.bearings.S | default("—") }}
+- **E (parallel):** {{ frontmatter.bearings.E | default("—") }}
+- **W (baseline):** {{ frontmatter.bearings.W | default("—") }}
+
+## Honey droplets crystallized
+
+{% for d in frontmatter.droplets | default([]) %}- [[{{ d }}]]
+{% endfor %}
+
+## Next mission node
+
+> [!anchor] Next bearing
+> {{ frontmatter.next_mission_node | default("(set bearing N/S/E/W and target)") }}
+
+```mermaid
+flowchart LR
+  A[Session start] --> B[W1 LIFTOFF]
+  B --> C[W2 CRUISE]
+  C --> D[W3 INSERTION]
+  D --> E[Synthesis]
+  E --> F([Next node])
+```

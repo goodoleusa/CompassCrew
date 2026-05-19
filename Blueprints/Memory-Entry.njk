@@ -1,0 +1,35 @@
+---
+type: memory
+status: active
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [memory]
+memory_type:
+confidence: high
+superseded_by:
+author:
+source_session:
+---
+
+# {{ file.basename }}
+
+{% section "Content" %}
+<!-- The actual memory/knowledge/preference/decision being recorded -->
+{% endsection %}
+
+{% section "Context" %}
+<!-- When and why was this learned? What investigation or session? -->
+{% endsection %}
+
+{% section "Implications" %}
+<!-- How should this memory affect future agent behavior? -->
+{% endsection %}
+
+{% section "Related Memories" %}
+```dataview
+LIST
+FROM "01-Memories"
+WHERE contains(tags, this.memory_type) AND file.name != this.file.name
+LIMIT 10
+```
+{% endsection %}

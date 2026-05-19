@@ -1,0 +1,25 @@
+{
+  "name": "faerie-hive-plugin",
+  "version": "2.0.0",
+  "description": "Hive — Faerie Obsidian Orchestrator. The vault-side counterpart to the Faerie hive-mind.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["obsidian", "faerie", "hive", "blueprint", "mcp", "compass"],
+  "author": "goodoleusa",
+  "license": "MIT",
+  "dependencies": {
+    "nunjucks": "^3.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/nunjucks": "^3.2.6",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.20.0",
+    "obsidian": "latest",
+    "typescript": "^5.4.0"
+  }
+}

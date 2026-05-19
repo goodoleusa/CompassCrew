@@ -1,0 +1,67 @@
+---
+type: feature-proposal
+status: proposed
+created: {{ moment().format('YYYY-MM-DD') }}
+updated: {{ moment().format('YYYY-MM-DD') }}
+tags: [feature, proposal, design]
+title: "{{ file.basename }}"
+system_area:
+priority: medium
+triggered_by_problem:
+estimated_problems_closed: 0
+baseline_eval_score: null
+parent: []
+blueprint: "[[Feature-Proposal]]"
+---
+
+# {{ file.basename }}
+
+{% section "What Problem Does This Solve" %}
+<!-- The specific named failure from the Problem-Log that triggered this. -->
+
+**Problem:**
+**Root cause it addresses:**
+{% endsection %}
+
+{% section "What Was Working Well Before" %}
+<!-- Don't skip. What does the existing system get right that this must not break? -->
+{% endsection %}
+
+{% section "Proposed Solution" %}
+<!-- Concrete enough to implement. Not a concept. -->
+
+**What gets built:**
+
+**What gets removed or simplified:**
+
+**Non-goals (what this deliberately does NOT address):**
+{% endsection %}
+
+{% section "Multi-Benefit Pre-Flight" %}
+<!-- Before building: how many problems might this close? If only 1, reconsider. -->
+
+| Problem | Category | Confidence |
+|---|---|---|
+|  | throughput / memory / resilience / quality / piston / COC | high/med/low |
+
+**Minimum expected problems closed:**
+**If it only solves 1 problem, why is the complexity worth it:**
+{% endsection %}
+
+{% section "Equilibrium Check" %}
+<!-- Does this add complexity proportional to what it removes? -->
+
+**Complexity added:**
+**Complexity removed:**
+**Net equilibrium:** surplus / neutral / deficit
+
+**If deficit — what would need to also be removed to balance:**
+{% endsection %}
+
+{% section "Eval Prediction" %}
+<!-- What should move on the eval after this ships? -->
+
+**Dimension most affected:**
+**Expected delta:**
+**How to verify it worked:**
+{% endsection %}

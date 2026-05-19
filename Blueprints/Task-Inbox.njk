@@ -1,0 +1,82 @@
+---
+type: task
+status: pending
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD HH:mm") }}
+tags: [task, inbox]
+task_id: TASK-{{ moment().format('YYYYMMDDHHmm') }}
+queue_task_id:
+task_type: work
+priority: MED
+assignee:
+requester:
+skill_required:
+deadline:
+completed_date:
+output_files: []
+output_location:
+source_file:
+source_sha256:
+local_path:
+git_commit:
+memory_lane: queue
+promotion_state: capture
+vault_path: "00-Inbox/tasks/{{ file.basename }}.md"
+faerie_session:
+blueprint: "[[Task-Inbox.blueprint]]"
+parent:
+  -
+sibling:
+  -
+child:
+  -
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author:
+agent_signed:
+ann_hash:
+ann_ts:
+---
+
+# {{ file.basename }}
+
+{% section "Task Description" %}
+<!-- What needs to be done? Specific enough for an agent to execute autonomously. -->
+{% endsection %}
+
+{% section "Context Bundle" %}
+<!-- Everything the agent needs — no internet lookup required to start. -->
+
+**Relevant files:**
+-
+
+**Key facts:**
+-
+
+**Do NOT:**
+-
+{% endsection %}
+
+{% section "Acceptance Criteria" %}
+- [ ] Output file written to:
+- [ ] Committed to git: yes / no
+- [ ] Vault note updated: yes / no
+{% endsection %}
+
+{% section "Agent Execution Log" %}
+<!-- Agent appends timestamped entries here — do not edit. -->
+{% endsection %}
+
+{% section "For the Human (async)" %}
+- [ ] Read and acknowledged
+- [ ] Decision (one line):
+
+**Human notes (append only):**
+-
+{% endsection %}
+
+{% section "For the Next Agent Run" %}
+-
+{% endsection %}

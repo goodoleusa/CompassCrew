@@ -1,0 +1,72 @@
+---
+type: observer-drop
+status: pending-review
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+tags: [observer, offline, usb, review]
+evidence_id:
+source_sha256:
+local_path:
+confidence_level: 0.00
+hypothesis_support: []
+tier:
+memory_lane: observer
+promotion_state: capture
+# --- chain (agent writes at pack time — do not edit) ---
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author:
+agent_signed:
+# --- observer signature ---
+sig:
+sig_fp:
+sig_ts:
+sig_hw: false
+ann_hash:
+ann_ts:
+blueprint: "[[Observer-Drop.blueprint]]"
+---
+
+# Observer Drop — {{ file.basename }}
+
+*This note was packaged for offline review via `note_sign.py observer-pack`.*
+*To return it: annotate in "Your Annotations", run `note_sign.py commit`, then `note_sign.py usb push`.*
+
+{% section "For the Observer" %}
+<!-- What are you being asked to review? Context for someone who may be offline. -->
+
+**Investigation:** `{{ chain_id }}`
+**What to look at:**
+**Question for you:**
+**Evidence to check:** *(linked below or in the observer pack's 0-raw-evidence/ folder)*
+{% endsection %}
+
+{% section "Findings Summary" %}
+<!-- Pre-filled by the sender. Key facts for context. -->
+{% endsection %}
+
+{% section "Quick-Start (if this is your first bundle)" %}
+```
+python3 quickstart.py    ← guided setup, ~6 steps, zero install required
+```
+
+After setup:
+```
+python3 note_sign.py verify <this-file>          ← verify chain integrity
+python3 note_sign.py commit <this-file>          ← sign your annotation
+python3 note_sign.py usb push --local ./bundle/ ← return via USB
+```
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Write here. Signs the content to prove you reviewed and your identity (protected). -->
+{% endsection %}
+
+{% section "Signing Status" %}
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+| Observer commitment | *(from frontmatter)* |
+{% endsection %}

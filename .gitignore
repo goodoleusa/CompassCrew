@@ -1,0 +1,8 @@
+node_modules/
+dist/
+main.js
+*.log
+.faerie-token
+.DS_Store
+.vscode/
+*.tsbuildinfo

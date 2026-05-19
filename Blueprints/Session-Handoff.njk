@@ -1,0 +1,85 @@
+---
+type: session-handoff
+agent_type: membot
+status: draft
+created: {{ file.ctime | moment("YYYY-MM-DD HH:mm") }}
+session_id:
+turns:
+ctx_pct:
+model: sonnet
+ended_at:
+tags: [handoff, session, async]
+doc_hash: sha256:pending
+promotion_state: awaiting-annotation
+ann_hash: ""
+ann_synced: false
+---
+
+# Session Handoff — {{ file.ctime | moment("YYYY-MM-DD") }}
+
+{% section "Session Summary" %}
+**Session ID:** `{{ session_id }}`
+**Turns:** {{ turns }} | **Context used:** {{ ctx_pct }}% | **Model:** {{ model }}
+**Ended:** {{ ended_at }}
+{% endsection %}
+
+{% section "Active Sprint" %}
+<!-- What was the main goal this session? -->
+
+{% endsection %}
+
+{% section "Completed" %}
+<!-- What was actually done? Bullet list. -->
+-
+
+{% endsection %}
+
+{% section "Artifacts" %}
+<!-- Files created, modified, committed -->
+| File | Action | Commit |
+|---|---|---|
+| | | |
+{% endsection %}
+
+{% section "Carried Forward" %}
+<!-- What was NOT completed? What's still open? -->
+-
+
+{% endsection %}
+
+{% section "Key Decisions" %}
+<!-- Architectural or investigative decisions made this session -->
+-
+
+{% endsection %}
+
+{% section "Discoveries" %}
+<!-- Surprising findings that other sessions or humans should know -->
+-
+
+{% endsection %}
+
+{% section "Next Steps" %}
+<!-- Specific next actions — ordered by priority -->
+1.
+2.
+3.
+{% endsection %}
+
+{% section "Queue Items Added" %}
+<!-- Tasks added to sprint-queue.json this session -->
+```dataview
+LIST
+FROM "00-Inbox/tasks"
+WHERE created = this.created
+```
+{% endsection %}
+
+---
+
+### Annotation Status
+**Ann Hash:** {{ann_hash}} | **Synced:** {{ann_synced}}
+
+*Written by session_stop_hook.py on session end.*
+*Also written manually by membot Phase 5 / /end command.*
+*Syncthing delivers to collaborators — ZimaBoard / OpenClaw picks this up.*

@@ -1,0 +1,40 @@
+---
+type: eval-report
+created: {{ now }}
+eval_id: {{ frontmatter.eval_id | default(file.basename) }}
+target: {{ frontmatter.target | default("?") }}
+---
+
+> [!charter] Eval Report — {{ frontmatter.target | default(file.basename) }}
+> Generated {{ now }} · scoring on 5 dimensions (each 0.0–1.0)
+
+## Dimensional scores
+
+| Dimension | Score | Meaning in context |
+|---|---|---|
+| Fitness | **{{ frontmatter.scores.fitness | default("?") }}** | Direct mission success rate — did the agent achieve the goal? |
+| Emergence | **{{ frontmatter.scores.emergence | default("?") }}** | Did discovered_work[] entries arise (>0 = healthy stigmergy)? |
+| Coherence | **{{ frontmatter.scores.coherence | default("?") }}** | Mission-cluster purity (same `mission` field across artifacts) |
+| Compression | **{{ frontmatter.scores.compression | default("?") }}** | dashboard_line ≤ 80 chars AND lossless summary? |
+| Equilibrium | **{{ frontmatter.scores.equilibrium | default("?") }}** | Did the change respect mutation discipline (T+1 measured)? |
+
+> [!honey] What the numbers mean
+> A score of **≥ 0.85** on any dimension is the threshold for "beneficial mutation" — propagate via NECTAR. Below **0.6** = harmful mutation, must roll back. **0.6–0.85** = neutral, observe one more session before deciding.
+
+## Detailed narrative
+
+{{ frontmatter.narrative | default("_Expand each dimensional score: WHY that number, what evidence in the manifests, what the trend over the last 3 sessions tells us._") }}
+
+## Trend (last 5 sessions)
+
+```mermaid
+xychart-beta
+  title "Fitness over last 5 sessions"
+  x-axis [s-5, s-4, s-3, s-2, s-1]
+  y-axis "Fitness" 0 --> 1
+  line [{{ frontmatter.trend | default("0,0,0,0,0") }}]
+```
+
+## Verdict
+
+> [!{% if frontmatter.scores.fitness | default(0) | float >= 0.85 %}honey{% else %}brood{% endif %}] {{ frontmatter.verdict | default("(verdict TBD)") }}

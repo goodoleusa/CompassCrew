@@ -1,0 +1,109 @@
+---
+type: evidence
+status: awaiting-human
+created: {{ file.ctime | moment("YYYY-MM-DD") }}
+updated: {{ file.mtime | moment("YYYY-MM-DD") }}
+tags: [osint, evidence]
+evidence_id: "{{ file.basename }}"
+source_file:
+source_sha256:
+local_path:
+git_commit:
+source_type: agent-research
+confidence_level: 0.00
+source_quality: unverified
+hypothesis_support: []
+tier:
+pipeline_run:
+date_collected: {{ moment().format('YYYY-MM-DD') }}
+date_analyzed:
+parent:
+  -
+sibling:
+  -
+child:
+  -
+memory_lane: inbox
+promotion_state: capture
+vault_path: "30-Evidence/{{ file.basename }}.md"
+faerie_session:
+blueprint: "[[Evidence-Item.blueprint]]"
+# --- chain (agent writes at creation — do not edit) ---
+chain_id:
+chain_seq: 0
+prev_hash:
+agent_hash:
+agent_author:
+agent_signed:
+# --- researcher signature (optional — sign when reviewing) ---
+sig:
+sig_fp:
+sig_ts:
+sig_hw: false
+# --- annotation commit (note_sign.py fills when you run commit) ---
+ann_hash:
+ann_ts:
+---
+
+# {{ file.basename }}
+
+{% section "What Was Found" %}
+<!-- One paragraph: what is this evidence, what does it show. Plain English, court-readable. -->
+{% endsection %}
+
+{% section "Why It Matters" %}
+<!-- Significance. Which hypothesis does this move and in which direction? -->
+
+| Hypothesis | Direction | Strength | Notes |
+|---|---|---|---|
+| H1 — *(your hypothesis)* | supports / contradicts / neutral | weak / moderate / strong | |
+| H2 — *(your hypothesis)* | | | |
+| H3 — *(your hypothesis)* | | | |
+| H4 — *(your hypothesis)* | | | |
+| H5 — *(your hypothesis)* | | | |
+<!-- Add or remove rows to match your investigation's hypotheses. -->
+{% endsection %}
+
+{% section "Provenance" %}
+| Field | Value |
+|---|---|
+| **Source File** | |
+| **SHA-256** | |
+| **Collection Date** | |
+| **Pipeline Run** | |
+| **Git Commit** | |
+| **Original URL / Path** | |
+{% endsection %}
+
+{% section "The Numbers" %}
+<!-- Statistics if applicable — p-values, ORs, confidence intervals, counts. -->
+<!-- Leave blank if not statistical evidence. -->
+{% endsection %}
+
+{% section "Open Questions" %}
+- [ ]
+{% endsection %}
+
+{% section "Related Evidence" %}
+```dataview
+LIST file.link
+FROM "30-Evidence"
+WHERE contains(sibling, this.file.link) AND file.name != this.file.name
+SORT confidence_level DESC
+```
+{% endsection %}
+
+{% section "Your Annotations" %}
+<!-- Write here. note_sign.py commit signs this section (Ctrl+Alt+C in Obsidian). -->
+<!-- Use --evidence-ref to link your annotation to a source hash for structural strength. -->
+{% endsection %}
+
+{% section "Signing Status" %}
+<!-- Filled automatically by note_sign.py — do not edit manually. -->
+
+| Field | Value |
+|---|---|
+| ann_hash | *(filled on commit)* |
+| ann_ts | *(filled on commit)* |
+| Signed by | *(commitments in frontmatter)* |
+{% endsection %}
