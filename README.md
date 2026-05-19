@@ -155,6 +155,56 @@ The novelty argument is laid out in detail at [`docs/NOVELTY.md`](docs/NOVELTY.m
 
 ---
 
+## MCP token management (admin reminder)
+
+The MCP token is how the plugin authenticates against the faerie server. **Get one, drop it in your vault, you're done.** Two paths:
+
+### One-click (recommended — requires plugin v2.1+)
+
+Run command **`faerie: grab MCP token`** → opens GitHub OAuth in your default browser → after you approve, faerie redirects back with a one-time token download → plugin auto-saves to `<vault>/.faerie-token` (gitignored). Done.
+
+### Manual (works today)
+
+```bash
+# Open the OAuth flow in your browser:
+open https://faerie.retrofuture.tech
+# (or visit it manually — sign in with GitHub, approve the app)
+
+# After approval you'll see your token. Copy it, then:
+echo "your-token-here" > /path/to/vault/.faerie-token
+
+# Lock down permissions (optional but recommended):
+chmod 600 /path/to/vault/.faerie-token
+```
+
+The token is a 200-char base64url string. Treat it like an SSH private key — never commit it, never paste in chat.
+
+### Rotating tokens
+
+```bash
+# From the plugin (admin command):
+# "faerie: rotate MCP token"  → invalidates the old token, issues a new one, auto-saves
+
+# Or from the VPS as admin:
+docker exec faerie2-mcp python3 deploy/scripts/manage-tokens.py rotate <user>
+```
+
+### Provisioning new users (admin only)
+
+GitHub OAuth handles this — anyone in `GITHUB_ALLOWED_USERS` (set in faerie's `.env`) can sign in at `https://faerie.retrofuture.tech` and gets a token + an Ed25519 signing keypair (one-time download, zero-knowledge — faerie keeps only the public key).
+
+```bash
+# Add a new user to the allow list (VPS admin):
+ssh faerie
+nano /opt/faerie/.env
+# Add their GitHub username to GITHUB_ALLOWED_USERS=...
+docker compose restart mcp-server
+```
+
+For the full provisioning + key-rotation flow (B2 buckets, signing keys, customer-facing accounts), see `scripts/dev/customer/` in the faerie repo. The same zero-knowledge contract applies: faerie holds only public keys + URLs; user retains their private signing key.
+
+---
+
 ## Configuration
 
 Settings → Hive →
