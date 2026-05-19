@@ -56,7 +56,7 @@ In Hive:
 - **Agent manifests** = pheromone trails. An AI agent finishes work and
   drops a manifest into `forensics/manifests/{date}/`. Other agents read
   the trail to decide what to do next.
-- **Human margin notes** = anti-pheromone. A human annotation on an AI
+- **Human annotations** = anti-pheromone. A human annotation on an AI
   artifact creates a routing signal: "this finding needs verification,"
   "this direction is dead," "this is the seed of something bigger."
 - **Bearings (N/S/E/W)** = chemical gradients. Each manifest carries a
@@ -84,7 +84,7 @@ self-referential structure where a system's symbols refer back to the
 system's own state. Hive embeds a small strange loop:
 
 ```
-  human writes margin note  →  MCP records margin note
+  human writes annotation  →  MCP records annotation
         ↑                              ↓
   next AI session reads        AI agent updates manifest
   the annotated context              based on annotation
@@ -133,12 +133,12 @@ This is qualitatively different from a generic backlinks graph. A backlinks
 graph shows *what is connected*; the bearing graph shows *which way the
 current is flowing*.
 
-### 3.3 The marginalia plane (human → AI signal)
+### 3.3 The annotations plane (human → AI signal)
 
-Cmd+Shift+M opens a margin note on the current artifact. The note is
-written to `00-SHARED/Marginalia/{date}/`, frontmatter-stamped with the
+Cmd+Shift+M opens a annotation on the current artifact. The note is
+written to `Human/{date}/`, frontmatter-stamped with the
 referenced artifact's SHA-256, then POSTed to the Faerie MCP server. The
-MCP indexes margin notes by `references_ai_artifact.path`, so the next
+MCP indexes annotations by `references_ai_artifact.path`, so the next
 agent working on that artifact reads the human's annotation *as part of
 its bundle*.
 
@@ -243,7 +243,7 @@ A reasonable monetization model:
   74 bundled blueprints), trail-refs, dependency doctor, file decorator,
   PDF export. Local-only. No MCP required.
 - **Hive+ subscription ($5/mo):** MCP bridge (Live pane, Chat panel,
-  marginalia loop, system-prompt round-trip, OSINT integration),
+  annotations loop, system-prompt round-trip, OSINT integration),
   hosted Faerie MCP server, monthly blueprint library updates, priority
   blueprint requests.
 - **Hive Pro ($10/mo):** everything in Hive+ plus team-shared blueprint
@@ -277,7 +277,7 @@ Specifically:
 
 - Every AI output is **marker-wrapped**, so human edits don't bounce off
   AI re-renders.
-- Every margin note is **routed back** to the AI for the next pass.
+- Every annotation is **routed back** to the AI for the next pass.
 - Every blueprint is **inspectable and editable**, so users can shape
   what AI is allowed to produce.
 - Every session has an **explicit push-to-durable**, so transient
@@ -297,7 +297,7 @@ not a finished product.
   bearing-aware navigation. Hive's trail-refs.
 - **Roam Research, Logseq, Obsidian** — bidirectional links as cognitive
   infrastructure. Hive layers semantics on top: bearings, blueprints,
-  margin notes.
+  annotations.
 - **Templater, QuickAdd, Dataview** — vault-side automation. Hive
   deliberately uses QuickAdd (not Templater) for macro logic, and
   Dataview for queryable rendering.

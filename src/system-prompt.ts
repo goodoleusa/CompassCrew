@@ -11,9 +11,9 @@ import * as path from "path";
  *           ▼
  *   vault/00-SHARED/SystemPrompts/<name>.md  (mirror, with frontmatter)
  *           │
- *           │  (2) Human edits margin notes / annotates inline
+ *           │  (2) Human drops annotations inline
  *           ▼
- *   vault/00-SHARED/Marginalia/<date>/m-*.md  (linked back to source)
+ *   vault/Human/<date>/a-*.md  (linked back to source)
  *           │
  *           │  (3) "Faerie: push prompt back" → POST faerie_update_system_prompt
  *           ▼
@@ -74,7 +74,7 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
           "---",
           "",
           "> [!propolis] Source-of-truth mirror",
-          `> Canonical file: \`prompts/system/${f}\` in **faerie2**. Annotate via margin notes (CMD+Shift+M). Push edits back with \`Faerie: push prompt back\`.`,
+          `> Canonical file: \`prompts/system/${f}\` in **faerie2**. Annotate via Human annotations (CMD+Shift+M). Push edits back with \`Faerie: push prompt back\`.`,
           "",
           "```njk",
           src,

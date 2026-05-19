@@ -1,7 +1,7 @@
 # Hive Tutorial
 
 This file is a stub. The full walkthrough — with screenshots, example
-blueprints, and the marginalia→MCP loop demo — lives in the vault at:
+blueprints, and the annotations→MCP loop demo — lives in the vault at:
 
 ```
 vault/00-SHARED/HELP/hive-plugin-tutorial.md

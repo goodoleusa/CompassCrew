@@ -48,7 +48,7 @@ W → west → "up" (alias) → parents bucket → #FFB300 → return to baselin
 - `src/vendor/micro-njk.ts` (NEW, 303 LOC) — zero-dep Nunjucks subset
 - `src/trail-refs.ts` (115 LOC)
 - `src/breadcrumbs-threading.ts` (75 LOC)
-- `src/marginalia.ts` (121 LOC)
+- `src/annotations.ts` (121 LOC)
 - `src/compass-overlay.ts` (REWRITTEN, ExcaliBrain-driven)
 - `src/excalidraw-setup.ts` (NEW, ~280 LOC) — pro preset, fonts, scripts, draft ExcaliBrain
 - `src/mcp-bridge.ts` (111 LOC) — Faerie Live pane
@@ -69,7 +69,7 @@ package.json has no `dependencies` section, only `devDependencies`. The plugin b
 ### MCP tools the plugin calls (faerie2 must implement)
 - `faerie_dashboard`, `faerie_metrics`, `faerie_charters` — Live pane
 - `faerie_chat`, `faerie_session_finalize` — Chat panel
-- `faerie_record_marginalia` — margin note loop
+- `faerie_record_annotation` — annotation loop
 - `faerie_anchor_promote` — QuickAdd macro
 - `faerie_update_system_prompt` — round-trip flow
 
@@ -197,7 +197,7 @@ class H(BaseHTTPRequestHandler):
       "faerie_charters": {"charters": [{"title": "Test", "path": "forensics/charters/2026-05-19/test.md"}]},
       "faerie_chat": {"reply": "Faerie stub reply: " + body.decode()[:80]},
       "faerie_session_finalize": {"ok": True, "path": "forensics/sessions/test.md"},
-      "faerie_record_marginalia": {"ok": True},
+      "faerie_record_annotation": {"ok": True},
       "faerie_anchor_promote": {"ok": True},
       "faerie_update_system_prompt": {"ok": True, "pr_url": "stub://pr/1"},
     }.get(tool, {"error": "unknown tool"})
@@ -206,7 +206,7 @@ class H(BaseHTTPRequestHandler):
 HTTPServer(("127.0.0.1", 8765), H).serve_forever()
 PYEOF
 python3 /tmp/faerie-mcp-stub.py &
-# Verify Live pane renders, Chat sends/receives, marginalia POST returns 200.
+# Verify Live pane renders, Chat sends/receives, annotation POST returns 200.
 ```
 **Done looks like:** Bearings audit report (clean OR drift-list); MCP stub running; Live pane + Chat verified against it.
 **Output:** Manifest with two artifacts: bearings-audit.md + mcp-stub-verified.md.

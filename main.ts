@@ -9,10 +9,10 @@ import {
 import { registerTrailRefs } from "./src/trail-refs";
 import { registerBreadcrumbsThreading } from "./src/breadcrumbs-threading";
 import {
-  registerMarginalia,
-  DEFAULT_MARGINALIA_SETTINGS,
-  MarginaliaSettings,
-} from "./src/marginalia";
+  registerAnnotations,
+  DEFAULT_ANNOTATION_SETTINGS,
+  AnnotationSettings,
+} from "./src/annotations";
 import { registerCompassOverlay } from "./src/compass-overlay";
 import {
   registerMcpBridge,
@@ -40,7 +40,7 @@ import { registerOntologyCommands } from "./src/ontology-commands";
 
 interface HiveSettings extends
   BlueprintSettings,
-  MarginaliaSettings,
+  AnnotationSettings,
   McpBridgeSettings,
   SystemPromptSettings,
   SpiderfootSettings {
@@ -49,7 +49,7 @@ interface HiveSettings extends
 
 const DEFAULT_HIVE_SETTINGS: HiveSettings = {
   ...DEFAULT_BLUEPRINT_SETTINGS,
-  ...DEFAULT_MARGINALIA_SETTINGS,
+  ...DEFAULT_ANNOTATION_SETTINGS,
   ...DEFAULT_MCP_BRIDGE_SETTINGS,
   ...DEFAULT_SYSTEM_PROMPT_SETTINGS,
   ...DEFAULT_SPIDERFOOT_SETTINGS,
@@ -89,7 +89,7 @@ export default class HivePlugin extends HivePdfPlugin {
     registerBlueprintEngine(this, getHiveSettings);
     registerBreadcrumbsThreading(this);
     registerTrailRefs(this);
-    registerMarginalia(this, getHiveSettings);
+    registerAnnotations(this, getHiveSettings);
     registerCompassOverlay(this);
     registerMcpBridge(this, getHiveSettings);
     registerFileDecorator(this);
@@ -158,6 +158,12 @@ class HiveSettingTab extends PluginSettingTab {
       .setDesc("File containing the bearer token. Should be gitignored.")
       .addText((t) => t.setValue(this.plugin.hiveSettings.tokenPath)
         .onChange(async (v) => { this.plugin.hiveSettings.tokenPath = v; await this.plugin.saveHiveSettings(); }));
+
+    new Setting(containerEl)
+      .setName("Human folder (vault-relative)")
+      .setDesc("Where annotations are written. Default: Human/ (vault root). Renamed from 'Marginalia folder'.")
+      .addText((t) => t.setValue(this.plugin.hiveSettings.annotationsDir)
+        .onChange(async (v) => { this.plugin.hiveSettings.annotationsDir = v || "Human"; await this.plugin.saveHiveSettings(); }));
 
     new Setting(containerEl)
       .setName("MCP refresh seconds (Live pane)")
