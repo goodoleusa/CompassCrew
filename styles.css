@@ -198,3 +198,118 @@ body.faerie-compass-overlay-active {
   max-height: 300px;
   overflow-y: auto;
 }
+
+/* --------------------------------------------------------------------------
+   6. Proposal review modal + Charter dashboard (added 2026-05-19)
+   -------------------------------------------------------------------------- */
+.faerie-proposal-modal h2 {
+  font-family: "Inter", "IBM Plex Sans", sans-serif;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 8px;
+}
+.faerie-proposal-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.faerie-proposal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  background: var(--background-secondary);
+  font-family: "Inter", "IBM Plex Sans", sans-serif;
+  font-size: 0.92em;
+}
+.faerie-proposal-row:hover { background: var(--background-modifier-hover); }
+.faerie-proposal-row input[type="checkbox"] { accent-color: #B8860B; }
+
+/* Charter dashboard pane (skeleton — see src/charter-dashboard.ts scaffold) */
+.faerie-charter-pane {
+  padding: 16px 20px;
+  font-family: "Inter", "IBM Plex Sans", sans-serif;
+}
+.faerie-charter-pane h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.faerie-charter-pane h2::before { content: "✶"; color: #DAA520; }
+.faerie-charter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.faerie-charter-card {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+  background:
+    linear-gradient(135deg, rgba(255, 248, 220, 0.20), rgba(245, 222, 179, 0.10));
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.faerie-charter-card:hover {
+  border-color: #B8860B;
+  transform: translateX(2px);
+}
+.faerie-charter-card .charter-title {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+.faerie-charter-card .charter-meta {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.faerie-charter-form label {
+  display: block;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin: 8px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.faerie-charter-form input,
+.faerie-charter-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  font-family: inherit;
+  font-size: 0.95em;
+}
+.faerie-charter-form textarea { min-height: 90px; resize: vertical; }
+.faerie-charter-form button {
+  margin-top: 14px;
+  padding: 8px 18px;
+  background: #B8860B;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.faerie-charter-form button:hover { background: #DAA520; }
+
+/* Faerie Live / Chat pane polish */
+.faerie-live-pane h2, .faerie-chat-pane h2 {
+  font-family: "Inter", "IBM Plex Sans", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.faerie-live-section {
+  background: var(--background-secondary);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}

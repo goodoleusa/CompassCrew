@@ -35,6 +35,7 @@ import {
 import { registerChatPanel, VIEW_TYPE_FAERIE_CHAT } from "./src/chat-panel";
 import { registerExcalidrawSetup } from "./src/excalidraw-setup";
 import { registerDesignFolder } from "./src/design-folder";
+import { registerCharterDashboard } from "./src/charter-dashboard";
 import { registerBreadcrumbsOnboarding } from "./src/breadcrumbs-onboarding";
 import { initOntology } from "./src/ontology-loader";
 import { registerOntologyCommands } from "./src/ontology-commands";
@@ -112,6 +113,10 @@ export default class HivePlugin extends HivePdfPlugin {
     );
     registerExcalidrawSetup(this);
     registerDesignFolder(this);
+    registerCharterDashboard(this,
+      () => this.hiveSettings.mcpUrl,
+      () => this.hiveSettings.tokenPath,
+    );
     registerBreadcrumbsOnboarding(this);
     registerOntologyCommands(this);
     registerCanonicalInstaller(this);
