@@ -6,7 +6,6 @@ Hive is an Obsidian plugin that turns your vault into a **collaborative substrat
 
 The point isn't to automate your thinking. It's to **see** what AI is doing in your work, **shape** it with your judgement, and **keep** the audit trail forever.
 
----
 
 ## What this is NOT
 
@@ -17,26 +16,22 @@ The point isn't to automate your thinking. It's to **see** what AI is doing in y
 
 ## What this IS
 
+- ✅ **Sketch your system, commit it, iterate.** Open Excalidraw, drag colored shapes around for your N/S/E/W bearings, hit *commit topology* — the plugin reads the colors back, writes the new structure into your frontmatter. **Vibe-code your knowledge graph the way you'd vibe-code a UI.** Re-sketch tomorrow if it doesn't feel right. Your second brain literally evolves on your canvas.
 - ✅ **A free AI tool with a visible, editable customization layer.** The vault IS the customization. Want to change how the AI thinks? Edit a markdown file. Save. Done.
 - ✅ **Steering, not telling.** Annotate while the AI works (live sync) OR while you read alone at midnight (queues for the next session). Either way, your edits land as first-class steering input.
-- ✅ A **two-layer canvas**: AI artifacts flow in as immutable forensic record; your annotations live in parallel, fully editable
-- ✅ A **compass for thinking**: every connection is typed (North = unblock, South = ship, East = parallel, West = re-validate)
-- ✅ A **glass-box system**: every AI template, formula, system prompt, and decision is a real Obsidian note you can read AND edit
-- ✅ A **knowledge-garden gardener**: blueprints render structured views over your existing notes without rewriting them
+- ✅ A **two-layer canvas**: AI artifacts flow in as immutable forensic record; your annotations live in parallel, fully editable. Neither overwrites the other.
 - ✅ **Yours, forever**: the vault is plain markdown. Uninstall the plugin and everything keeps working as plain notes.
 
----
 
-## Quickstart (3 commands)
+## Quickstart (2 commands, no build step)
+
+The plugin ships with `main.js` pre-built. No npm, no Node, no compilation.
 
 ```bash
-# 1. Clone + build
-git clone https://github.com/Persistech/faerie-hive-plugin && cd faerie-hive-plugin && npm install && npm run build
+# 1. Clone into your vault's plugins dir
+git clone https://github.com/Persistech/swarmy-hive-plugin /path/to/vault/.obsidian/plugins/hive
 
-# 2. Symlink into your vault
-ln -s "$(pwd)" /path/to/your/vault/.obsidian/plugins/hive
-
-# 3. Open Obsidian → Settings → Community plugins → enable Hive
+# 2. Open Obsidian → Settings → Community plugins → enable Hive
 ```
 
 That's it. Open the command palette and run **`faerie: doctor`** — it'll tell you which companion plugins (Dataview, Meta Bind, QuickAdd, Breadcrumbs, ExcaliBrain) you should add. Click "Install recommended" when offered.
@@ -47,7 +42,6 @@ Optional (only if you want AI features beyond local templates):
 - Drop it in `<vault>/.faerie-token` (gitignored, stays on your machine)
 - Run **`faerie: install canonical configs`** to drop in linter rules + Breadcrumbs setup + visual-language CSS
 
----
 
 ## What you get
 
@@ -70,9 +64,34 @@ You don't have to "tell" the AI — your reading IS the telling.
 
 Run `faerie: compass overlay for current note`. An [ExcaliBrain](https://github.com/zsviczian/excalibrain) view opens showing the note's N/S/E/W neighborhood as a hierarchical bearing tree — jasper for unblockers, emerald for deliverables, coral for parallels, amber for baselines. The native Obsidian graph can't show typed edges; this can.
 
-### ✏️ Excalidraw — Sketch your topology, commit it back
+### ✏️ Excalidraw round-trip — the headline feature
 
-`faerie: draft excalibrain` opens a new Excalidraw canvas pre-seeded with your current note's bearings hierarchy as labeled, color-coded rectangles. Drag shapes around to brainstorm a new structure. Run `faerie: commit excalibrain draft` — the plugin reads the colors back, writes the new topology into frontmatter. Round-trip closed: see-system → sketch-new-system → commit-new-system. Ships with the **Architect** preset (smooth bold lines, professional sans fonts: Inter, IBM Plex Sans, JetBrains Mono) and 20 curated Excalidraw automation scripts.
+The **draw → AI → code** loop has been the standout pattern for visual UI scaffolding all year. Hive applies the same idea to **knowledge structure**: draw → AI → system. Sketch your relationships, commit the topology, work in it, re-sketch. Your second brain literally evolves on the canvas.
+
+**The loop:**
+
+1. Run `faerie: draft excalibrain` on any note → opens a fresh Excalidraw canvas pre-seeded with that note's bearings hierarchy as labeled, color-coded rectangles
+2. Drag shapes around. Add new ones. Move connections. Brainstorm freely. Stay visual.
+3. Run `faerie: commit excalibrain draft` — the plugin reads the colors back from the canvas, diffs against the source, **writes the new topology into your frontmatter as proper NSEW links**
+4. Open the source note. The graph has changed to match your sketch.
+5. Tomorrow you re-sketch. The cycle never ends.
+
+**Vibe-code your knowledge graph the way you'd vibe-code a UI.** Most "second brains" force you to think in YAML upfront. Hive flips it: think visually, let the YAML follow.
+
+### 🗺️ Point it at any folder — design any system, not just faerie's
+
+The plugin doesn't care what the folder is. You can run the draw → commit cycle on:
+
+- **A code repo's docs** — sketch how modules depend, commit the structure, the repo's `README.md`s land as N/S/E/W-linked nodes
+- **A creative writing project** — chapters as boxes, "leads-to" / "callbacks" / "parallel-thread" as colored arrows, commit, your manuscript has its outline in frontmatter
+- **A research paper** — citations as N (prerequisites), claims as S (supports), counter-arguments as W (questions), related work as E
+- **A photo or media collection** — sketch the taxonomy you want, commit, the metadata flows
+- **A list of contacts** — relationship graph as a draw-and-commit
+- **Literally any folder in your vault** — open it in `faerie: design this folder`, see its current structure (or lack thereof), redraw, commit
+
+The 4-bearing compass is structural; the labels are yours (per `ontology.yaml`). The folder is whatever you point at. The cycle is the same.
+
+Ships with the **Architect** preset (smooth bold lines, no hand-drawn jitter, professional sans fonts: Inter / IBM Plex Sans / JetBrains Mono) and 20 curated Excalidraw automation scripts (Auto Layout, Connect Elements, Add Next Step in Process, Box Selected, etc.).
 
 ### 🍯 Visual Language Callouts
 
@@ -125,7 +144,6 @@ Original feature from `hive-pdf` v1, preserved unchanged. Smart-sized mermaid di
 
 Every AI artifact carries a sha256 hash. Every human annotation gets the same. Two parallel chains-of-custody (`coc.jsonl` for AI, `coc-human.jsonl` for you), both append-only, hash-linked. The vault is markdown; the audit is forensic.
 
----
 
 ## Philosophy
 
@@ -140,7 +158,6 @@ This is the apiary model — bees forage, the keeper curates, the comb holds bot
 
 The novelty argument is laid out in detail at [`docs/NOVELTY.md`](docs/NOVELTY.md) — *Hive: A Cognitive Substrate for Human–AI Co-Thinking*. If you want the academic framing, read it. If you want to just use the thing, you don't have to.
 
----
 
 ## Deeper docs
 
@@ -153,7 +170,6 @@ The novelty argument is laid out in detail at [`docs/NOVELTY.md`](docs/NOVELTY.m
 - **Spawn bundle (for AI verification):** [`docs/SPAWN-BUNDLE.md`](docs/SPAWN-BUNDLE.md) — the 4-agent multi-bearing wave that empirically tests the plugin against a real vault
 - **Companion plugins:** [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) · [Meta Bind](https://github.com/mProjectsCode/obsidian-meta-bind-plugin) · [QuickAdd](https://github.com/chhoumann/quickadd) · [Breadcrumbs](https://breadcrumbs-wiki.netlify.app/) · [ExcaliBrain](https://github.com/zsviczian/excalibrain)
 
----
 
 ## MCP token management (admin reminder)
 
@@ -203,7 +219,6 @@ docker compose restart mcp-server
 
 For the full provisioning + key-rotation flow (B2 buckets, signing keys, customer-facing accounts), see `scripts/dev/customer/` in the faerie repo. The same zero-knowledge contract applies: faerie holds only public keys + URLs; user retains their private signing key.
 
----
 
 ## Configuration
 
@@ -218,13 +233,11 @@ Settings → Hive →
 
 All settings are optional — the plugin works in a fully local mode (PDF export, blueprints, trail-refs, compass overlay, visual callouts, Excalidraw round-trip) with **zero network calls**.
 
----
 
 ## License
 
 MIT. Use it, fork it, ship your own version. Credit Latticework and any other plugins you build on, like we did.
 
----
 
 ## A note on the name
 
