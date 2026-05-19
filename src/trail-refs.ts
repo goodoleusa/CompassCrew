@@ -1,12 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin } from "obsidian";
-
-type Bearing = "N" | "S" | "E" | "W";
-const BEARING_NAME: Record<Bearing, string> = {
-  N: "North — unblock predecessor",
-  S: "South — conclude / move downstream",
-  E: "East — parallel sister work",
-  W: "West — return to baseline / HQ",
-};
+import { Bearing, BEARING_LABEL, BEARINGS } from "./bearings";
 
 class BearingPickerModal extends Modal {
   constructor(app: App, private onPick: (b: Bearing, dest: string) => void) {
@@ -22,8 +15,8 @@ class BearingPickerModal extends Modal {
     const row = contentEl.createDiv();
     row.style.display = "flex";
     row.style.gap = "8px";
-    (Object.keys(BEARING_NAME) as Bearing[]).forEach((b) => {
-      const btn = row.createEl("button", { text: `${b} — ${BEARING_NAME[b]}` });
+    BEARINGS.forEach((b) => {
+      const btn = row.createEl("button", { text: BEARING_LABEL[b] });
       btn.onclick = () => {
         const dest = destInput.value.trim() || "#";
         this.onPick(b, dest);

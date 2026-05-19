@@ -1,32 +1,19 @@
 import { App, Notice, Plugin, TFile } from "obsidian";
+import { Bearing, BEARING_TO_BC_FIELD } from "./bearings";
 
 /**
  * Breadcrumbs threading integration.
  *
- * Breadcrumbs plugin (SkepticMystic/breadcrumbs) builds a hierarchy from
- * frontmatter fields. It supports both YAML-list values (newer) and
- * comma-separated strings. Default canonical fields used by Faerie:
+ * Bearing → field mapping is imported from src/bearings.ts (the canonical
+ * NSEW ontology module). Do NOT define mappings locally.
+ *
+ * Breadcrumbs plugin builds a hierarchy from frontmatter fields:
  *   - up    (parent / north — unblock predecessor)
  *   - down  (children / south — concluded deliverables below)
  *   - next  (south sibling — next-in-thread)
  *   - prev  (north sibling — previous-in-thread)
  *   - same  (east — parallel sister work)
- *
- * Threading view: Breadcrumbs exposes a "trail" rendered as a thread of
- * crumbs across the top of each note (List, Path, or Grid). We add commands
- * that maintain the thread automatically when trail-refs are created and
- * provide a "thread navigator" view via Breadcrumbs commands.
- *
- * Bearing → field map (canonical, mirrors compass DAG):
- *   N → up / prev   S → down / next   E → same   W → up (returns to HQ)
  */
-
-export const BEARING_TO_BC_FIELD: Record<"N" | "S" | "E" | "W", string> = {
-  N: "up",
-  S: "next",
-  E: "same",
-  W: "up",
-};
 
 function basenameNoExt(p: string): string {
   const b = p.split("/").pop() || p;
@@ -39,18 +26,14 @@ async function addBreadcrumbThread(
   field: string,
   targetPath: string,
 ): Promise<void> {
-  const link = `"[[${basenameNoExt(targetPath)}]]"`;
+  const linkVal = `[[${basenameNoExt(targetPath)}]]`;
   await app.fileManager.processFrontMatter(file, (fm) => {
     const existing = fm[field];
-    if (existing == null) {
-      fm[field] = [link.replace(/^"|"$/g, "")];
-    } else if (Array.isArray(existing)) {
-      const linkVal = link.replace(/^"|"$/g, "");
+    if (existing == null) fm[field] = [linkVal];
+    else if (Array.isArray(existing)) {
       if (!existing.includes(linkVal)) existing.push(linkVal);
     } else if (typeof existing === "string") {
-      if (!existing.includes(basenameNoExt(targetPath))) {
-        fm[field] = [existing, link.replace(/^"|"$/g, "")];
-      }
+      if (!existing.includes(basenameNoExt(targetPath))) fm[field] = [existing, linkVal];
     }
   });
 }
@@ -62,8 +45,6 @@ export function registerBreadcrumbsThreading(plugin: Plugin) {
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
-      // Default: thread S (next) to clipboard if it parses as [[Link]],
-      // otherwise prompt with last-selected text.
       const cb = await navigator.clipboard.readText().catch(() => "");
       const m = cb.match(/\[\[([^\]|#]+)/);
       const target = m ? m[1] : cb.trim();
@@ -73,8 +54,7 @@ export function registerBreadcrumbsThreading(plugin: Plugin) {
     },
   });
 
-  // Helper exposed for trail-refs to call when a bearing ref is created.
-  (plugin as any).faerieAddBreadcrumb = async (file: TFile, bearing: "N"|"S"|"E"|"W", dest: string) => {
+  (plugin as any).faerieAddBreadcrumb = async (file: TFile, bearing: Bearing, dest: string) => {
     const field = BEARING_TO_BC_FIELD[bearing];
     if (!field) return;
     await addBreadcrumbThread(plugin.app, file, field, dest);

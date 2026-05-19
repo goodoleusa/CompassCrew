@@ -2,16 +2,12 @@ import { App, Notice, Plugin, TFile, FuzzySuggestModal } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
 
-// Nunjucks is bundled via npm dependency. Falls back to a tiny mustache-like
-// renderer if the runtime require fails (e.g. during stub builds).
-let nunjucks: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  nunjucks = require("nunjucks");
-  nunjucks.configure({ autoescape: false });
-} catch {
-  nunjucks = null;
-}
+// Vendored micro-Nunjucks renderer — zero npm dependencies. Supports the
+// subset of Nunjucks syntax actually used by Hive blueprints: variables,
+// dotted paths, default/upper/lower/length/join/replace/date filters,
+// {% if %} {% else %} {% endif %}, {% for x in xs %} {% endfor %}, and
+// {% set %}. See src/vendor/micro-njk.ts.
+import { renderString as microNjkRender } from "./vendor/micro-njk";
 
 export interface BlueprintSettings {
   blueprintsDir: string; // vault-relative
@@ -41,14 +37,7 @@ function listBlueprints(app: App, settings: BlueprintSettings): string[] {
 
 function renderTemplate(tplPath: string, ctx: Record<string, unknown>): string {
   const raw = fs.readFileSync(tplPath, "utf8");
-  if (nunjucks) {
-    return nunjucks.renderString(raw, ctx);
-  }
-  // Fallback: very simple {{ var }} replacement
-  return raw.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, key) => {
-    const v = key.split(".").reduce((o: any, k: string) => (o == null ? undefined : o[k]), ctx);
-    return v == null ? "" : String(v);
-  });
+  return microNjkRender(raw, ctx as any);
 }
 
 const BEGIN = (s: string) => `<!-- BLUEPRINT-BEGIN:${s} -->`;

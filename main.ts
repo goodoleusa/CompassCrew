@@ -33,6 +33,8 @@ import {
   SpiderfootSettings,
 } from "./src/spiderfoot";
 import { registerChatPanel, VIEW_TYPE_FAERIE_CHAT } from "./src/chat-panel";
+import { registerExcalidrawSetup } from "./src/excalidraw-setup";
+import { registerBreadcrumbsOnboarding } from "./src/breadcrumbs-onboarding";
 
 interface HiveSettings extends
   BlueprintSettings,
@@ -91,6 +93,8 @@ export default class HivePlugin extends HivePdfPlugin {
       () => this.hiveSettings.mcpUrl,
       () => this.hiveSettings.tokenPath,
     );
+    registerExcalidrawSetup(this);
+    registerBreadcrumbsOnboarding(this);
 
     this.addSettingTab(new HiveSettingTab(this.app, this));
 

@@ -7,9 +7,15 @@ const REQUIRED_PLUGINS = [
   "obsidian-meta-bind-plugin",
   "quickadd",
   "breadcrumbs",
-  "juggl",
+  "excalibrain",                  // canonical compass-overlay engine
+  "obsidian-excalidraw-plugin",   // ExcaliBrain dependency + draft canvas
   "obsidian-linter",
-  "obsidian-excalidraw-plugin",
+];
+
+const OPTIONAL_PLUGINS = [
+  "juggl",                        // optional alternative graph view
+  "extended-graph",               // optional richer graph styling
+  "advanced-uri",                 // enables CLI-driven QuickAdd shell macros
 ];
 
 const FORBIDDEN_PLUGINS = ["templater-obsidian"];
