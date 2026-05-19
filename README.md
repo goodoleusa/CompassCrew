@@ -23,18 +23,37 @@ The point isn't to automate your thinking. It's to **see** what AI is doing in y
 - ✅ **Yours, forever**: the vault is plain markdown. Uninstall the plugin and everything keeps working as plain notes.
 
 
-## Quickstart (2 commands, no build step)
+## Quickstart (2 minutes, no build step)
 
 The plugin ships with `main.js` pre-built. No npm, no Node, no compilation.
 
-```bash
-# 1. Clone into your vault's plugins dir
-git clone https://github.com/Persistech/swarmy-hive-plugin /path/to/vault/.obsidian/plugins/hive
+### 1. Get the plugin into your vault
 
-# 2. Open Obsidian → Settings → Community plugins → enable Hive
+```bash
+git clone https://github.com/Persistech/swarmy-hive-plugin /path/to/your-vault/.obsidian/plugins/hive
 ```
 
-That's it. Open the command palette and run **`faerie: doctor`** — it'll tell you which companion plugins (Dataview, Meta Bind, QuickAdd, Breadcrumbs, ExcaliBrain) you should add. Click "Install recommended" when offered.
+### 2. Enable it in Obsidian
+
+- Open your vault in Obsidian
+- `Settings → Community plugins`
+- (First time only) toggle off "Restricted mode"
+- Find **Hive** in the installed plugins list → toggle it ON
+
+### 3. Run the doctor
+
+The doctor checks your companion plugins (Dataview, Meta Bind, QuickAdd, Breadcrumbs, ExcaliBrain) and offers to install whichever you're missing.
+
+To run any command in Obsidian, **open the command palette** — that's the universal shortcut for "do a thing":
+
+- Mac: `⌘ + P`
+- Windows / Linux: `Ctrl + P`
+
+The palette opens. **Start typing `faerie`** — every Hive command is prefixed with `faerie:` so they all surface together. Pick **`Faerie: doctor`** and hit `Enter`.
+
+Doctor tells you what's missing and offers a one-click installer. Done.
+
+> **Already an Obsidian user?** Every "command" mentioned below is invoked the same way — `⌘/Ctrl+P`, type the name, hit enter. No shell, no config files, no YAML editing.
 
 Optional (only if you want AI features beyond local templates):
 
