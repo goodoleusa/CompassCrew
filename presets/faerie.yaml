@@ -1,0 +1,18 @@
+# Faerie default ontology — the canonical hive-mind framing.
+# Bearings = compass directions for mission-graph navigation.
+name: "faerie"
+bearings:
+  N: {label: "N — unblock predecessor", color: "#C73E1D", glyph: "↑", role: "unblock predecessor (reverse-dependency, upstream anchor)"}
+  S: {label: "S — conclude downstream", color: "#2E8540", glyph: "↓", role: "conclude / ship downstream (forward-dependency, next deliverable)"}
+  E: {label: "E — parallel sister",     color: "#FF8E3C", glyph: "→", role: "parallel sister work (same DAG level, same mission)"}
+  W: {label: "W — return to baseline",  color: "#FFB300", glyph: "←", role: "return to baseline / re-seat assumptions (backtrack to HQ)"}
+callouts:
+  - {id: "navigator", icon: "compass",      color_uses_bearing: N}
+  - {id: "maker",     icon: "hammer",       color_uses_bearing: S}
+  - {id: "bridge",    icon: "git-branch",   color_uses_bearing: E}
+  - {id: "deep-diver",icon: "search",       color_uses_bearing: W}
+  - {id: "knowledge-synthesizer", icon: "library", color_uses_bearing: E}
+  - {id: "research-analyst",      icon: "telescope", color_uses_bearing: N}
+  - {id: "security-auditor",      icon: "shield",    color_uses_bearing: W}
+blueprint_pack: "faerie"
+mcp_servers: ["faerie"]

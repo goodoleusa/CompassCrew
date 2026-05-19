@@ -1,0 +1,13 @@
+# Getting Things Done (David Allen) — context-driven action management.
+# N = blocked / waiting-for; S = next concrete action; E = parallel project;
+# W = someday-maybe (re-seat: review later).
+name: "gtd"
+bearings:
+  N: {label: "Waiting-for",      color: "#C73E1D", glyph: "⏸", role: "blocked on someone else / external input"}
+  S: {label: "Next action",      color: "#2E8540", glyph: "▶", role: "next concrete physical action"}
+  E: {label: "Parallel project", color: "#1E88E5", glyph: "≡", role: "active sister project at the same horizon"}
+  W: {label: "Someday/maybe",    color: "#9E9E9E", glyph: "◌", role: "incubating idea — review during weekly review"}
+callouts:
+  - {id: "context",     icon: "tag",     color_uses_bearing: S}
+  - {id: "weekly-review", icon: "calendar-check", color_uses_bearing: W}
+blueprint_pack: "gtd"

@@ -35,6 +35,8 @@ import {
 import { registerChatPanel, VIEW_TYPE_FAERIE_CHAT } from "./src/chat-panel";
 import { registerExcalidrawSetup } from "./src/excalidraw-setup";
 import { registerBreadcrumbsOnboarding } from "./src/breadcrumbs-onboarding";
+import { initOntology } from "./src/ontology-loader";
+import { registerOntologyCommands } from "./src/ontology-commands";
 
 interface HiveSettings extends
   BlueprintSettings,
@@ -67,6 +69,11 @@ export default class HivePlugin extends HivePdfPlugin {
     await super.onload();
     await this.loadHiveSettings();
 
+    // Initialize pluggable ontology (display layer for NSEW bearings) BEFORE
+    // any UI module reads BEARING_LABEL/COLOR/GLYPH. The internal data model
+    // is always N/S/E/W — only the display surface adapts to user preference.
+    initOntology(this.app);
+
     // The plugin folder bundles a canonical `Blueprints/` directory at the
     // repo root. Resolve its absolute path so the blueprint engine can use
     // it as the primary template source (vault `00-SHARED/Blueprints/`
@@ -95,6 +102,7 @@ export default class HivePlugin extends HivePdfPlugin {
     );
     registerExcalidrawSetup(this);
     registerBreadcrumbsOnboarding(this);
+    registerOntologyCommands(this);
 
     this.addSettingTab(new HiveSettingTab(this.app, this));
 

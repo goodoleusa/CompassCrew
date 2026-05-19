@@ -14,6 +14,16 @@
  * If you change anything here, also update those three files. The ontology
  * is the topology of the mission graph; drifting definitions = drifting
  * graph = harmful mutation.
+ *
+ * NOTE (pluggable ontology, task #36):
+ * --------------------------------------
+ * The BEARING_LABEL / BEARING_COLOR / BEARING_GLYPH / BEARING_ROLE records
+ * below are now the DISPLAY layer and may be mutated at runtime by
+ * `ontology-loader.ts` based on `vault/.hive/ontology.yaml`. The structural
+ * NSEW keys + iteration order + Breadcrumbs / ExcaliBrain bucket mappings
+ * NEVER change — those are the topology. Only the user-facing surface
+ * (label text, color hex, glyph, role description) is per-user. Importers
+ * keep getting the same object reference; mutation propagates ambiently.
  */
 
 export type Bearing = "N" | "S" | "E" | "W";

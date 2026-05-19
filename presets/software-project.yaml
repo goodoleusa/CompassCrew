@@ -1,0 +1,15 @@
+# Software project — Agile-flavored task triage.
+# N = blocker (must clear first); S = feature shipped (deliverable);
+# E = parallel work; W = design decision (reseatable architecture choice).
+name: "software-project"
+bearings:
+  N: {label: "Blocker",          color: "#E53935", glyph: "⛔", role: "must be resolved before downstream work proceeds"}
+  S: {label: "Feature shipped",  color: "#43A047", glyph: "🚀", role: "deliverable merged / deployed"}
+  E: {label: "Parallel work",    color: "#1E88E5", glyph: "‖", role: "concurrent track (same sprint, no dependency)"}
+  W: {label: "Design decision",  color: "#8E24AA", glyph: "⚖", role: "architectural choice — reseatable if assumptions break"}
+callouts:
+  - {id: "bug",     icon: "bug",        color_uses_bearing: N}
+  - {id: "feature", icon: "sparkles",   color_uses_bearing: S}
+  - {id: "refactor",icon: "wrench",     color_uses_bearing: W}
+  - {id: "spike",   icon: "zap",        color_uses_bearing: E}
+blueprint_pack: "software"

@@ -1,0 +1,15 @@
+# Academic paper — citation-network framing.
+# N = cited source (prior art the paper builds on); S = claim supported (by this paper);
+# E = related work (same field, parallel contribution); W = counter-argument.
+name: "academic-paper"
+bearings:
+  N: {label: "Cited source",     color: "#1565C0", glyph: "↑", role: "prior work this paper builds on"}
+  S: {label: "Claim supported",  color: "#2E7D32", glyph: "↓", role: "conclusion / contribution of this paper"}
+  E: {label: "Related work",     color: "#EF6C00", glyph: "↔", role: "parallel contribution in the same field"}
+  W: {label: "Counter-argument", color: "#C62828", glyph: "⊗", role: "objection / limitation requiring re-seating of claims"}
+callouts:
+  - {id: "abstract",   icon: "file-text", color_uses_bearing: S}
+  - {id: "methodology",icon: "flask",     color_uses_bearing: N}
+  - {id: "finding",    icon: "lightbulb", color_uses_bearing: S}
+  - {id: "limitation", icon: "alert-triangle", color_uses_bearing: W}
+blueprint_pack: "academic"

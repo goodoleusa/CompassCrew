@@ -1,0 +1,14 @@
+# Zettelkasten — Luhmann-style atomic-note linking.
+# N = parent-note (upstream concept); S = child elaboration (deepens);
+# E = sibling link (lateral association); W = structure note (index/anchor).
+name: "zettelkasten"
+bearings:
+  N: {label: "Parent note",         color: "#5E35B1", glyph: "↰", role: "upstream concept this note refines"}
+  S: {label: "Child elaboration",   color: "#00897B", glyph: "↳", role: "more specific note that branches from here"}
+  E: {label: "Sibling link",        color: "#FB8C00", glyph: "↔", role: "lateral association (related-but-not-derived)"}
+  W: {label: "Structure note",      color: "#6D4C41", glyph: "⌂", role: "index / hub / anchor for this thread"}
+callouts:
+  - {id: "literature-note", icon: "book",     color_uses_bearing: N}
+  - {id: "permanent-note",  icon: "anchor",   color_uses_bearing: W}
+  - {id: "fleeting-note",   icon: "wind",     color_uses_bearing: E}
+blueprint_pack: "zettelkasten"

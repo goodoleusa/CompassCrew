@@ -1,0 +1,15 @@
+# OSINT investigation — analyst-of-competing-hypotheses workflow.
+# N = hypothesis (claim under test); S = evidence (supporting fact);
+# E = related entity (parallel actor / artifact); W = alternative theory.
+name: "osint-investigation"
+bearings:
+  N: {label: "Hypothesis",        color: "#D32F2F", glyph: "?", role: "claim under investigation (depends on evidence)"}
+  S: {label: "Evidence",          color: "#388E3C", glyph: "✓", role: "fact / artifact that supports a hypothesis"}
+  E: {label: "Related entity",    color: "#F57C00", glyph: "◇", role: "adjacent actor, artifact, or location worth following"}
+  W: {label: "Alternative theory", color: "#FBC02D", glyph: "⇆", role: "competing explanation (forces hypothesis re-test)"}
+callouts:
+  - {id: "subject",  icon: "user",       color_uses_bearing: N}
+  - {id: "artifact", icon: "file-text",  color_uses_bearing: S}
+  - {id: "location", icon: "map-pin",    color_uses_bearing: E}
+  - {id: "timeline", icon: "clock",      color_uses_bearing: E}
+blueprint_pack: "osint"
