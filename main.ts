@@ -34,6 +34,7 @@ import {
 } from "./src/spiderfoot";
 import { registerChatPanel, VIEW_TYPE_FAERIE_CHAT } from "./src/chat-panel";
 import { registerExcalidrawSetup } from "./src/excalidraw-setup";
+import { registerDesignFolder } from "./src/design-folder";
 import { registerBreadcrumbsOnboarding } from "./src/breadcrumbs-onboarding";
 import { initOntology } from "./src/ontology-loader";
 import { registerOntologyCommands } from "./src/ontology-commands";
@@ -110,6 +111,7 @@ export default class HivePlugin extends HivePdfPlugin {
       () => this.hiveSettings.tokenPath,
     );
     registerExcalidrawSetup(this);
+    registerDesignFolder(this);
     registerBreadcrumbsOnboarding(this);
     registerOntologyCommands(this);
     registerCanonicalInstaller(this);
