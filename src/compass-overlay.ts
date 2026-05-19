@@ -1,4 +1,6 @@
-import { Notice, Plugin } from "obsidian";
+import { ItemView, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
+import { readBearingFrontmatter } from "./breadcrumbs-threading";
+import { BEARING_COLOR, BEARING_LABEL, Bearing } from "./bearings";
 
 /**
  * Compass overlay — powered by ExcaliBrain.
@@ -123,3 +125,111 @@ export function registerCompassOverlay(plugin: Plugin) {
     },
   });
 }
+
+
+/* -----------------------------------------------------------------------
+ * Inline Mermaid compass view (no new deps; uses Obsidian's bundled mermaid)
+ * -----------------------------------------------------------------------
+ * Complements the ExcaliBrain command: reads NSEW frontmatter from the
+ * active note (via breadcrumbs-threading.readBearingFrontmatter, which
+ * prefers canonical NSEW and falls back to Breadcrumbs aliases) and
+ * renders a bearing-colored mermaid graph in a transient leaf.
+ */
+
+const VIEW_TYPE_FAERIE_MERMAID_COMPASS = "faerie-mermaid-compass";
+
+function stripLink(s: string): string {
+  const m = s.match(/^\[\[([^\]|#]+)/);
+  return (m ? m[1] : s).trim();
+}
+
+function escapeId(s: string): string {
+  return s.replace(/[^A-Za-z0-9_]/g, "_");
+}
+
+function escLabel(s: string): string {
+  return s.replace(/"/g, "'");
+}
+
+function buildMermaid(noteName: string, bearings: Partial<Record<Bearing, string[]>>): string {
+  const lines: string[] = ["graph TD"];
+  const cId = "C__" + escapeId(noteName);
+  lines.push(`    ${cId}["${escLabel(noteName)}"]`);
+
+  const emit = (b: Bearing) => {
+    const items = bearings[b] || [];
+    for (let i = 0; i < items.length; i++) {
+      const name = stripLink(items[i]);
+      const nid = b + i + "__" + escapeId(name);
+      lines.push(`    ${nid}["${escLabel(name)}"]`);
+      if (b === "N") lines.push(`    ${nid} -->|N| ${cId}`);
+      else if (b === "S") lines.push(`    ${cId} -->|S| ${nid}`);
+      else if (b === "E") lines.push(`    ${cId} -.->|E| ${nid}`);
+      else if (b === "W") lines.push(`    ${nid} -.->|W| ${cId}`);
+      lines.push(`    style ${nid} stroke:${BEARING_COLOR[b]},stroke-width:2px`);
+    }
+  };
+  emit("N"); emit("S"); emit("E"); emit("W");
+  lines.push(`    style ${cId} fill:#FFD96B,stroke:#333,stroke-width:2px`);
+  return lines.join("\n");
+}
+
+class FaerieMermaidCompassView extends ItemView {
+  private file: TFile | null = null;
+  constructor(leaf: WorkspaceLeaf) { super(leaf); }
+  getViewType() { return VIEW_TYPE_FAERIE_MERMAID_COMPASS; }
+  getDisplayText() { return "Faerie Compass (mermaid)"; }
+  getIcon() { return "compass"; }
+  setSourceFile(f: TFile) { this.file = f; }
+  async render() {
+    const root = this.containerEl.children[1] as HTMLElement;
+    root.empty();
+    root.createEl("h3", { text: "Faerie Compass — bearings overlay" });
+    if (!this.file) {
+      root.createEl("p", { text: "No active file when this view opened." });
+      return;
+    }
+    const bearings = await readBearingFrontmatter(this.app, this.file);
+    const total = (Object.values(bearings) as string[][]).reduce((a, v) => a + (v?.length || 0), 0);
+    if (total === 0) {
+      root.createEl("p", { text: `No NSEW or up/next/same frontmatter on ${this.file.basename}.` });
+      return;
+    }
+    const mermaid = buildMermaid(this.file.basename, bearings);
+    const legend = root.createEl("div", { cls: "faerie-compass-legend" });
+    for (const b of ["N", "S", "E", "W"] as Bearing[]) {
+      const swatch = legend.createEl("span");
+      swatch.style.display = "inline-block";
+      swatch.style.padding = "2px 8px";
+      swatch.style.margin = "0 6px 0 0";
+      swatch.style.border = `2px solid ${BEARING_COLOR[b]}`;
+      swatch.style.borderRadius = "4px";
+      swatch.setText(BEARING_LABEL[b]);
+    }
+    const host = root.createEl("div", { cls: "faerie-compass-mermaid" });
+    const code = "```mermaid\n" + mermaid + "\n```";
+    const { MarkdownRenderer } = require("obsidian");
+    await MarkdownRenderer.renderMarkdown(code, host, this.file.path, this);
+  }
+  async onOpen() { await this.render(); }
+  async onClose() { /* nothing */ }
+}
+
+export function registerMermaidCompass(plugin: Plugin) {
+  plugin.registerView(VIEW_TYPE_FAERIE_MERMAID_COMPASS, (leaf) => new FaerieMermaidCompassView(leaf));
+  plugin.addCommand({
+    id: "faerie-mermaid-compass",
+    name: "Faerie: mermaid compass (inline NSEW overlay)",
+    callback: async () => {
+      const file = plugin.app.workspace.getActiveFile();
+      if (!file) { new Notice("Open a note first."); return; }
+      const leaf = plugin.app.workspace.getLeaf(true);
+      await leaf.setViewState({ type: VIEW_TYPE_FAERIE_MERMAID_COMPASS, active: true });
+      const view = leaf.view as FaerieMermaidCompassView;
+      view.setSourceFile(file);
+      await view.render();
+    },
+  });
+}
+
+export { VIEW_TYPE_FAERIE_MERMAID_COMPASS };

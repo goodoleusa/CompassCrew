@@ -1,3 +1,8 @@
+// TODO(schema-verify): CSV column names assume {events.csv, subdomains.csv,
+// ips.csv, emails.csv, tech.csv, leaks.csv} with primary field 'value'.
+// Verify against actual scripts/spiderfoot output once accessible. Until
+// then, readCsvColumn falls back through ['value','data','subdomain', first
+// column] so we degrade gracefully on schema drift.
 import { App, Modal, Notice, Plugin, TFile } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
@@ -79,8 +84,15 @@ function readCsvColumn(csvPath: string, columnName: string, limit = 50): string[
     const raw = fs.readFileSync(csvPath, "utf8");
     const lines = raw.split(/\r?\n/);
     if (!lines.length) return [];
-    const header = lines[0].split(",");
-    const idx = header.indexOf(columnName);
+    const header = lines[0].split(",").map((h) => h.trim());
+    // Tolerant column lookup: configured → 'value' → 'data' → 'subdomain' → first column.
+    const candidates = [columnName, "value", "data", "subdomain"];
+    let idx = -1;
+    for (const c of candidates) {
+      idx = header.indexOf(c);
+      if (idx >= 0) break;
+    }
+    if (idx < 0) idx = 0; // last-resort fallback
     if (idx < 0) return [];
     const out: string[] = [];
     for (let i = 1; i < lines.length && out.length < limit; i++) {
