@@ -1,0 +1,573 @@
+---
+description: "Session orchestrator — orient from memory, launch tasks, show dashboard"
+argument-hint: "[--train|--review|--queue|--explain] [natural language context]"
+model: sonnet
+effort: high
+---
+
+/faerie = self-orienting session orchestrator. Read → launch → brief in 1 turn.
+
+**What it does:** Reads the latest handoff/brief, runs Wave 1+2 agents **synchronously**
+(inline, awaited), then responds ONCE with a completed dashboard. Wave 3 fires after response.
+No "launching agents" status lines. User sees nothing until work is done.
+
+## Modes
+
+| Invocation | Role | Behavior |
+|---|---|---|
+| `/faerie` | WORK | Orient, run W1+W2 inline (await both), dashboard, then W3 background |
+| `/faerie focus on H2` | WORK + FOCUS | Same but prioritize tasks related to the given context |
+| `--train` | TRAIN | Load training queue, run autotune, skip investigation tasks |
+| `--train evidence-analyst` | TRAIN + TARGET | Train a specific agent type |
+| `--review` | REVIEW | Red-team top findings, no tasks launched |
+| `--queue` | ORCHESTRATE | Queue manager only — add/reorder/reprioritize |
+| `--explain` | DRY RUN | Show what /faerie WOULD do without doing it |
+
+**Session boundaries:** `/faerie` = session START. `/handoff` = session END (inverse).
+`/crystallize` = explicit memory crystallization round (any time).
+Pass natural language after any flag — it becomes the session focus/filter.
+
+---
+
+## TURN 0 COMPLETION PATTERN (non-negotiable)
+
+**The rule: Do not respond until Wave 1 AND Wave 2 are complete.**
+
+The user sees NOTHING until both waves return. This means:
+
+- Wave 0: bash reads (non-blocking, run while reading context files)
+- Wave 1: spawn ALL fast agents WITHOUT run_in_background — faerie waits inline
+- Wave 2: spawn ALL medium agents WITHOUT run_in_background — faerie waits inline
+- After both waves return: merge results, build dashboard, respond ONCE
+- Wave 3: spawn WITH run_in_background: true AFTER the single response
+
+**Why not background + poll:** Claude Code CLI Agent tool does not expose a TaskOutput
+polling mechanism. The only reliable synchronous-await is spawning without run_in_background.
+The wave completes when the Agent call returns. This is the correct pattern.
+
+**Timeout handling (defensive):**
+- If W1 individual agent stalls >5 min (rare): note partial, proceed to W2 anyway
+- If W2 individual agent stalls >8 min total: mark partial, include in dashboard
+- Partial result format: {agent} PARTIAL — still running in background
+- Never skip the response. Partial dashboard is better than infinite wait.
+
+---
+
+## Execution Flow
+
+### Step 0 — Context reads + bash Wave 0 (parallel, before any Agent spawn)
+
+Run ALL simultaneously. These are bash-only — fast, cheap, no Agent tool:
+
+```bash
+python3 ~/.claude/hooks/state/faerie_turn1.py          # queue state + brief freshness + auto-patch
+python3 ~/.claude/scripts/health_check.py 2>/dev/null  # system health flags
+python3 ~/.claude/hooks/state/session_heartbeat.py read 2>/dev/null
+python3 ~/.claude/scripts/batch_collect.py 2>/dev/null  # overnight batch results
+ANNOTATION_RESULT=$(python3 ~/.claude/scripts/vault_annotation_sync.py --apply --limit 50 2>/dev/null)  # sync pending human annotations
+python3 ~/.claude/scripts/queue_vault_sync.py --hook 2>/dev/null  # import vault queue annotations ([!]/[>]/[~]/[x])
+cat ~/.claude/hooks/state/faerie-brief.json 2>/dev/null
+cat ~/.claude/hooks/state/handoff-snapshot-summary.json 2>/dev/null  # FIX #3: lightweight summary, avoids 1009KB Read limit
+cat ~/.claude/hooks/state/overnight-synthesis-results.json 2>/dev/null
+python3 ~/.claude/scripts/eval_harness.py --quick 2>/dev/null
+
+# NEW: Wave manifests + session gates + active review queue
+cat ~/.claude/memory/REVIEW-HOT.md 2>/dev/null  # active flags (last 48h, <2K tokens)
+cat ~/.claude/hooks/state/piston-checkpoint.json 2>/dev/null  # prior wave state
+```
+
+**Read context in priority order while bash runs:**
+1. **handoff-snapshot-summary.json** (~50KB, avoids 256KB Read limit) age < 12h -> use it (essential state for Turn 0)
+2. **handoff-snapshot.json** (full, ~1009KB) -> fallback if summary missing or conditional deep reads
+3. faerie-brief.json age < 12h -> lighter fallback
+4. emergency_handoff.py output -> if no fresh snapshot
+5. piston-checkpoint.json -> resume signals (last_wave_launched, agents_in_flight)
+6. REVIEW-HOT.md -> active flags (last 48h only, critical blocking items)
+
+**Fresh-start detection (>8h since last session):** If brief age > 8h or heartbeat > 8h:
+```bash
+python3 ~/.claude/scripts/emergency_handoff.py  # collects all active project memories
+```
+Cross-project summary enters the dashboard under PROJECTS.
+
+Write session presence:
+```bash
+python3 ~/.claude/hooks/state/session_heartbeat.py write --role WORK 2>/dev/null
+```
+
+Check overnight-synthesis-results.json — integrate Opus batch output before W2 if present.
+
+Read annotation sync state (written by vault_annotation_sync --apply above):
+```bash
+cat ~/.claude/hooks/state/annotation-sync-state.json 2>/dev/null
+```
+If ``pending_found > 0`` and ``applied > 0``: include in dashboard as:
+``Annotations applied: {applied} | Forensic receipts: {applied}  ({correction_types from ANNOTATION_RESULT if available})``
+If ``pending_found > 0`` and ``applied == 0`` (dry-run or error): surface as FLAG.
+
+### Step 1 — Wave Planning via piston.py
+
+Delegate wave assignment and orchestration to piston script infrastructure:
+
+```bash
+# Classify pending tasks into speed tiers (W1=fast/45s, W2=medium/180s, W3=deep/600s)
+WAVE_PLAN=$(python3 ~/.claude/scripts/piston.py plan --queue-file ~/.claude/hooks/state/sprint-queue.json)
+# Returns: {"waves": {"W1": [tasks], "W2": [tasks], "W3": [tasks]}, "stats": {...}}
+
+# Extract wave assignments
+W1_TASKS=$(echo "$WAVE_PLAN" | jq -r '.waves.W1')
+W2_TASKS=$(echo "$WAVE_PLAN" | jq -r '.waves.W2')
+W3_TASKS=$(echo "$WAVE_PLAN" | jq -r '.waves.W3')
+```
+
+**Speed tier assignment (piston.py):**
+- **W1 (fast, 45s):** Explore, security-auditor, admin-sync, token-optimizer, context-manager, claude-code-guide
+- **W2 (medium, 180s):** data-engineer, data-scientist, code-reviewer, knowledge-synthesizer, report-writer, evidence-analyst, memory-keeper
+- **W3 (deep, 600s):** Complex synthesis, multi-source correlation, final narrative
+
+If queue empty: piston assigns default triage team (context-manager + membot).
+
+### Step 1a — Baseline Capture (before any Agent spawn)
+
+After piston.py returns wave assignments, capture baseline metrics for every task:
+
+```bash
+# Pipe wave plan directly into baseline capture — reads done_looks_like from each task
+echo "$WAVE_PLAN" | python3 ~/.claude/skills/run/faerie_baseline_capture.py --stdin
+# Returns: {"captured": N, "skipped": N, "baselines": [...]}
+# Writes: ~/.claude/hooks/state/task-baselines/{task_id}.json per task
+```
+
+**Why here:** This is the only moment where we know (a) which tasks are about to run, (b) their wave assignment, and (c) their done_looks_like criteria. Once agents spawn, the opportunity to capture a clean pre-run baseline is gone.
+
+**Idempotent:** Tasks with a fresh baseline (<2h old) are skipped — safe to re-run.
+
+**Integration with auto_eval.py:** When agents complete, the PostToolUse hook (`auto_eval_hook.py`) reads the baseline written here and scores the output. No baseline = no score. This step is what enables quality tracking across sessions.
+
+### Step 2 — Execute Wave 1 (via piston_orchestrator)
+
+Delegate W1 spawn, wait, checkpoint to piston infrastructure:
+
+```bash
+python3 ~/.claude/scripts/piston_orchestrator.py \
+  --wave 1 \
+  --queue-file ~/.claude/hooks/state/sprint-queue.json \
+  --session $CLAUDE_SESSION_ID
+# Orchestrator: spawns all W1 agents in parallel, waits for returns, writes piston-checkpoint.json
+```
+
+The orchestrator handles:
+- Parallel Agent tool spawning for all W1 tasks
+- Inline awaiting (no run_in_background)
+- Manifest collection from wave1-*-result.json
+- Checkpointing wave 1 state
+- Return to faerie when W1 complete
+
+Required fields in every W1 agent prompt (piston_orchestrator injects these):
+```
+PRIMARY TASK: {goal from queue task — specific, actionable}
+TASK ID: {task_id for queue status update on completion}
+QUEUE CONTEXT: {up to 5 adjacent tasks same category}
+MANIFEST RETURN: write JSON summary to ~/.claude/hooks/state/wave1-{agent_type}-result.json
+  Required format: {"agent": "{type}", "ts": "{iso}", "wave": 1,
+                    "findings": N, "output_path": "~/.claude/hooks/state/wave1-{agent_type}-full.json",
+                    "dashboard_line": "...", "files_written": [...], "next": "..."}
+  Return the manifest path, not full content. Full output goes to output_path (parent reads only on explicit need).
+  dashboard_line: ONE-line summary for Turn 0 dashboard (~50 tokens max).
+STREAMING + STIGMERGY:
+  - Stream reasoning to scratch MEM blocks (private trail)
+  - Write output to manifest path progressively — draft at milestones, not just final
+  - Use frontmatter status: in-progress -> draft -> final
+  - If manifest already exists at that path: READ IT FIRST, build on it
+VAULT OUTPUTS: check agent card ## Vault Outputs for blueprint type.
+  Required frontmatter: type, blueprint, agent_type, session_id, doc_hash: sha256:pending, status: draft
+  Map: ~/.claude/agents/BLUEPRINT-MAP.md
+```
+
+Wait for ALL Wave 1 Agent calls to return before Step 3.
+
+### Step 3 — Execute Wave 2 (via piston_orchestrator)
+
+After W1 completes, delegate W2 spawn, wait, checkpoint to piston:
+
+```bash
+python3 ~/.claude/scripts/piston_orchestrator.py \
+  --wave 2 \
+  --queue-file ~/.claude/hooks/state/sprint-queue.json \
+  --w1-manifest-path ~/.claude/hooks/state/wave1-*-result.json \
+  --session $CLAUDE_SESSION_ID
+# Orchestrator: reads W1 manifests, spawns all W2 agents, waits for returns, checkpoints W2
+```
+
+The orchestrator:
+- Reads W1 manifests and extracts context for W2 prompts
+- Spawns all W2 agents in parallel with W1 context injected
+- Inline awaits W2 returns (no run_in_background)
+- Writes W2 manifests to ~/.claude/hooks/state/wave2-*-result.json
+- Checkpoints wave 2 state via piston.py
+
+W2 agents inherit W1 findings context automatically.
+
+### Step 4 — Dashboard + Respond (faerie layer — LIGHTWEIGHT)
+
+After W1+W2 complete (orchestrator signals completion), **delegate dashboard generation to subprocess**:
+
+```bash
+# Build dashboard from wave results in subprocess (cheap, disposable)
+python3 ~/.claude/scripts/build_dashboard.py --wave 1 2 3 --session $CLAUDE_SESSION_ID
+# Writes: ~/.claude/hooks/state/dashboard-turn-final.md (pre-formatted, one-shot)
+```
+
+Faerie responds once with **three things only**:
+1. **Read dashboard** — `cat ~/.claude/hooks/state/dashboard-turn-final.md` (50 tokens, no synthesis)
+2. **Vault status** — `echo "SESSION: {timestamp} | status: complete" >> $CT_VAULT/00-SHARED/Dashboards/system/session-status.md`
+3. **Signal W3** — Return control to user; W3 spawns in background after response
+
+**Why:** Dashboard synthesis (reading manifests, extracting, formatting) is 800-1500 tokens of synthesis work. Moving it to subprocess (expires after one use) frees faerie's persistent context for actual orchestration decisions.
+
+### Step 5 — Wave 3 Spawn (background, after dashboard response)
+
+After faerie responds with W1+W2 dashboard:
+
+```bash
+python3 ~/.claude/scripts/piston_orchestrator.py \
+  --wave 3 \
+  --queue-file ~/.claude/hooks/state/sprint-queue.json \
+  --session $CLAUDE_SESSION_ID \
+  --background
+# Orchestrator: queues all W3 agents with run_in_background: true, returns immediately
+```
+
+W3 runs async in parallel with user's next interaction. Manifests auto-complete via task-completion-handler.py on session stop.
+
+### Step 6 — Dashboard format (the single Turn 0 response)
+
+**Pre-built by build_dashboard.py, faerie just cats it:**
+
+```
+FAERIE 2026-04-07 15:05 | TURN 0 COMPLETE
+================================================================================
+EVAL: 0.64→  T:0.75  M:0.67  R:0.67
+
+WAVE 1  (4 agents)
+  context-manager       → Loaded HONEY + NECTAR (120 items, 15KB)
+  evidence-analyst      → Analyzed 8 findings, 3 gaps identified
+  fullstack-developer   → Dashboard built (2 new views)
+  admin-sync            → Coverage: admin.html + api_server.py (2 new features)
+
+WAVE 2  (3 agents)
+  data-engineer         → Pipeline clean, 50K rows ingested
+  memory-keeper         → Promoted 12 findings to NECTAR
+  knowledge-synthesizer → Cross-project synthesis: 4 connections
+
+QUEUE: 10 HIGH | 5 MED | 2 LOW
+MEMORY: brief fresh | scratch 3 files | HONEY 2.1K
+INFLIGHT: W1⚡context-m… W1⚡evidence-… (2 running)
+================================================================================
+NEXT: /run to claim tasks | /handoff to close session
+```
+
+**Key insight:** Dashboard is built by `build_dashboard.py` (subprocess, 50 tokens, expires).
+Faerie just reads the file via `cat ~/.claude/hooks/state/dashboard-turn-final.md`.
+**Cost reduction:** 1500 tokens of synthesis → 50 tokens of file I/O. Faerie reclaims 30% of context budget for actual decisions.
+
+---
+
+## Intent-driven piston launch (advanced: `/faerie --unblock`, `/faerie focus on X`)
+
+Parse intent from `/faerie` args, call `queue_analyzer.py`, assign wave targets, spawn waves.
+
+```python
+import sys, json, subprocess
+from pathlib import Path
+
+SCRIPTS_DIR = Path.home() / ".claude" / "scripts"
+QUEUE_FILE = Path.home() / ".claude" / "hooks" / "state" / "sprint-queue.json"
+
+# Intent flag parsing — --unblock, --deep, --momentum (default: balanced)
+INTENT_FLAGS = {"--unblock": "unblock", "--deep": "deep", "--momentum": "momentum"}
+intent = next((v for k, v in INTENT_FLAGS.items() if k in sys.argv), "balanced")
+
+# Invoke queue_analyzer.py — returns JSON with wave_target on each task
+analyzer_output = subprocess.check_output(
+    ["python3", str(SCRIPTS_DIR / "queue_analyzer.py"),
+     "--queue-file", str(QUEUE_FILE),
+     "--intent", intent,
+     "--output-json"],
+    text=True
+)
+analysis = json.loads(analyzer_output)
+# analysis["tasks"]: list of task dicts with wave_target field assigned
+# analysis["stats"]: {intent, total_queued, wave_counts: {W1, W2, W3, background}}
+
+# Print dashboard to stderr (integrated into Step 5 QUEUE line)
+dashboard_txt = subprocess.check_output(
+    ["python3", str(SCRIPTS_DIR / "queue_analyzer.py"),
+     "--queue-file", str(QUEUE_FILE),
+     "--intent", intent,
+     "--print-dashboard"],
+    text=True
+)
+
+# Category → agent type routing
+CATEGORY_AGENT_MAP = {
+    "investigation": "research-analyst",
+    "infrastructure": "python-pro",
+    "meta": "context-manager",
+    "meta-dev": "python-pro",
+    "review": "code-reviewer",
+    "publishing": "documentation-engineer",
+    "training": "membot",
+    "analysis": "data-scientist",
+    "forensic": "evidence-analyst",
+    "vault": "memory-keeper",
+    "admin": "membot",
+}
+
+# Free model agent map — category -> free agent slug (used when task qualifies via _check_free_model_eligible)
+FREE_AGENT_MAP = {
+    "training": "llama-fast",
+    "admin": "llama-fast",
+    "meta": "llama-fast",
+    "review": "qwen-coder",
+    "publishing": "mistral-bulk",
+    "analysis": "mistral-bulk",
+    "infrastructure": "llama-fast",
+    "vault": "mistral-bulk",
+}
+
+def _pick_agent(task):
+    """Return (agent_slug, spawn_method) for a task.
+
+    spawn_method values:
+      "bash"       — spawn via Bash: python3 ~/.claude/scripts/openrouter_agent.py --tier free
+      "agent_tool" — spawn via Agent tool as normal
+
+    Free model eligibility is checked first (imported from faerie_turn1).
+    Falls back to standard CATEGORY_AGENT_MAP if not eligible.
+    """
+    # Import eligibility check from faerie_turn1 (available in hooks/state/)
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(Path.home() / ".claude" / "hooks" / "state"))
+        from faerie_turn1 import _check_free_model_eligible
+        free_eligible = _check_free_model_eligible(task)
+    except Exception:
+        free_eligible = False
+
+    if free_eligible:
+        category = task.get("category", "")
+        slug = FREE_AGENT_MAP.get(category, "llama-fast")
+        return (slug, "bash")
+
+    # Standard agent tool routing
+    category = task.get("category", "misc") if isinstance(task, dict) else task
+    agent_type = CATEGORY_AGENT_MAP.get(category, "generalPurpose")
+    return (agent_type, "agent_tool")
+
+tasks = analysis["tasks"]
+w1_tasks = [t for t in tasks if t.get("wave_target") == "W1"]
+w2_tasks = [t for t in tasks if t.get("wave_target") == "W2"]
+w3_tasks = [t for t in tasks if t.get("wave_target") == "W3"]
+bg_tasks  = [t for t in tasks if t.get("wave_target") == "background"
+             and t.get("status") == "queued"]
+
+# W1: inline sync — faerie waits (see Step 2 for prompt spec)
+# _pick_agent now returns (slug, spawn_method). Handle both paths:
+#   spawn_method == "bash"       -> Bash: openrouter_agent.py --tier free
+#   spawn_method == "agent_tool" -> Agent tool as normal
+if w1_tasks:
+    slug, method = _pick_agent(w1_tasks[0])
+    if method == "bash":
+        # Free model path — Bash spawn via OpenRouter
+        for t in w1_tasks:
+            manifest = f"~/.claude/hooks/state/wave1-{slug}-{t['id']}-result.json"
+            spawn_bash_free(slug, t, manifest_path=manifest)
+    else:
+        spawn_inline(slug, w1_tasks, chaining=True)
+
+# W2: inline sync — faerie waits after W1 returns (see Step 3)
+if w2_tasks:
+    slug, method = _pick_agent(w2_tasks[0])
+    if method == "bash":
+        for t in w2_tasks:
+            manifest = f"~/.claude/hooks/state/wave2-{slug}-{t['id']}-result.json"
+            spawn_bash_free(slug, t, manifest_path=manifest)
+    else:
+        spawn_inline(slug, w2_tasks, chaining=True)
+
+# W3: background — fired after dashboard response (see Step 4)
+if w3_tasks:
+    slug, method = _pick_agent(w3_tasks[0])
+    if method == "bash":
+        for t in w3_tasks:
+            manifest = f"~/.claude/hooks/state/wave3-{slug}-{t['id']}-result.json"
+            spawn_bash_free(slug, t, manifest_path=manifest)
+    else:
+        spawn_background(slug, w3_tasks, chaining=True)
+
+# Fire-and-forget background tasks — skip already running/completed
+for task in bg_tasks:
+    slug, method = _pick_agent(task)
+    if method == "bash":
+        manifest = f"~/.claude/hooks/state/bg-{slug}-{task['id']}-result.json"
+        spawn_bash_free(slug, task, manifest_path=manifest)
+    else:
+        spawn_background(slug, [task], chaining=False)
+
+# Helper: free model spawn via Bash
+def spawn_bash_free(slug, task, manifest_path):
+    """Spawn a free-tier model via openrouter_agent.py (Bash path).
+
+    Bash command:
+      python3 ~/.claude/scripts/openrouter_agent.py \
+        --tier free \
+        --agent {slug} \
+        --task "{task.goal_one_line}" \
+        --task-id {task.id} \
+        --output-path {manifest_path}
+    """
+    import subprocess
+    goal = task.get("goal_one_line", "")
+    task_id = task.get("id", "unknown")
+    cmd = [
+        "python3", str(Path.home() / ".claude" / "scripts" / "openrouter_agent.py"),
+        "--tier", "free",
+        "--agent", slug,
+        "--task", goal,
+        "--task-id", task_id,
+        "--output-path", manifest_path,
+    ]
+    # Non-blocking fire: result checked at manifest_path after return
+    subprocess.Popen(cmd)
+```
+
+**Intent → wave assignment (enforced by queue_analyzer.py):**
+
+| Intent | W1 | W2 | W3 |
+|---|---|---|---|
+| `--unblock` | blocker=true tasks | blocks>2 tasks | score>0.2 |
+| `--momentum` | complexity=easy | complexity=medium | rest |
+| `--deep` | complex, dep-free | score>0.5 | synthesis |
+| default | HIGH blockers | score>0.5 mix | everything else |
+
+W1 cap: 2 tasks. W2 cap: 2 tasks. Overflow spills down: W1→W2→W3→bg.
+
+---
+
+## Ongoing Session Rule
+
+After Turn 0, every user message -> spawn first, respond second.
+Main = switchboard. Subagents = workers. Never do substantive work inline.
+If message is pure conversation: respond directly. Everything else: spawn.
+Rule of thumb: response would take >3 reasoning sentences -> subagent.
+
+---
+
+## Intent Parsing (every user message)
+
+`detect_focus.py` runs automatically via `UserPromptSubmit` hook -- faerie NEVER asks the
+user to type `/focus`. Focus is detected from natural language silently.
+
+**Read focus before spawning W1/W2:**
+```bash
+cat ~/.claude/hooks/state/session-focus.json 2>/dev/null
+```
+If `{"active": true, "focus": "equilibrium"}`: pass `--focus equilibrium` to
+`queue_analyzer.py` so it surfaces matching tasks first.
+
+**Dashboard line when focus active:**
+```
+FOCUS: 'equilibrium' (auto-detected) | 3 matching tasks queued
+```
+
+**Auto-clear conditions:**
+- All tasks matching focus topic are claimed/done
+- User says "clear focus" / "back to normal" / "all tasks" (hook handles it)
+- Bare `/faerie` with no args resets focus (treated as new unfiltered session)
+
+**Confidence thresholds:**
+- >= 0.85: apply silently, note in dashboard
+- 0.70-0.84: apply, but note in dashboard as "possible focus"
+- < 0.70: do not apply (no false positives on normal conversation)
+
+**`/focus` command = explicit override only** (still works, sets the same file).
+
+---
+
+## Atomized Brief Architecture
+
+Briefs are atomized checkpoints, not a single file:
+- handoff-snapshot.json -- mechanical roundup (written by script, <2s)
+- Session brief atoms -- written by briefgen.py at pipeline boundaries
+  (00-SHARED/Session-Briefs/atoms/ as JSON, rendered via Blueprints)
+- faerie-brief.json -- lightweight cold-start pointer (never sole source)
+
+/faerie reads LATEST snapshot first, assembles from atoms only if needed.
+No single file is the source of truth -- the collection of atoms IS the truth.
+
+---
+
+## Auto-Queue Rules
+
+When any finding strengthens/challenges a hypothesis: auto-queue follow-up task.
+Set --next-on-success and --next-on-failure when continuation is known.
+Cross-project items: queue with --source faerie:cross-project.
+
+---
+
+## Context Bundles
+
+Every queued task MUST have context_bundle:
+  {"highest_value": "...", "done_looks_like": "...", "source_files": [...]}
+
+faerie_turn1.py auto-patches missing bundles on every /faerie launch.
+
+---
+
+## Memory Delegation
+
+Spawn membot for mechanical memory work -- never inline.
+At session end: membot promotes scratch -> NECTAR, writes brief atoms.
+faerie_turn1.py queues recovery task automatically if brief is stale.
+
+---
+
+## Post-Compact Piston Restart
+
+Auto-compact = flywheel stutter, NOT cold start. Compact summary IS context.
+1. Read ~/.claude/hooks/state/piston-checkpoint.json
+2. Check which wave completed last (wave_num field)
+3. Launch the next wave immediately (no re-reading summarized files)
+
+SEAMLESS RULE: Never say "resuming after compaction." Just do the next thing.
+
+---
+
+## System Separation
+
+| System | Script | When it runs |
+|---|---|---|
+| Context phases | context_phase.py | Continuous (statusline) |
+| Surfacing | surfacing_scheduler.py | /faerie launch + calibrate on Stop |
+| Metrics | session_metrics.py | Stop hook (hash-chained KPIs) |
+
+Closed loop: metrics -> surfacing-calibration.json -> better surfacing next session.
+Statusline: ctx:42%^ ORB r:3 d:2 (phase, rounds left, agents in flight)
+
+---
+
+## References
+
+- Snapshot: ~/.claude/hooks/state/handoff-snapshot.json
+- Brief: ~/.claude/hooks/state/faerie-brief.json
+- Queue: ~/.claude/hooks/state/sprint-queue.json via queue_ops.py
+- W1 manifests: ~/.claude/hooks/state/wave1-*-result.json
+- W2 manifests: ~/.claude/hooks/state/wave2-*-result.json
+- Checkpoint: ~/.claude/hooks/state/piston-checkpoint.json
+- Agents: ~/.claude/hooks/state/subagent-options.json
+- Scripts: ~/.claude/scripts/piston.py, emergency_handoff.py, memory_router.py
+- Phase: ~/.claude/hooks/state/context-phase.json
+- Surfacing: ~/.claude/scripts/surfacing_scheduler.py
+- Metrics: ~/.claude/scripts/session_metrics.py
+- Calibration: ~/.claude/hooks/state/surfacing-calibration.json

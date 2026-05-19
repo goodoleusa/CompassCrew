@@ -37,6 +37,7 @@ import { registerExcalidrawSetup } from "./src/excalidraw-setup";
 import { registerBreadcrumbsOnboarding } from "./src/breadcrumbs-onboarding";
 import { initOntology } from "./src/ontology-loader";
 import { registerOntologyCommands } from "./src/ontology-commands";
+import { registerCanonicalInstaller } from "./src/canonical-installer";
 
 interface HiveSettings extends
   BlueprintSettings,
@@ -103,6 +104,7 @@ export default class HivePlugin extends HivePdfPlugin {
     registerExcalidrawSetup(this);
     registerBreadcrumbsOnboarding(this);
     registerOntologyCommands(this);
+    registerCanonicalInstaller(this);
 
     this.addSettingTab(new HiveSettingTab(this.app, this));
 
