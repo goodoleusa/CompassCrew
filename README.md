@@ -87,7 +87,7 @@ The plugin doesn't care what the folder is. You can run the draw → commit cycl
 - **A research paper** — citations as N (prerequisites), claims as S (supports), counter-arguments as W (questions), related work as E
 - **A photo or media collection** — sketch the taxonomy you want, commit, the metadata flows
 - **A list of contacts** — relationship graph as a draw-and-commit
-- **Literally any folder in your vault** — open it in `faerie: design this folder`, see its current structure (or lack thereof), redraw, commit
+- **Literally any folder in your vault** — open it in `faerie: pollinate`, see its current structure (or lack thereof), redraw, commit
 
 The 4-bearing compass is structural; the labels are yours (per `ontology.yaml`). The folder is whatever you point at. The cycle is the same.
 

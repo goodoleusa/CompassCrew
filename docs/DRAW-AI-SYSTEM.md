@@ -19,7 +19,7 @@ Knowledge is the new UI. Your second brain has a topology; the canvas is where y
 
 ## The cycle: see → sketch → commit → work → re-sketch
 
-1. **See** — `faerie: design this folder` scans any folder (notes, wikilinks, tags, hierarchy) and seeds an Excalidraw canvas with one box per note, positioned from the implicit structure. You see what you already have.
+1. **See** — `faerie: pollinate` scans any folder (notes, wikilinks, tags, hierarchy) and seeds an Excalidraw canvas with one box per note, positioned from the implicit structure. You see what you already have.
 2. **Sketch** — Drag boxes into the four quadrants by bearing. Color the strokes (jasper / emerald / amber / honey) to declare direction. Add new boxes for missing pieces.
 3. **Commit** — `faerie: commit excalibrain draft` reads the canvas back and writes NSEW links into each note's frontmatter. Breadcrumbs, ExcaliBrain, and Faerie agents all see the new topology immediately.
 4. **Work** — Use the structure. Spawn agents that follow the bearings. Read N to unblock predecessors, S to ship deliverables, E to find parallel work, W to re-seat assumptions.
@@ -30,13 +30,13 @@ Why each step matters: **seeing** breaks the YAML-first tax; **sketching** unloc
 ## Five worked examples
 
 ### 1. Code repo (`src/` of a TypeScript project)
-- `faerie: design this folder` on `src/` → boxes for every module
+- `faerie: pollinate` on `src/` → boxes for every module
 - Drag `bearings.ts` north (everyone imports from it). Drag `pdf-export.ts` south (terminal feature, no downstream). Cluster `breadcrumbs-*` east (parallel sisters).
 - Commit → each module's frontmatter now declares its position in the dependency graph
 - An agent asked to "refactor the trail layer" reads N-bearings to know what it must not break, S-bearings to know who depends on it
 
 ### 2. Creative writing (a novel's `chapters/` folder)
-- 30 chapters, one note each. `faerie: design this folder` seeds them in a 6×5 grid
+- 30 chapters, one note each. `faerie: pollinate` seeds them in a 6×5 grid
 - Drag in the actual plot order: prologue → north of chapter 1. Two subplot threads run east-parallel. The climax pulls everything south to the epilogue
 - Commit → frontmatter encodes the dramatic structure. A re-read pass walking N→S reveals pacing gaps; the parallel E-thread reveals subplot anemia
 
@@ -46,12 +46,12 @@ Why each step matters: **seeing** breaks the YAML-first tax; **sketching** unloc
 - Commit → the literature map is typed. Drafting the related-work section becomes "walk N from the contribution box"
 
 ### 4. Photo collection (markdown notes with EXIF + captions)
-- One note per photoshoot, captions and notes inside. `faerie: design this folder` lays out a year of shoots
+- One note per photoshoot, captions and notes inside. `faerie: pollinate` lays out a year of shoots
 - Drag by lineage: portrait series N-chains the technique they descend from. Same-day shoots cluster E. Failed experiments hang W as cautionary backtracks
 - Commit → an agent asked to assemble a portfolio walks the S-bearings to find peak deliverables
 
 ### 5. Contacts (a CRM in markdown)
-- One note per person. `faerie: design this folder` shows the soup. You sketch: mentors N, mentees S, peers E, "people I owe a reply" W
+- One note per person. `faerie: pollinate` shows the soup. You sketch: mentors N, mentees S, peers E, "people I owe a reply" W
 - Commit → "show me everyone I owe a reply" becomes a Dataview query on `west:` frontmatter
 
 ## Comparison to draw → AI → code tooling
@@ -76,10 +76,13 @@ You don't plan your second brain in YAML any more than you plan a website in HTM
 
 Crystallized from the [draw-to-system survey](../../../faerie2/forensics/audits/draw-to-system-survey-2026-05-19.md):
 
-- **`faerie: design this folder`** — `src/design-folder.ts::designThisFolder` — WORKING. Right-click any folder → seeded Excalidraw canvas.
-- **`faerie: scan and propose bearings`** — `src/design-folder.ts::scanAndProposeBearings` — STUB. Payload + review modal wired; MCP `faerie_propose_bearings` prompt template is the next commit.
-- **`faerie: auto-layout from frontmatter`** — `src/design-folder.ts::autoLayoutFromFrontmatter` — STUB. Quadrant-snap working; force-directed pass + decoration preservation is the next commit.
+- **`faerie: pollinate`** — `src/design-folder.ts::pollinate` — WORKING. Right-click any folder → seeded Excalidraw canvas.
+- **`faerie: scan and propose bearings`** — `src/design-folder.ts::scanAndProposeBearings` — WORKING (2026-05-19). POSTs to MCP `faerie_propose_bearings`; server runs an offline heuristic (mutual outlinks → E, directed outlinks → N/S pairs, hub note → W anchor) and filters out bearings already declared in recent manifests. Review modal lets you accept/reject each.
+- **`faerie: auto-layout from frontmatter`** — `src/design-folder.ts::autoLayoutFromFrontmatter` — WORKING (2026-05-19). Replaced force-directed/quadrant-snap with a **deterministic layered/ordered-tree layout**: N lane above, S below, E right, W left; each lane sorted by label, evenly spaced. Same input always yields the same output (no jitter, no physics). Non-bearing elements are never moved. Tunables (`BOX_W`, `H_GAP`, `LANE_OFFSET`) live at the top of the function.
 - **`faerie: draft excalibrain`** + **`faerie: commit excalibrain draft`** — `src/excalidraw-setup.ts` — WORKING. The core round-trip these new features feed into.
+
+### Why layered, not force-directed
+Force-directed graphs look organic but read poorly — positions jitter between runs and spatial memory is destroyed. Layered layouts trade organic feel for **spatial predictability**: tomorrow's canvas looks like today's plus your edits. The right trade-off for a knowledge graph you'll re-open hundreds of times.
 
 ## References
 

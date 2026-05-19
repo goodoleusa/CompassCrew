@@ -8,7 +8,7 @@ import { BEARING_COLOR, BEARING_LABEL, BEARINGS, Bearing } from "./bearings";
  *
  * Three commands implementing the draw → AI → system loop for arbitrary folders:
  *
- *   1. `faerie: design this folder`
+ *   1. `faerie: pollinate`
  *      Right-click (or active file's parent) → scan folder for notes →
  *      generate Excalidraw canvas with one box per note positioned by
  *      current implicit structure (folder depth = y, sibling order = x,
@@ -19,24 +19,26 @@ import { BEARING_COLOR, BEARING_LABEL, BEARINGS, Bearing } from "./bearings";
  *      Status: WORKING (seed scene + open canvas).
  *
  *   2. `faerie: scan and propose bearings`
- *      Same folder scan, but instead of opening a canvas, POSTs the
- *      folder's note list + brief content excerpts to MCP `faerie_chat`
- *      with a structured "propose bearings" prompt. The reply (JSON
- *      proposals per note) opens in a review modal — accept/reject each,
- *      accepted ones write to frontmatter.
+ *      Folder scan → POSTs to MCP `faerie_propose_bearings`. Server
+ *      runs an offline heuristic (mutual outlinks → E, directed
+ *      outlinks → N/S pairs, hub note → W anchor) and filters out
+ *      bearings already declared in recent manifests. The reply opens
+ *      in a review modal — user accepts/rejects each; accepted ones
+ *      write to frontmatter.
  *
- *      Status: STUB (modal + MCP call shape wired; prompt template TBD,
- *      so the proposal call is currently a no-op that surfaces a Notice).
+ *      Status: WORKING (2026-05-19) — MCP server tool live.
  *
  *   3. `faerie: auto-layout from frontmatter`
- *      Reads active Excalidraw note → re-positions boxes whose labels
- *      match current frontmatter bearings, leaving user decorations
- *      (sticky notes, annotations) untouched. Ports the spirit of
- *      ea-scripts/Auto Layout.md into a single command (no script finder).
+ *      Reads active Excalidraw note → re-positions bearing-rectangles
+ *      using a deterministic layered/ordered-tree layout (N above,
+ *      S below, E right, W left; sorted by label, evenly spaced).
+ *      Non-bearing elements (sticky notes, text, freedraws) are never
+ *      moved. Same input always yields the same output (no jitter,
+ *      no physics). Tunables (BOX_W, H_GAP, V_GAP, LANE_OFFSET) live
+ *      at the top of autoLayoutFromFrontmatter.
  *
- *      Status: STUB (signature + canvas read wired; layout algorithm
- *      currently snaps boxes to a fixed 4-quadrant grid based on color —
- *      good enough for ≤8 nodes per bearing, not yet force-directed).
+ *      Status: WORKING (2026-05-19) — replaced quadrant-snap stub
+ *      with full layered algorithm.
  */
 
 // --- shared helpers ---------------------------------------------------------
@@ -81,7 +83,7 @@ function resolveTargetFolder(app: App, explicit?: TFolder): TFolder | null {
   return null;
 }
 
-// --- Feature 1: design this folder (WORKING) --------------------------------
+// --- Feature 1: pollinate (WORKING) --------------------------------
 
 function buildSeedScene(notes: FolderNote[]): { elements: any[] } {
   const elements: any[] = [];
@@ -127,7 +129,7 @@ function buildSeedScene(notes: FolderNote[]): { elements: any[] } {
   return { elements };
 }
 
-async function designThisFolder(plugin: Plugin, folder?: TFolder) {
+async function pollinate(plugin: Plugin, folder?: TFolder) {
   const tgt = resolveTargetFolder(plugin.app, folder);
   if (!tgt) { new Notice("No folder context — open a note or right-click a folder."); return; }
   const notes = await scanFolder(plugin.app, tgt);
@@ -194,9 +196,10 @@ class ProposalReviewModal extends Modal {
   }
   onOpen() {
     const { contentEl } = this;
+    contentEl.addClass("faerie-proposal-modal");
     contentEl.createEl("h2", { text: "Proposed bearings — review" });
     if (this.proposals.length === 0) {
-      contentEl.createEl("p", { text: "No proposals returned. (Stub: MCP prompt template not yet wired.)" });
+      contentEl.createEl("p", { text: "No proposals returned. (Check MCP connection / token, or the folder may have no inter-note wikilinks for the heuristic to chew on.)" });
       return;
     }
     const accepted: Set<number> = new Set(this.proposals.map((_, i) => i));
@@ -223,18 +226,47 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
   const notes = await scanFolder(plugin.app, tgt);
   if (notes.length === 0) { new Notice(`No notes in ${tgt.path}.`); return; }
 
-  // STUB: build the MCP payload but do not yet POST. Returning an empty
-  // proposal list surfaces the modal in its "wired but inactive" form so
-  // we can verify the review UX before turning the AI call on.
-  const _payload = {
+  // POST to MCP faerie_propose_bearings. Server runs an offline heuristic
+  // (mutual outlinks → E, directed outlinks → N/S pairs, hub note → W
+  // anchor) and filters out bearings already declared in recent manifests.
+  // See faerie2/deploy/mcp-server/server.py::faerie_propose_bearings.
+  const settings: any = ((plugin.app as any).plugins?.plugins?.["hive"]?.hiveSettings) || {};
+  const mcpUrl: string = settings.mcpUrl || "http://localhost:8765";
+  const tokenPath: string = settings.tokenPath || ".faerie-token";
+  let token: string | null = null;
+  try { token = fs.readFileSync(path.join(vaultRoot(plugin.app), tokenPath), "utf8").trim(); } catch { token = null; }
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const payload = {
     folder: tgt.path,
     notes: notes.map((n) => ({ basename: n.file.basename, excerpt: n.excerpt, outLinks: n.outLinks })),
-    bearings_doc: "N=unblock predecessor, S=conclude downstream, E=parallel sister, W=return to baseline",
   };
-  // TODO: POST _payload to MCP `faerie_propose_bearings` (or `faerie_chat`
-  // with a propose-bearings system prompt) and parse the JSON reply into
-  // BearingProposal[]. For now, empty proposals → modal shows stub message.
-  const proposals: BearingProposal[] = [];
+
+  let proposals: BearingProposal[] = [];
+  try {
+    const r = await fetch(mcpUrl.replace(/\/+$/, "") + "/tools/faerie_propose_bearings", {
+      method: "POST", headers, body: JSON.stringify(payload),
+    });
+    if (r.ok) {
+      const data: any = await r.json();
+      const raw = (data?.proposals ?? data?.result?.proposals ?? []) as any[];
+      proposals = raw
+        .filter((p) => p && p.note && p.bearing && p.target)
+        .map((p) => ({
+          note: String(p.note),
+          bearing: String(p.bearing).toUpperCase() as Bearing,
+          target: String(p.target),
+          rationale: String(p.rationale ?? ""),
+        }))
+        .filter((p) => (BEARINGS as readonly string[]).includes(p.bearing));
+      new Notice(`Faerie proposed ${proposals.length} bearings for ${tgt.name}.`, 5000);
+    } else {
+      new Notice(`MCP propose_bearings failed: HTTP ${r.status}`, 6000);
+    }
+  } catch (e) {
+    new Notice(`MCP unreachable: ${(e as Error).message}. Modal will show empty.`, 6000);
+  }
 
   new ProposalReviewModal(plugin.app, proposals, async (accepted) => {
     let n = 0;
@@ -263,22 +295,69 @@ async function autoLayoutFromFrontmatter(plugin: Plugin) {
   try { data = JSON.parse(m[1]); } catch { new Notice("Excalidraw JSON parse failed."); return; }
   const elements: any[] = data.elements ?? [];
 
-  // STUB algorithm: snap colored rectangles into a 4-quadrant grid by bearing.
-  // Real implementation would run force-directed layout respecting user-added
-  // sticky notes and annotations. For now, this rearranges only rectangles
-  // whose strokeColor matches a canonical bearing.
+  // LAYERED / ORDERED-TREE layout — replaces force-directed entirely.
+  //
+  // Goal: orderly, predictable, tree-like spatial structure that users
+  // with strong spatial preference can read at a glance. No physics, no
+  // jitter, no randomness — same input always yields the same output.
+  //
+  // Algorithm (deterministic Sugiyama-lite):
+  //  1. Partition bearing-rectangles into four lanes by stroke color
+  //     (N=above center, S=below, E=right, W=left).
+  //  2. Within each lane, sort stably by current label text so identity
+  //     is preserved across re-layouts (no shuffling).
+  //  3. Place lane along its perpendicular axis with uniform spacing.
+  //     N/S lanes spread horizontally so the lane reads left-to-right;
+  //     E/W lanes spread vertically so the lane reads top-to-bottom.
+  //  4. The "center" node (label starts with ◎) is anchored at origin.
+  //  5. Non-bearing elements (sticky notes, text, freedraws, user
+  //     annotations) are NEVER moved.
+  //
+  // Tunables — change here, no library to swap:
+  const BOX_W = 220;
+  const BOX_H = 60;
+  const H_GAP = 60;   // horizontal gap between sibling boxes
+  const V_GAP = 40;   // vertical gap between sibling boxes
+  const LANE_OFFSET = 180; // distance from center to first lane row
+
   const lanes: Record<Bearing, any[]> = { N: [], S: [], E: [], W: [] };
+  let centerEl: any | null = null;
   for (const el of elements) {
     if (el?.type !== "rectangle") continue;
+    const lbl = el?.label?.text || "";
+    if (lbl.startsWith("◎")) { centerEl = el; continue; }
     for (const b of BEARINGS) if (el.strokeColor === BEARING_COLOR[b]) lanes[b].push(el);
   }
-  const place = (arr: any[], baseX: number, baseY: number, dx: number, dy: number) => {
-    arr.forEach((el, i) => { el.x = baseX + i * dx; el.y = baseY + i * dy; });
-  };
-  place(lanes.N, -110, -300, 0, -80);
-  place(lanes.S, -110, 200, 0, 80);
-  place(lanes.E, 300, -30, 240, 0);
-  place(lanes.W, -440, -30, -240, 0);
+  for (const b of BEARINGS) {
+    lanes[b].sort((a, z) => String(a?.label?.text || "").localeCompare(String(z?.label?.text || "")));
+  }
+
+  if (centerEl) { centerEl.x = -BOX_W / 2; centerEl.y = -BOX_H / 2; }
+
+  // N lane: spread horizontally above center
+  const nWidth = lanes.N.length * BOX_W + Math.max(0, lanes.N.length - 1) * H_GAP;
+  lanes.N.forEach((el, i) => {
+    el.x = -nWidth / 2 + i * (BOX_W + H_GAP);
+    el.y = -LANE_OFFSET - BOX_H;
+  });
+  // S lane: spread horizontally below
+  const sWidth = lanes.S.length * BOX_W + Math.max(0, lanes.S.length - 1) * H_GAP;
+  lanes.S.forEach((el, i) => {
+    el.x = -sWidth / 2 + i * (BOX_W + H_GAP);
+    el.y = LANE_OFFSET;
+  });
+  // E lane: spread vertically to the right
+  const eHeight = lanes.E.length * BOX_H + Math.max(0, lanes.E.length - 1) * V_GAP;
+  lanes.E.forEach((el, i) => {
+    el.x = LANE_OFFSET + 40;
+    el.y = -eHeight / 2 + i * (BOX_H + V_GAP);
+  });
+  // W lane: spread vertically to the left
+  const wHeight = lanes.W.length * BOX_H + Math.max(0, lanes.W.length - 1) * V_GAP;
+  lanes.W.forEach((el, i) => {
+    el.x = -LANE_OFFSET - 40 - BOX_W;
+    el.y = -wHeight / 2 + i * (BOX_H + V_GAP);
+  });
 
   const newBlock = "```json\n" + JSON.stringify(data, null, 2) + "\n```";
   const next = raw.replace(/```json\n[\s\S]*?\n```/, newBlock);
@@ -291,9 +370,9 @@ async function autoLayoutFromFrontmatter(plugin: Plugin) {
 
 export function registerDesignFolder(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-design-this-folder",
-    name: "Faerie: design this folder (sketch topology for any folder of notes)",
-    callback: () => designThisFolder(plugin),
+    id: "faerie-pollinate",
+    name: "🐝 Faerie: pollinate (sketch + commit topology for any folder)",
+    callback: () => pollinate(plugin),
   });
 
   plugin.addCommand({
@@ -314,9 +393,9 @@ export function registerDesignFolder(plugin: Plugin) {
       if (!(fileOrFolder instanceof TFolder)) return;
       menu.addItem((item) =>
         item
-          .setTitle("Faerie: design this folder")
+          .setTitle("🐝 Faerie: pollinate")
           .setIcon("compass")
-          .onClick(() => designThisFolder(plugin, fileOrFolder))
+          .onClick(() => pollinate(plugin, fileOrFolder))
       );
       menu.addItem((item) =>
         item
