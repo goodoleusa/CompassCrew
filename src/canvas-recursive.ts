@@ -29,17 +29,66 @@ import * as path from "path";
  */
 
 // ─── Status palette — matches `swarmy-inbox` + VaultPreviewPane.jsx ──
-// Single source of truth lives in deploy/chat-mvp/src/dashboards/
-// v0-mission-steer/VaultPreviewPane.jsx for the colour values; mirror
-// here for the canvas-side surface. If they drift, the canvas pane
-// loses its visual link to the publish dashboard.
-export const STATUS_PALETTE: Record<string, { stroke: string; fill: string; emoji: string; label: string }> = {
+// Default palette colors live here; vocabulary + bearing colors are
+// loaded from `_meta/swarmy.config.json` at plugin boot (one-place
+// truth). If the config is missing or malformed, we fall back to the
+// hardcoded defaults so the plugin never crashes — but the source of
+// authority is the vault config.
+const STATUS_PALETTE_FALLBACK: Record<string, { stroke: string; fill: string; emoji: string; label: string }> = {
   "draft":            { stroke: "#9CA3AF", fill: "#F3F4F6", emoji: "✏️", label: "Draft" },
   "reviewing":        { stroke: "#0891B2", fill: "#E0F7FA", emoji: "👁",  label: "Reviewing" },
   "annotating":       { stroke: "#D97706", fill: "#FEF3C7", emoji: "📝", label: "Annotating" },
   "ready-to-publish": { stroke: "#059669", fill: "#D1FAE5", emoji: "🚀", label: "Ready" },
   "published":        { stroke: "#7C3AED", fill: "#EDE9FE", emoji: "✅", label: "Published" },
 };
+
+// Bearing colors fallback — mirrors `_meta/swarmy.config.json`.
+const BEARING_COLORS_FALLBACK: Record<string, { label: string; color: string; archetype: string }> = {
+  "N": { label: "unblock",  color: "#D14A8B", archetype: "NAVIGATOR" },
+  "S": { label: "ship",     color: "#0E7C8A", archetype: "MAKER" },
+  "E": { label: "parallel", color: "#1BA9C7", archetype: "BRIDGE" },
+  "W": { label: "baseline", color: "#C9A84C", archetype: "DEEP_DIVER" },
+};
+
+// Live values populated by loadSwarmyConfig(); exported so callers
+// always read the current config-backed values, not the fallbacks.
+export let STATUS_PALETTE: Record<string, { stroke: string; fill: string; emoji: string; label: string }> = { ...STATUS_PALETTE_FALLBACK };
+export let STATUS_VOCAB: string[] = Object.keys(STATUS_PALETTE_FALLBACK);
+export let BEARING_COLORS: Record<string, { label: string; color: string; archetype: string }> = { ...BEARING_COLORS_FALLBACK };
+
+/**
+ * Load _meta/swarmy.config.json relative to the vault root.
+ * Safe to call multiple times. Falls back silently to defaults on any
+ * error so the plugin never breaks on a missing or malformed config.
+ */
+export function loadSwarmyConfig(app: App): void {
+  try {
+    const vaultRoot = (app.vault.adapter as any).basePath
+      ?? (app.vault.adapter as any).getBasePath?.();
+    if (!vaultRoot) return;
+    const cfgPath = path.join(vaultRoot, "_meta", "swarmy.config.json");
+    if (!fs.existsSync(cfgPath)) return;
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
+
+    if (Array.isArray(cfg.status_vocab) && cfg.status_vocab.length) {
+      STATUS_VOCAB = cfg.status_vocab.slice();
+      // Rebuild palette keys in config order. Use fallback entries for
+      // any vocab term we don't have a colour for; the user can extend
+      // the palette in a future config key (`status_palette`).
+      const next: typeof STATUS_PALETTE = {};
+      for (const s of STATUS_VOCAB) {
+        next[s] = STATUS_PALETTE_FALLBACK[s]
+          ?? { stroke: "#6B7280", fill: "#F9FAFB", emoji: "·", label: s };
+      }
+      STATUS_PALETTE = next;
+    }
+    if (cfg.bearing_colors && typeof cfg.bearing_colors === "object") {
+      BEARING_COLORS = { ...BEARING_COLORS_FALLBACK, ...cfg.bearing_colors };
+    }
+  } catch (_) {
+    // silent — fallbacks remain in effect
+  }
+}
 
 // ─── Card-template presets — Decker / Parchment / Bubble ─────────────
 export const CARD_TEMPLATES: Record<string, { stroke: string; fill: string; strokeWidth: number; roundness: { type: number } | null }> = {
@@ -191,6 +240,11 @@ async function commitCanvasToCharter(app: App): Promise<void> {
  */
 export function registerCanvasRecursive(plugin: Plugin): void {
   const app = plugin.app;
+
+  // Load the one-place-truth config (_meta/swarmy.config.json) so the
+  // status palette + bearing colors reflect the user's edits. Falls
+  // back silently to the hardcoded defaults on any error.
+  loadSwarmyConfig(app);
 
   // Status commands — one per bucket.
   for (const status of Object.keys(STATUS_PALETTE)) {
