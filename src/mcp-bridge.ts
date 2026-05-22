@@ -2,7 +2,7 @@ import { App, ItemView, Plugin, WorkspaceLeaf } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
 
-export const VIEW_TYPE_FAERIE_LIVE = "faerie-live";
+export const VIEW_TYPE_SWARMY_LIVE = "swarmy-live";
 
 export interface McpBridgeSettings {
   mcpUrl: string;
@@ -12,7 +12,7 @@ export interface McpBridgeSettings {
 
 export const DEFAULT_MCP_BRIDGE_SETTINGS: McpBridgeSettings = {
   mcpUrl: "http://localhost:8765",
-  tokenPath: ".faerie-token",
+  tokenPath: ".swarmy-token",
   refreshSeconds: 60,
 };
 
@@ -32,13 +32,13 @@ async function callMcp(s: McpBridgeSettings, token: string | null, tool: string,
   return await r.json();
 }
 
-export class FaerieLiveView extends ItemView {
+export class SwarmyLiveView extends ItemView {
   private timer: number | null = null;
   constructor(leaf: WorkspaceLeaf, private getSettings: () => McpBridgeSettings) {
     super(leaf);
   }
-  getViewType() { return VIEW_TYPE_FAERIE_LIVE; }
-  getDisplayText() { return "Faerie Live"; }
+  getViewType() { return VIEW_TYPE_SWARMY_LIVE; }
+  getDisplayText() { return "Swarmy Live"; }
   getIcon() { return "compass"; }
 
   async onOpen() {
@@ -53,26 +53,26 @@ export class FaerieLiveView extends ItemView {
   async render() {
     const root = this.containerEl.children[1] as HTMLElement;
     root.empty();
-    root.addClass("faerie-live-pane");
-    root.createEl("h2", { text: "Faerie Live" });
-    const status = root.createEl("div", { cls: "faerie-live-status", text: "Connecting…" });
+    root.addClass("swarmy-live-pane");
+    root.createEl("h2", { text: "Swarmy Live" });
+    const status = root.createEl("div", { cls: "swarmy-live-status", text: "Connecting…" });
     const settings = this.getSettings();
     const token = readToken(this.app, settings);
 
     const sections = [
-      { name: "Dashboard", tool: "faerie_dashboard" },
-      { name: "Metrics", tool: "faerie_metrics" },
-      { name: "Charters", tool: "faerie_charters" },
+      { name: "Dashboard", tool: "swarmy_dashboard" },
+      { name: "Metrics", tool: "swarmy_metrics" },
+      { name: "Charters", tool: "swarmy_charters" },
     ];
 
     for (const sec of sections) {
       const h = root.createEl("h3", { text: sec.name });
-      const box = root.createEl("pre", { cls: "faerie-live-section" });
+      const box = root.createEl("pre", { cls: "swarmy-live-section" });
       try {
         const data = await callMcp(settings, token, sec.tool, {});
         box.setText(typeof data === "string" ? data : JSON.stringify(data, null, 2));
         // Charters as clickable list
-        if (sec.tool === "faerie_charters" && Array.isArray((data as any)?.charters)) {
+        if (sec.tool === "swarmy_charters" && Array.isArray((data as any)?.charters)) {
           box.empty();
           for (const c of (data as any).charters) {
             const a = box.createEl("a", { text: c.title || c.path });
@@ -94,16 +94,16 @@ export class FaerieLiveView extends ItemView {
 }
 
 export function registerMcpBridge(plugin: Plugin, getSettings: () => McpBridgeSettings) {
-  plugin.registerView(VIEW_TYPE_FAERIE_LIVE, (leaf) => new FaerieLiveView(leaf, getSettings));
+  plugin.registerView(VIEW_TYPE_SWARMY_LIVE, (leaf) => new SwarmyLiveView(leaf, getSettings));
   plugin.addCommand({
-    id: "faerie-open-live-pane",
-    name: "Faerie: open Live pane",
+    id: "swarmy-open-live-pane",
+    name: "Swarmy: open Live pane",
     callback: async () => {
       const { workspace } = plugin.app;
-      let leaf = workspace.getLeavesOfType(VIEW_TYPE_FAERIE_LIVE)[0];
+      let leaf = workspace.getLeavesOfType(VIEW_TYPE_SWARMY_LIVE)[0];
       if (!leaf) {
         leaf = workspace.getRightLeaf(false)!;
-        await leaf.setViewState({ type: VIEW_TYPE_FAERIE_LIVE, active: true });
+        await leaf.setViewState({ type: VIEW_TYPE_SWARMY_LIVE, active: true });
       }
       workspace.revealLeaf(leaf);
     },
