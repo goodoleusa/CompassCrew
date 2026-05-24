@@ -58,6 +58,12 @@ import {
   DEFAULT_BREADCRUMBS_THREADING_SETTINGS,
   BreadcrumbsThreadingSettings,
 } from "./src/breadcrumbs-threading";
+import {
+  registerLatticework,
+  DEFAULT_LATTICEWORK_SETTINGS,
+  LatticeworkSettings,
+  LATTICEWORK_STYLES,
+} from "./src/latticework";
 
 interface HiveSettings extends
   BlueprintSettings,
@@ -67,7 +73,8 @@ interface HiveSettings extends
   SpiderfootSettings,
   BreadcrumbsThreadingSettings,
   LinterSettings,
-  HomePageSettings {
+  HomePageSettings,
+  LatticeworkSettings {
   // PDF settings live on the parent class.
 }
 
@@ -80,6 +87,7 @@ const DEFAULT_HIVE_SETTINGS: HiveSettings = {
   ...DEFAULT_BREADCRUMBS_THREADING_SETTINGS,
   ...DEFAULT_LINTER_SETTINGS,
   ...DEFAULT_HOME_PAGE_SETTINGS,
+  ...DEFAULT_LATTICEWORK_SETTINGS,
 };
 
 /**
@@ -116,6 +124,14 @@ export default class HivePlugin extends HivePdfPlugin {
     registerBlueprintEngine(this, getHiveSettings);
     registerBreadcrumbsThreading(this, () => this.hiveSettings.emitBreadcrumbsAliases);
     registerTrailRefs(this);
+    registerLatticework(this);
+    // Inject Latticework CSS so chip styles render without requiring
+    // operators to edit their own snippets.css.
+    const lwStyle = document.createElement("style");
+    lwStyle.id = "latticework-styles";
+    lwStyle.textContent = LATTICEWORK_STYLES;
+    document.head.appendChild(lwStyle);
+    this.register(() => lwStyle.remove());
     registerAnnotations(this, getHiveSettings);
     registerCompassOverlay(this);
     registerMcpBridge(this, getHiveSettings);
