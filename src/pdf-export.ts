@@ -35,8 +35,37 @@ interface HivePdfSettings {
   openAfterBuild: boolean;
   overwriteExisting: boolean;
   wslDistro: string;            // "" = default distro
-  includeExcalidraw: boolean;   // NEW: include ![[*.excalidraw]] in PDF
-  excalidrawScale: number;      // NEW: PNG export scale for Excalidraw
+  includeExcalidraw: boolean;   // include ![[*.excalidraw]] in PDF
+  excalidrawScale: number;      // PNG export scale for Excalidraw
+  // ── Readability (operator-tunable per doc type 2026-05-23) ──────────────
+  fontSize: string;             // pandoc -V fontsize (e.g. "11pt" notes, "14pt" business docs)
+  marginInches: number;         // pandoc -V geometry:margin (e.g. 1.0 notes, 0.75 business docs)
+  mainFont: string;             // pandoc -V mainfont (xelatex requires system font name)
+  sansFont: string;             // pandoc -V sansfont
+  monoFont: string;             // pandoc -V monofont
+  useExternalLatexTemplate: boolean;  // false = inline -V flags only (cleaner); true = use latexTemplatePath
+  latexTemplatePath: string;    // ignored when useExternalLatexTemplate=false
+  preset: "note" | "business" | "academic" | "custom";  // preset selector (drives the above)
+}
+
+// Presets: clean defaults per common use case. Operator can override individually.
+function applyPreset(s: HivePdfSettings): HivePdfSettings {
+  if (s.preset === "business") {
+    return { ...s, fontSize: "14pt", marginInches: 0.75, mainFont: "DejaVu Sans",
+             sansFont: "DejaVu Sans", monoFont: "DejaVu Sans Mono",
+             useExternalLatexTemplate: false };
+  }
+  if (s.preset === "academic") {
+    return { ...s, fontSize: "12pt", marginInches: 1.0, mainFont: "Latin Modern Roman",
+             sansFont: "Latin Modern Sans", monoFont: "Latin Modern Mono",
+             useExternalLatexTemplate: false };
+  }
+  if (s.preset === "note") {
+    return { ...s, fontSize: "11pt", marginInches: 1.0, mainFont: "DejaVu Sans",
+             sansFont: "DejaVu Sans", monoFont: "DejaVu Sans Mono",
+             useExternalLatexTemplate: false };
+  }
+  return s;  // custom — operator manages all fields directly
 }
 
 const DEFAULT_SETTINGS: HivePdfSettings = {
@@ -48,6 +77,14 @@ const DEFAULT_SETTINGS: HivePdfSettings = {
   wslDistro: "",
   includeExcalidraw: true,
   excalidrawScale: 2,
+  fontSize: "11pt",
+  marginInches: 1.0,
+  mainFont: "DejaVu Sans",
+  sansFont: "DejaVu Sans",
+  monoFont: "DejaVu Sans Mono",
+  useExternalLatexTemplate: false,
+  latexTemplatePath: "",
+  preset: "note",
 };
 
 // ─── Excalidraw API types (minimal surface we need) ────────────────────────
@@ -556,24 +593,47 @@ async function buildPdf(
   }
 
   // ── Step 4: pandoc → PDF ──────────────────────────────────────────────────
+  // 2026-05-23: parameterized via HivePdfSettings.preset (note/business/academic/custom)
+  // + applyPreset() at top of file. Old external template path (/mnt/d/0LOCAL/.claude/
+  // scripts/pdf-template.tex) was missing on most systems; switched to inline -V flags
+  // so the plugin is self-contained. Operator can still opt-into a custom template via
+  // settings.useExternalLatexTemplate + settings.latexTemplatePath.
+  //
+  // TODO 2026-05-23: add mermaid.ink integration as Step 3.5 — pre-process markdown
+  // for ```mermaid blocks; base64-encode source; fetch
+  // https://mermaid.ink/img/{b64}?type=png; save PNG next to readyMdWsl; replace block
+  // with ![Diagram](mermaid-{hash}.png). Resolves the "Mermaid blocks render as code
+  // listings instead of diagrams" complaint. See faerie2 business/patent/ for the
+  // worked-example pdfs using this technique.
   new Notice("Hive PDF: running pandoc…");
   log.append("\n[Step 4] pandoc → xelatex → PDF");
 
-  const template = "/mnt/d/0LOCAL/.claude/scripts/pdf-template.tex";
+  const s = applyPreset(this.settings ?? DEFAULT_SETTINGS);
+  const templateArg = s.useExternalLatexTemplate && s.latexTemplatePath
+    ? `--template='${s.latexTemplatePath}'`
+    : "";  // omit when not using external template — inline -V flags cover it
 
   const pandocCmd = [
     `cd '${buildWsl}'`,
     `&& pandoc '${readyMdWsl}'`,
     `--pdf-engine=xelatex`,
-    `--template='${template}'`,
+    templateArg,
+    `--resource-path='${buildWsl}:${buildWsl}/diagrams'`,
     `--toc`,
     `--toc-depth=3`,
     `--number-sections`,
-    `-V geometry:margin=1in`,
-    `-V fontsize:11pt`,
+    `-V geometry:margin=${s.marginInches}in`,
+    `-V fontsize:${s.fontSize}`,
+    `-V mainfont='${s.mainFont}'`,
+    `-V sansfont='${s.sansFont}'`,
+    `-V monofont='${s.monoFont}'`,
+    `-V documentclass=article`,
+    `-V colorlinks=true`,
+    `-V linkcolor=blue`,
+    `-V urlcolor=blue`,
     `-o '${pdfWsl}'`,
     `2>&1`,
-  ].join(" ");
+  ].filter(Boolean).join(" ");
 
   const pandocResult = await runWsl(distro, pandocCmd);
   log.append(`  stdout: ${pandocResult.stdout.trim()}`);
