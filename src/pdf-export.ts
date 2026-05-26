@@ -45,23 +45,45 @@ interface HivePdfSettings {
   monoFont: string;             // pandoc -V monofont
   useExternalLatexTemplate: boolean;  // false = inline -V flags only (cleaner); true = use latexTemplatePath
   latexTemplatePath: string;    // ignored when useExternalLatexTemplate=false
-  preset: "note" | "business" | "academic" | "custom";  // preset selector (drives the above)
+  latexHeaderPath: string;      // --include-in-header path; empty = use faerie2 print-ready-header.tex if found
+  preset: "note" | "business" | "academic" | "comparison" | "custom";  // preset selector (drives the above)
 }
+
+// ─── Preset parity contract with faerie2/.agents/skills/pdf ───────────────────
+// IMPORTANT: Presets here MUST stay in lockstep with the headless skill at:
+//   faerie2/.agents/skills/pdf/scripts/build_pdf.sh
+// Both pipelines share `print-ready-header.tex` and the same shaded-stub.tex.
+// When you add or modify a preset, update BOTH so an agent running headlessly
+// (e.g. on the swarmy VPS) produces visually-identical output to a user
+// exporting from inside Obsidian.
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Presets: clean defaults per common use case. Operator can override individually.
 function applyPreset(s: HivePdfSettings): HivePdfSettings {
   if (s.preset === "business") {
+    // Client-facing decks, proposals — larger type, tighter margins
     return { ...s, fontSize: "14pt", marginInches: 0.75, mainFont: "DejaVu Sans",
              sansFont: "DejaVu Sans", monoFont: "DejaVu Sans Mono",
              useExternalLatexTemplate: false };
   }
   if (s.preset === "academic") {
+    // Papers, formal reports — classical serif body
     return { ...s, fontSize: "12pt", marginInches: 1.0, mainFont: "Latin Modern Roman",
              sansFont: "Latin Modern Sans", monoFont: "Latin Modern Mono",
              useExternalLatexTemplate: false };
   }
   if (s.preset === "note") {
+    // Daily notes, drafts — readable defaults, generous margins
     return { ...s, fontSize: "11pt", marginInches: 1.0, mainFont: "DejaVu Sans",
+             sansFont: "DejaVu Sans", monoFont: "DejaVu Sans Mono",
+             useExternalLatexTemplate: false };
+  }
+  if (s.preset === "comparison") {
+    // Side-by-side tables, multi-column comparisons, glossary docs.
+    // Slightly tighter margin than `note` so wide tables fit without splitting,
+    // while keeping `note`'s readable type size.
+    // Matches faerie2/.agents/skills/pdf preset of the same name.
+    return { ...s, fontSize: "11pt", marginInches: 0.85, mainFont: "DejaVu Sans",
              sansFont: "DejaVu Sans", monoFont: "DejaVu Sans Mono",
              useExternalLatexTemplate: false };
   }
@@ -84,6 +106,7 @@ const DEFAULT_SETTINGS: HivePdfSettings = {
   monoFont: "DejaVu Sans Mono",
   useExternalLatexTemplate: false,
   latexTemplatePath: "",
+  latexHeaderPath: "",  // empty = auto-detect faerie2 print-ready-header.tex
   preset: "note",
 };
 
@@ -592,19 +615,148 @@ async function buildPdf(
     );
   }
 
+  // ── Step 3.5: mermaid.ink fallback for remaining ```mermaid blocks ──────────
+  // 2026-05-25: fills the TODO from 2026-05-23. After Step 3 (aspect-sizer),
+  // any ```mermaid blocks that survived (mmdc may have left them if it only
+  // processes extracted .mmd files) are replaced by fetched PNGs from
+  // mermaid.ink. We read the .ready.md file, find remaining blocks, fetch via
+  // mermaid.ink, write PNGs to diagramsDir, and rewrite the .ready.md.
+  //
+  // Encoding strategy: pako-compressed base64url for diagrams ≥ 500 chars of
+  // source (stays under URL length limits); plain base64url for shorter ones.
+  // Cache key: SHA-256(source) → mermaid-{hex16}.png in diagramsDir.
+  // On mermaid.ink error: leave a visible placeholder comment in the markdown.
+  new Notice("Hive PDF: resolving remaining Mermaid blocks via mermaid.ink…");
+  log.append("\n[Step 3.5] mermaid.ink fallback for remaining mermaid blocks");
+
+  const readyMdPath = path.join(buildDir, "note.ready.md");
+  let readyMdContent = fs.existsSync(readyMdPath)
+    ? fs.readFileSync(readyMdPath, "utf8")
+    : fs.readFileSync(path.join(buildDir, "note.preprocessed.md"), "utf8");
+
+  // SHA-256 helper (Node.js built-in)
+  const { createHash } = await import("crypto");
+  const { default: https } = await import("https");
+  const { default: zlib } = await import("zlib");
+
+  /** Compute SHA-256 hex of a string */
+  const sha256hex = (s: string): string =>
+    createHash("sha256").update(s, "utf8").digest("hex");
+
+  /** Raw DEFLATE (no zlib header) — what pako uses */
+  const rawDeflate = (src: string): Promise<Buffer> =>
+    new Promise((resolve, reject) =>
+      zlib.deflateRaw(Buffer.from(src, "utf8"), { level: 9 }, (err, result) =>
+        err ? reject(err) : resolve(result)
+      )
+    );
+
+  /** Build mermaid.ink URL — pako for large, plain base64url for small */
+  const mermaidInkUrl = async (source: string): Promise<string> => {
+    const PAKO_THRESHOLD = 500;
+    const theme = "default";
+    if (source.length >= PAKO_THRESHOLD) {
+      const deflated = await rawDeflate(source);
+      const b64 = deflated.toString("base64url").replace(/=+$/, "");
+      return `https://mermaid.ink/img/pako:${b64}?theme=${theme}&bgColor=white`;
+    } else {
+      const b64 = Buffer.from(source, "utf8").toString("base64url").replace(/=+$/, "");
+      return `https://mermaid.ink/img/${b64}?theme=${theme}&bgColor=white`;
+    }
+  };
+
+  /** Fetch a URL and return the body as Buffer, or null on error */
+  const fetchPng = (url: string): Promise<Buffer | null> =>
+    new Promise((resolve) => {
+      const req = https.get(url, { headers: { "User-Agent": "swarmy-hive-plugin/1.1" } }, (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => {
+          const body = Buffer.concat(chunks);
+          // mermaid.ink returns small payloads on parse error
+          resolve(body.length > 200 ? body : null);
+        });
+      });
+      req.setTimeout(30_000, () => { req.destroy(); resolve(null); });
+      req.on("error", () => resolve(null));
+    });
+
+  const mermaidRe = /```mermaid\n([\s\S]*?)\n```/g;
+  let inkDiagramCount = 0;
+  const inkReplacements: Array<{ placeholder: string; replacement: string }> = [];
+
+  // Collect all remaining mermaid blocks
+  let inkMatch: RegExpExecArray | null;
+  while ((inkMatch = mermaidRe.exec(readyMdContent)) !== null) {
+    const fullBlock = inkMatch[0];
+    const source = inkMatch[1].trim();
+    const hashPrefix = sha256hex(source).slice(0, 16);
+    const pngName = `mermaid-${hashPrefix}.png`;
+    const pngDestPath = path.join(diagramsDir, pngName);
+    const pngMdRef = `diagrams/${pngName}`;
+    inkDiagramCount++;
+
+    // Use cached PNG if available
+    if (fs.existsSync(pngDestPath) && fs.statSync(pngDestPath).size > 200) {
+      log.append(`  [ink-${inkDiagramCount}] cache hit: ${pngName}`);
+      const { w, h } = getPngDims(fs.readFileSync(pngDestPath));
+      const ann = sizeAnnotation(w, h);
+      const replacement = ann === "LANDSCAPE"
+        ? `\n\\begin{landscape}\n\\begin{center}\n\\includegraphics[width=\\linewidth]{${pngMdRef}}\n\\end{center}\n\\end{landscape}\n\n`
+        : `\n![Mermaid diagram ${inkDiagramCount}](${pngMdRef}){ ${ann} }\n`;
+      inkReplacements.push({ placeholder: fullBlock, replacement });
+      continue;
+    }
+
+    // Fetch from mermaid.ink
+    try {
+      const url = await mermaidInkUrl(source);
+      log.append(`  [ink-${inkDiagramCount}] fetching from mermaid.ink: ${url.slice(0, 80)}…`);
+      const pngBuf = await fetchPng(url);
+      if (pngBuf && pngBuf.length > 200) {
+        fs.writeFileSync(pngDestPath, pngBuf);
+        const { w, h } = getPngDims(pngBuf);
+        const ann = sizeAnnotation(w, h);
+        log.append(`    ok: ${pngBuf.length} bytes, dims ${w}x${h}, ann=${ann}`);
+        const replacement = ann === "LANDSCAPE"
+          ? `\n\\begin{landscape}\n\\begin{center}\n\\includegraphics[width=\\linewidth]{${pngMdRef}}\n\\end{center}\n\\end{landscape}\n\n`
+          : `\n![Mermaid diagram ${inkDiagramCount}](${pngMdRef}){ ${ann} }\n`;
+        inkReplacements.push({ placeholder: fullBlock, replacement });
+      } else {
+        log.append(`    WARN: mermaid.ink returned empty/small payload — using placeholder`);
+        inkReplacements.push({
+          placeholder: fullBlock,
+          replacement: `\n> **[Mermaid diagram ${inkDiagramCount} — render failed: mermaid.ink returned no data]**\n\n`,
+        });
+      }
+    } catch (inkErr) {
+      log.append(`    ERROR: ${inkErr}`);
+      inkReplacements.push({
+        placeholder: fullBlock,
+        replacement: `\n> **[Mermaid diagram ${inkDiagramCount} — render failed: ${inkErr}]**\n\n`,
+      });
+    }
+  }
+
+  // Apply replacements to ready.md (rewrite file with PNGs inlined)
+  if (inkDiagramCount > 0) {
+    for (const { placeholder, replacement } of inkReplacements) {
+      readyMdContent = readyMdContent.replace(placeholder, replacement);
+    }
+    fs.writeFileSync(readyMdPath, readyMdContent, "utf8");
+    log.append(`  mermaid.ink pass done: ${inkDiagramCount} block(s) processed`);
+  } else {
+    log.append(`  no remaining mermaid blocks — step skipped`);
+  }
+
   // ── Step 4: pandoc → PDF ──────────────────────────────────────────────────
   // 2026-05-23: parameterized via HivePdfSettings.preset (note/business/academic/custom)
-  // + applyPreset() at top of file. Old external template path (/mnt/d/0LOCAL/.claude/
-  // scripts/pdf-template.tex) was missing on most systems; switched to inline -V flags
-  // so the plugin is self-contained. Operator can still opt-into a custom template via
-  // settings.useExternalLatexTemplate + settings.latexTemplatePath.
-  //
-  // TODO 2026-05-23: add mermaid.ink integration as Step 3.5 — pre-process markdown
-  // for ```mermaid blocks; base64-encode source; fetch
-  // https://mermaid.ink/img/{b64}?type=png; save PNG next to readyMdWsl; replace block
-  // with ![Diagram](mermaid-{hash}.png). Resolves the "Mermaid blocks render as code
-  // listings instead of diagrams" complaint. See faerie2 business/patent/ for the
-  // worked-example pdfs using this technique.
+  // + applyPreset() at top of file. Inline -V flags so plugin is self-contained.
+  // External LaTeX header for no-split floats + hyperref config now supported via
+  // latexHeaderPath setting (see HivePdfSettings).
+  // 2026-05-25: upgraded colorlinks to NavyBlue; added highlight-style=tango;
+  //   added --include-in-header support for print-ready-header.tex (no-split floats,
+  //   needspace, booktabs, widow/orphan penalties).
   new Notice("Hive PDF: running pandoc…");
   log.append("\n[Step 4] pandoc → xelatex → PDF");
 
@@ -613,15 +765,29 @@ async function buildPdf(
     ? `--template='${s.latexTemplatePath}'`
     : "";  // omit when not using external template — inline -V flags cover it
 
+  // Include the print-ready LaTeX header (provides no-split floats, needspace,
+  // NavyBlue hyperref, widow/orphan penalties, booktabs, caption styles).
+  // Priority: (1) user-provided s.latexHeaderPath, (2) faerie2 canonical path,
+  // (3) empty — inline -V flags remain the baseline fallback.
+  const FALLBACK_HEADER = "/mnt/d/0local/gitrepos/faerie2/forensics/publication-renders/print-ready-header.tex";
+  const headerTex = s.latexHeaderPath || FALLBACK_HEADER;
+  const headerWsl = winToWsl(headerTex);
+  const headerArg = (() => {
+    try { return fs.existsSync(headerTex) ? `--include-in-header='${headerWsl}'` : ""; }
+    catch { return ""; }
+  })();
+
   const pandocCmd = [
     `cd '${buildWsl}'`,
     `&& pandoc '${readyMdWsl}'`,
     `--pdf-engine=xelatex`,
     templateArg,
+    headerArg,
     `--resource-path='${buildWsl}:${buildWsl}/diagrams'`,
     `--toc`,
     `--toc-depth=3`,
     `--number-sections`,
+    `--highlight-style=tango`,
     `-V geometry:margin=${s.marginInches}in`,
     `-V fontsize:${s.fontSize}`,
     `-V mainfont='${s.mainFont}'`,
@@ -629,8 +795,11 @@ async function buildPdf(
     `-V monofont='${s.monoFont}'`,
     `-V documentclass=article`,
     `-V colorlinks=true`,
-    `-V linkcolor=blue`,
-    `-V urlcolor=blue`,
+    `-V linkcolor=NavyBlue`,
+    `-V urlcolor=NavyBlue`,
+    `-V citecolor=NavyBlue`,
+    `-V toccolor=NavyBlue`,
+    `-V papersize=letter`,
     `-o '${pdfWsl}'`,
     `2>&1`,
   ].filter(Boolean).join(" ");
@@ -1003,10 +1172,45 @@ class HivePdfSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl)
+      .setName("LaTeX header file (--include-in-header)")
+      .setDesc(
+        "Path to a .tex file injected via pandoc --include-in-header. " +
+        "Provides: no-split tables/figures (float [H]), needspace for headings, " +
+        "NavyBlue hyperref colorlinks, widow/orphan penalties, booktabs, caption styles. " +
+        "Leave blank to auto-detect faerie2/forensics/publication-renders/print-ready-header.tex, " +
+        "or enter a custom path. Set to 'none' to disable."
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("(auto: faerie2 print-ready-header.tex)")
+          .setValue(this.plugin.settings.latexHeaderPath)
+          .onChange(async (value) => {
+            this.plugin.settings.latexHeaderPath = value.trim() === "none" ? "__disabled__" : value.trim();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("External LaTeX template")
+      .setDesc(
+        "Enable to use a custom pandoc LaTeX template (--template). " +
+        "When off (default), inline -V flags control all styling. " +
+        "Use this only if you need a fully custom document class."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.useExternalLatexTemplate)
+          .onChange(async (value) => {
+            this.plugin.settings.useExternalLatexTemplate = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     // Footer
     containerEl.createEl("hr");
     containerEl.createEl("p", {
-      text: "Pipeline: Excalidraw → PNG, extract .mmd → mmdc (PNG), 9x_pdf_aspect_sizer.py, pandoc/xelatex. Build logs in <note-folder>/.pdf-build/. All subprocess calls run inside WSL.",
+      text: "Pipeline: Excalidraw → PNG, extract .mmd → mmdc (PNG), 9x_pdf_aspect_sizer.py, mermaid.ink fallback (Step 3.5), pandoc/xelatex + print-ready-header.tex (no-split floats, NavyBlue hyperref). Build logs in <note-folder>/.pdf-build/. All subprocess calls run inside WSL.",
       cls: "setting-item-description",
     });
   }
