@@ -1,8 +1,37 @@
+# ─── What stays OUT of git ────────────────────────────────────────────────
+
+# Dependencies (resolved at `npm install` time on each clone — not source)
 node_modules/
+
+# Build artifacts that aren't part of the shipped plugin
 dist/
+build/
+*.tsbuildinfo
 *.log
-.faerie-token
+
+# Editor + OS scratch
 .DS_Store
 .vscode/
-*.tsbuildinfo
-package-lock.json
+.idea/
+*.swp
+*~
+
+# Secrets — NEVER commit these
+.swarmy-token
+.swarmy-user-key
+.faerie-token
+.env
+.env.local
+
+# ─── What STAYS in git ────────────────────────────────────────────────────
+# (Not gitignored — listed here as documentation only)
+#
+# manifest.json    — Obsidian reads this; required in release
+# main.js          — the built bundle; users install this directly
+# main.ts, src/    — source so developers can rebuild
+# styles.css       — plugin CSS, loaded by Obsidian at runtime
+# package.json     — declares build scripts + devDependencies
+# package-lock.json — locks build-time deps for reproducible CI builds
+# esbuild.config.mjs, tsconfig.json — build configuration
+# Blueprints/, templates/, presets/ — content bundled with the plugin
+# README.md, INSTALL.md, THIRD_PARTY_NOTICES.md, TUTORIAL.md, LICENSE

@@ -1,0 +1,72 @@
+---
+name: Flow-Evolution
+description: Agent evolution cycle — mutation detection, classification, baseline measurement, NECTAR propagation. TD layout.
+triggers:
+  - "evolution"
+  - "mutation"
+  - "fitness"
+  - "selection"
+  - "baseline"
+---
+{#
+  Flow-Evolution.njk
+  Variables:
+    title   — diagram title
+    caption — optional note
+#}
+{% set title = title | default("Agent Evolution Cycle") %}
+
+## {{ title }}
+
+```mermaid
+flowchart TD
+    subgraph DETECT["Mutation Detection"]
+        DELTA["🔍 Delta Observed\nagent behavior shift"]
+        CLASS{"Classify\nmutation"}
+    end
+
+    subgraph TYPES["Mutation Types"]
+        BEN["✅ Beneficial\nimproves Q/R/M/F"]
+        NEU["⚪ Neutral\nno measurable effect"]
+        HARM["❌ Harmful\ndegrades metric"]
+        UNC["❓ Uncertain\nnot enough data"]
+    end
+
+    subgraph MEASURE["Measurement Protocol"]
+        T0["T=0 Baseline\nlock before repair"]
+        APPLY["Apply / Observe\n(do NOT fix harmful yet)"]
+        T1["T+1 Measure\nQ, R, M, F scores"]
+        DIFF["Δ = T1 − T0"]
+    end
+
+    subgraph PROPAGATE["Propagation"]
+        NECTAR["🧊 NECTAR entry\n(if beneficial)"]
+        BLOCK["🚫 Block propagation\n(if harmful)"]
+        WATCH["👁 Watch list\n(if uncertain)"]
+        HONEY_UP["🍯 HONEY update\n(if principle-level)"]
+    end
+
+    DELTA --> CLASS
+    CLASS -- beneficial --> BEN --> T0
+    CLASS -- neutral --> NEU
+    CLASS -- harmful --> HARM --> T0
+    CLASS -- uncertain --> UNC --> T0
+
+    T0 --> APPLY --> T1 --> DIFF
+    DIFF -- positive Δ --> NECTAR --> HONEY_UP
+    DIFF -- negative Δ --> BLOCK
+    DIFF -- unclear --> WATCH
+
+    style BEN    fill:#ECFDF5,stroke:#059669
+    style HARM   fill:#FFF1F2,stroke:#DB2777
+    style NEU    fill:#F9FAFB,stroke:#94a3b8
+    style UNC    fill:#FFFBEB,stroke:#D97706
+    style NECTAR fill:#EFF6FF,stroke:#0891B2
+    style HONEY_UP fill:#FFFBEB,stroke:#D97706,stroke-width:2px
+    style BLOCK  fill:#FFF1F2,stroke:#DB2777
+    style T0     fill:#F3EEFF,stroke:#8B5CF6
+```
+
+{% if caption %}
+> *{{ caption }}*
+{% endif %}

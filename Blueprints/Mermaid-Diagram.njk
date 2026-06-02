@@ -1,0 +1,45 @@
+---
+name: Mermaid-Diagram
+description: Renders a Mermaid diagram. Stable types use a native fenced block; beta types (architecture-beta, kanban, xychart-beta, packet-beta, venn, ishikawa-beta) use a mermaid.ink image embed since Obsidian bundles an older renderer.
+triggers:
+  - "mermaid"
+  - "diagram"
+  - "chart"
+---
+{#
+  Mermaid-Diagram.njk
+  Variables:
+    title     — diagram title (string)
+    code      — Mermaid diagram source (string, required)
+    beta      — set to "true" to force mermaid.ink embed (default: false)
+    theme     — mermaid theme: default | dark | forest | neutral (default: default)
+    caption   — optional caption
+#}
+{% set theme = theme | default("default") %}
+{% set isBeta = beta | default("false") %}
+
+{% if title %}
+## {{ title }}
+{% endif %}
+
+{% if isBeta == "true" %}
+{# --- mermaid.ink image embed (for beta types Obsidian can't render yet) --- #}
+{% set payload = '{"code":' + (code | json) + ',"mermaid":{"theme":"' + theme + '"}}' %}
+{% set encoded = payload | b64 %}
+
+![{{ title | default("diagram") }}](https://mermaid.ink/svg/{{ encoded }}?bgColor=!white)
+
+> [!note]- Source (mermaid.ink)
+> ```mermaid
+> {{ code }}
+> ```
+{% else %}
+{# --- native fenced block (Obsidian renders these directly) --- #}
+```mermaid
+{{ code }}
+```
+{% endif %}
+
+{% if caption %}
+*{{ caption }}*
+{% endif %}

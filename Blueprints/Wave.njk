@@ -1,0 +1,63 @@
+---
+type: wave
+wave_id: {{ frontmatter.wave_id | default(file.basename) }}
+date: {{ today }}
+mission: {{ frontmatter.mission | default("") }}
+charter_id: {{ frontmatter.charter_id | default("") }}
+piston_stage: {{ frontmatter.piston_stage | default("W1") }}
+agents_spawned: {{ frontmatter.agents_spawned | default(0) }}
+agents_sealed: {{ frontmatter.agents_sealed | default(0) }}
+status: {{ frontmatter.status | default("in-flight") }}
+canonical_repo_path: {{ frontmatter.canonical_repo_path | default("forensics/manifests/") }}{{ today }}/
+created: {{ now }}
+tags: [wave, spawn, pseudosystem]
+---
+
+> [!propolis] Wave — {{ frontmatter.wave_id | default(file.basename) }}
+> **Stage:** `{{ frontmatter.piston_stage | default("W1") }}` · **Mission:** `{{ frontmatter.mission | default("—") }}` · **Status:** `{{ frontmatter.status | default("in-flight") }}`
+>
+> Dossier for one multi-agent dispatch wave.
+> A wave is a single `/spawn` or Queen liftoff event — N agents dispatched, their manifests collected, mission advanced.
+
+## Dispatch Summary
+
+| Field | Value |
+|-------|-------|
+| Date | {{ today }} |
+| Mission | [[{{ frontmatter.mission | default("") }}]] |
+| Charter | [[{{ frontmatter.charter_id | default("") }}]] |
+| Piston stage | {{ frontmatter.piston_stage | default("W1") }} |
+| Agents spawned | {{ frontmatter.agents_spawned | default("—") }} |
+| Agents sealed | {{ frontmatter.agents_sealed | default("—") }} |
+
+## Agents in Wave
+
+| Agent | Task ID | Bearing | Dashboard Line |
+|-------|---------|---------|----------------|
+{% for a in frontmatter.agents_spawned_list | default([]) %}| {{ a.agent_type | default("?") }} | {{ a.task_id | default("?") }} | {{ a.bearing | default("S") }} | {{ a.dashboard_line | default("—") }} |
+{% endfor %}
+
+## Emergence
+
+<!-- What patterns, discoveries, or discovered_work emerged from this wave that weren't in the brief? -->
+
+## Manifests
+
+```dataview
+TABLE bearing, agent_type, dashboard_line
+FROM "Manifests/{{ today }}"
+WHERE type = "manifest"
+SORT file.ctime ASC
+```
+
+## Seal Record
+
+| Field | Value |
+|-------|-------|
+| Sealed at | — |
+| Final agent count | — |
+| Synthesis note | — |
+
+---
+
+*Canonical manifests: `forensics/manifests/{{ today }}/` in repo.*

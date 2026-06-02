@@ -1,0 +1,50 @@
+---
+type: shape
+shape_id: {{ frontmatter.shape_id | default(file.basename) }}
+target_direction: {{ frontmatter.target_direction | default("decreasing") }}
+current_count: {{ frontmatter.current_count | default("null") }}
+baseline_ts: {{ frontmatter.baseline_ts | default("") }}
+membench_probe: {{ frontmatter.membench_probe | default(false) }}
+cluster_prefix: {{ frontmatter.cluster_prefix | default([]) | join(", ") }}
+applicable_repos: {{ frontmatter.applicable_repos | default(["faerie2"]) | join(", ") }}
+canonical_repo_path: {{ frontmatter.canonical_repo_path | default("_meta/shapes.json") }}
+created: {{ now }}
+tags: [shape, measurement, pseudosystem]
+---
+
+> [!propolis] Shape — {{ frontmatter.shape_id | default(file.basename) }}
+> **Target direction:** `{{ frontmatter.target_direction | default("decreasing") }}` · **Current count:** {{ frontmatter.current_count | default("—") }}
+>
+> Vault pseudosystem mirror of a shape from `_meta/shapes.json`.
+> The canonical registry lives in the repo — this note is the navigable dossier.
+
+## Description
+
+<!-- Copy description from shapes.json. -->
+
+## Measurement
+
+| Field | Value |
+|-------|-------|
+| Target direction | {{ frontmatter.target_direction | default("—") }} |
+| Current count | {{ frontmatter.current_count | default("—") }} |
+| Noise threshold | {{ frontmatter.noise_threshold | default("—") }} |
+| Detector script | {{ frontmatter.detector_script | default("—") }} |
+| Membench probe | {{ frontmatter.membench_probe | default(false) }} |
+
+## History
+
+| Timestamp | Count | Mutation | Verdict |
+|-----------|-------|----------|---------|
+
+## Interpretation
+
+<!-- What does this shape measure? What does decreasing/increasing mean in practice? -->
+
+## Related Shapes
+
+<!-- Wiki-links to related shape notes — same cluster or same domain. -->
+
+---
+
+*Canonical source: `_meta/shapes.json` → `shapes[shape_id="{{ frontmatter.shape_id | default(file.basename) }}"]`*

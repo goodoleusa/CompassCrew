@@ -2,10 +2,15 @@
 type: manifest
 task_id: {{ frontmatter.task_id | default(file.basename) }}
 charter_ref: {{ frontmatter.charter_ref | default("?") }}
+charter_id: {{ frontmatter.charter_id | default(frontmatter.charter_ref | default("?")) }}
+charter_phase: {{ frontmatter.charter_phase | default("") }}
 mission: {{ frontmatter.mission | default("?") }}
 bearing: {{ frontmatter.bearing | default("S") }}
 agent_type: {{ frontmatter.agent_type | default("?") }}
 session_id: {{ frontmatter.session_id | default("?") }}
+status: {{ frontmatter.status | default("sealed") }}
+completion_kind: {{ frontmatter.completion_kind | default("") }}
+signed_by: {{ frontmatter.signed_by | default("") }}
 created: {{ now }}
 ---
 
@@ -28,7 +33,19 @@ created: {{ now }}
 {% for w in frontmatter.discovered_work | default([]) %}| {{ w.to_label }} | {{ w.bearing }} | {{ w.rationale }} |
 {% endfor %}
 
+## Summary
+
+{{ frontmatter.summary | default("_2–4 sentence narrative of what this agent accomplished._") }}
+
 ## Artifacts
 
 {% for a in frontmatter.artifacts | default([]) %}- [[{{ a }}]]
 {% endfor %}
+
+## Signature
+
+- **Signed by:** {{ frontmatter.signed_by | default("UNSIGNED") }}
+- **Agent type:** {{ frontmatter.agent_type | default("?") }}
+- **Mission:** `{{ frontmatter.mission | default("?") }}`
+- **Charter:** [[{{ frontmatter.charter_ref | default(frontmatter.charter_id | default("?")) }}]]
+- **Charter phase:** {{ frontmatter.charter_phase | default("—") }}

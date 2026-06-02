@@ -40,7 +40,7 @@ BUDGET_TEAMS = {
 }
 
 def read_formulas():
-    path = Path("/mnt/d/0local/.claude/faerie2-formulas.json")
+    path = Path("/mnt/d/0local/.claude/swarmy-formulas.json")
     try:
         with open(path) as f:
             return json.load(f)

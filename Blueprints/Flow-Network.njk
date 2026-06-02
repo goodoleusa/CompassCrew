@@ -1,0 +1,74 @@
+---
+name: Flow-Network
+description: Network/infrastructure flow — request routing, service mesh, TCP/TLS handshake, packet path. TD layout.
+triggers:
+  - "network"
+  - "TCP"
+  - "TLS"
+  - "request flow"
+  - "packet"
+  - "routing"
+---
+{#
+  Flow-Network.njk
+  Variables:
+    title   — diagram title
+    caption — optional note
+#}
+{% set title = title | default("Network Flow") %}
+
+## {{ title }}
+
+```mermaid
+flowchart TD
+    subgraph CLIENT["Client"]
+        CL["🖥 Client\n(Browser / App)"]
+        DNS["🔍 DNS Resolve\nretrofuture.tech → IP"]
+    end
+
+    subgraph EDGE["Edge / Proxy"]
+        CDN["🌐 CDN / Caddy\n:443 TLS termination"]
+        TLS["🔒 TLS Handshake\nClientHello → ServerHello\n→ Certificate → Finished"]
+    end
+
+    subgraph API["API Layer"]
+        GW["API Gateway\n/api/* routing"]
+        AUTH["Auth Middleware\nBearer token check"]
+        MCP["MCP Server\n:8080"]
+    end
+
+    subgraph INFRA["Infrastructure"]
+        DB["🗄 Postgres\n:5432"]
+        CACHE["⚡ Redis\n:6379"]
+        VAULT["📁 Vault\n(bind mount)"]
+    end
+
+    subgraph RESPONSE["Response Path"]
+        SERIAL["Serialize JSON\n+ set headers"]
+        COMPRESS["gzip / br"]
+        DELIVER["→ Client"]
+    end
+
+    CL --> DNS --> CDN
+    CDN --> TLS
+    TLS --> GW
+    GW --> AUTH
+    AUTH -- authed --> MCP
+    AUTH -- reject --> ERR["❌ 401"]
+    MCP --> DB
+    MCP --> CACHE
+    MCP --> VAULT
+    MCP --> SERIAL
+    SERIAL --> COMPRESS --> DELIVER
+
+    style CDN    fill:#F3EEFF,stroke:#8B5CF6
+    style TLS    fill:#ECFDF5,stroke:#059669
+    style AUTH   fill:#EFF6FF,stroke:#0891B2
+    style MCP    fill:#FFFBEB,stroke:#D97706
+    style ERR    fill:#FFF1F2,stroke:#DB2777
+    style DELIVER fill:#ECFDF5,stroke:#059669
+```
+
+{% if caption %}
+> *{{ caption }}*
+{% endif %}

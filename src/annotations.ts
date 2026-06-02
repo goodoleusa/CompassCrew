@@ -3,9 +3,9 @@
  * an AI artifact and POSTs to the MCP server for COC capture.
  *
  * Vocabulary lock (task #37): folder = `Human/` (vault root), noun =
- * "annotation". MCP tool name is `faerie_record_annotation`; we fall
- * back to the legacy `faerie_record_marginalia` for one release while
- * the faerie2 server publishes an alias.
+ * "annotation". MCP tool name is `swarmy_record_annotation`; we fall
+ * back to the legacy `swarmy_record_marginalia` for one release while
+ * the swarmy server publishes an alias.
  */
 import { App, Modal, Notice, Plugin } from "obsidian";
 import * as fs from "fs";
@@ -14,13 +14,13 @@ import * as crypto from "crypto";
 
 export interface AnnotationSettings {
   mcpUrl: string;        // e.g. http://localhost:8765
-  tokenPath: string;     // relative to vault root; default ".faerie-token"
+  tokenPath: string;     // relative to vault root; default ".swarmy-token"
   annotationsDir: string; // vault-relative; default "Human"
 }
 
 export const DEFAULT_ANNOTATION_SETTINGS: AnnotationSettings = {
   mcpUrl: "http://localhost:8765",
-  tokenPath: ".faerie-token",
+  tokenPath: ".swarmy-token",
   annotationsDir: "Human",
 };
 
@@ -79,13 +79,13 @@ class AnnotationModal extends Modal {
 async function postAnnotation(baseUrl: string, headers: Record<string, string>, body: any): Promise<{ ok: boolean; status: number; usedLegacy: boolean }> {
   const base = baseUrl.replace(/\/+$/, "");
   // Try new tool name first.
-  let res = await fetch(`${base}/tools/faerie_record_annotation`, {
+  let res = await fetch(`${base}/tools/swarmy_record_annotation`, {
     method: "POST", headers, body: JSON.stringify(body),
   });
   if (res.ok) return { ok: true, status: res.status, usedLegacy: false };
   if (res.status === 404 || res.status === 405) {
     // Legacy fallback (one-release transition window).
-    res = await fetch(`${base}/tools/faerie_record_marginalia`, {
+    res = await fetch(`${base}/tools/swarmy_record_marginalia`, {
       method: "POST", headers, body: JSON.stringify(body),
     });
     return { ok: res.ok, status: res.status, usedLegacy: true };
@@ -104,7 +104,7 @@ async function maybeOfferMigration(plugin: Plugin) {
   (plugin as any)._annotationMigrationPromptShown = true;
 
   const notice = new Notice(
-    "Faerie: legacy 00-SHARED/Marginalia/ found. Click to migrate to Human/.",
+    "Swarmy: legacy 00-SHARED/Marginalia/ found. Click to migrate to Human/.",
     0,
   );
   // @ts-ignore obsidian's Notice exposes noticeEl
@@ -153,8 +153,8 @@ export function registerAnnotations(
   maybeOfferMigration(plugin);
 
   plugin.addCommand({
-    id: "faerie-drop-annotation",
-    name: "Faerie: drop annotation (attach to current note)",
+    id: "swarmy-drop-annotation",
+    name: "Swarmy: drop annotation (attach to current note)",
     callback: () => {
       const file = plugin.app.workspace.getActiveFile();
       const defaultRef = file ? file.path : "";
@@ -210,10 +210,10 @@ export function registerAnnotations(
 
   // Back-compat command id (so existing user keybindings keep working).
   plugin.addCommand({
-    id: "faerie-add-margin-note",
-    name: "Faerie: add margin note (deprecated alias)",
+    id: "swarmy-add-margin-note",
+    name: "Swarmy: add margin note (deprecated alias)",
     callback: () => {
-      (plugin as any).app.commands.executeCommandById(`${plugin.manifest.id}:faerie-drop-annotation`);
+      (plugin as any).app.commands.executeCommandById(`${plugin.manifest.id}:swarmy-drop-annotation`);
     },
   });
 }

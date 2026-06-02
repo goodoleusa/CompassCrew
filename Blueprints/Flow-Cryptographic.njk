@@ -1,0 +1,76 @@
+---
+name: Flow-Cryptographic
+description: Cryptographic flow diagram — key derivation, signing, verification, hash chains. TD layout for mobile.
+triggers:
+  - "crypto"
+  - "cryptographic"
+  - "hash chain"
+  - "signing"
+  - "key derivation"
+---
+{#
+  Flow-Cryptographic.njk
+  Variables:
+    title    — diagram title
+    subtitle — optional subtitle / context
+    caption  — optional note below
+#}
+{% set title = title | default("Cryptographic Flow") %}
+
+## {{ title }}{% if subtitle %} — {{ subtitle }}{% endif %}
+
+```mermaid
+flowchart TD
+    subgraph INPUT["Input Material"]
+        SK["🔑 Secret Key / Seed\n(never transmitted)"]
+        MSG["📄 Message / Payload"]
+        NONCE["⚡ Nonce / Salt\n(random, per-op)"]
+    end
+
+    subgraph DERIVE["Key Derivation"]
+        KDF["KDF\n(HKDF-SHA256 / Argon2)"]
+        DK["Derived Key\n(scoped to operation)"]
+    end
+
+    subgraph SIGN["Sign / MAC"]
+        HMAC["HMAC-SHA256\nHMAC(DK, MSG)"]
+        SIG["Signature σ\n(32 bytes)"]
+    end
+
+    subgraph CHAIN["Hash Chain (COC)"]
+        H0["H₀ = SHA256(genesis)"]
+        H1["H₁ = SHA256(H₀ ‖ entry₁)"]
+        HN["Hₙ = SHA256(Hₙ₋₁ ‖ entryₙ)"]
+    end
+
+    subgraph VERIFY["Verification"]
+        CHK{"σ == HMAC(DK, MSG)?"}
+        OK["✅ Valid"]
+        FAIL["❌ Tampered"]
+    end
+
+    SK --> KDF
+    NONCE --> KDF
+    KDF --> DK
+    DK --> HMAC
+    MSG --> HMAC
+    HMAC --> SIG
+    SIG --> CHK
+    CHK -- yes --> OK
+    CHK -- no  --> FAIL
+
+    H0 --> H1 --> HN
+
+    style SK   fill:#F3EEFF,stroke:#8B5CF6
+    style DK   fill:#EFF6FF,stroke:#0891B2
+    style SIG  fill:#ECFDF5,stroke:#059669
+    style OK   fill:#ECFDF5,stroke:#059669
+    style FAIL fill:#FFF1F2,stroke:#DB2777
+    style H0   fill:#FFFBEB,stroke:#D97706
+    style H1   fill:#FFFBEB,stroke:#D97706
+    style HN   fill:#FFFBEB,stroke:#D97706
+```
+
+{% if caption %}
+> *{{ caption }}*
+{% endif %}

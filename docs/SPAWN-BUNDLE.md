@@ -68,7 +68,7 @@ package.json has no `dependencies` section, only `devDependencies`. The plugin b
 
 ### MCP tools the plugin calls (faerie2 must implement)
 - `faerie_dashboard`, `faerie_metrics`, `faerie_charters` — Live pane
-- `faerie_chat`, `faerie_session_finalize` — Chat panel
+- `swarmy_chat`, `swarmy_session_finalize` — Chat panel
 - `faerie_record_annotation` — annotation loop
 - `faerie_anchor_promote` — QuickAdd macro
 - `faerie_update_system_prompt` — round-trip flow
@@ -108,9 +108,9 @@ without error:
   - hive:insert-hive-diagram
   - hive:faerie-doctor
   - hive:faerie-install-canonical-configs
-  - hive:faerie-apply-blueprint
+  - hive:swarmy-apply-blueprint
   - hive:faerie-render-blueprint-clipboard
-  - hive:faerie-apply-blueprint-folder
+  - hive:swarmy-apply-blueprint-folder
   - hive:faerie-highlight-with-bearing
   - hive:faerie-copy-trail-ref
   - hive:faerie-toggle-all-trail-refs
@@ -120,16 +120,16 @@ without error:
   - hive:faerie-compass-overlay
   - hive:faerie-write-excalibrain-config
   - hive:faerie-open-live-pane
-  - hive:faerie-open-chat
+  - hive:swarmy-open-chat
   - hive:faerie-install-quickadd-macros
   - hive:faerie-import-system-prompt
   - hive:faerie-push-system-prompt
   - hive:faerie-spiderfoot-install
   - hive:faerie-spiderfoot-scan
-  - hive:faerie-excalidraw-apply-pro-preset
-  - hive:faerie-excalidraw-install-fonts
-  - hive:faerie-excalidraw-install-scripts
-  - hive:faerie-draft-excalibrain
+  - hive:swarmy-excalidraw-apply-pro-preset
+  - hive:swarmy-excalidraw-install-fonts
+  - hive:swarmy-excalidraw-install-scripts
+  - hive:swarmy-draft-excalibrain
   - hive:faerie-commit-excalibrain-draft
 ```
 **Done looks like:** All 27 commands listed + executed (or marked broken with stack trace).
@@ -157,7 +157,7 @@ bash install_launch.sh        # Get SpiderFoot installed via uv
 
 # ExcaliBrain draft flow
 # In faerie-vault, open any note with `up:` or `down:` frontmatter fields.
-# Run faerie-draft-excalibrain command.
+# Run swarmy-draft-excalibrain command.
 # Verify:
 #   - New canvas opens under 00-SHARED/Drafts/ExcaliBrain/<date>/
 #   - Has labeled rectangles for parents/children/friends with correct colors
@@ -182,8 +182,8 @@ grep -rn -E '"N"|"S"|"E"|"W"|north|south|east|west|unblock|conclude|parallel|bas
 # Any discrepancy = report as drift. Patch to import from bearings.ts.
 
 # MCP stub server (so Live pane + Chat work without faerie2 deployment)
-# Create /tmp/faerie-mcp-stub.py:
-cat > /tmp/faerie-mcp-stub.py <<'PYEOF'
+# Create /tmp/swarmy-mcp-stub.py:
+cat > /tmp/swarmy-mcp-stub.py <<'PYEOF'
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 class H(BaseHTTPRequestHandler):
@@ -195,8 +195,8 @@ class H(BaseHTTPRequestHandler):
       "faerie_dashboard": {"missions": 3, "in_flight": 2, "ctx_pct": 42},
       "faerie_metrics": {"fitness": 0.87, "emergence": 0.91, "coherence": 0.85},
       "faerie_charters": {"charters": [{"title": "Test", "path": "forensics/charters/2026-05-19/test.md"}]},
-      "faerie_chat": {"reply": "Faerie stub reply: " + body.decode()[:80]},
-      "faerie_session_finalize": {"ok": True, "path": "forensics/sessions/test.md"},
+      "swarmy_chat": {"reply": "Faerie stub reply: " + body.decode()[:80]},
+      "swarmy_session_finalize": {"ok": True, "path": "forensics/sessions/test.md"},
       "faerie_record_annotation": {"ok": True},
       "faerie_anchor_promote": {"ok": True},
       "faerie_update_system_prompt": {"ok": True, "pr_url": "stub://pr/1"},
@@ -205,7 +205,7 @@ class H(BaseHTTPRequestHandler):
     self.wfile.write(json.dumps(resp).encode())
 HTTPServer(("127.0.0.1", 8765), H).serve_forever()
 PYEOF
-python3 /tmp/faerie-mcp-stub.py &
+python3 /tmp/swarmy-mcp-stub.py &
 # Verify Live pane renders, Chat sends/receives, annotation POST returns 200.
 ```
 **Done looks like:** Bearings audit report (clean OR drift-list); MCP stub running; Live pane + Chat verified against it.

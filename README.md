@@ -57,8 +57,8 @@ Doctor tells you what's missing and offers a one-click installer. Done.
 
 Optional (only if you want AI features beyond local templates):
 
-- Get a faerie MCP bearer token from https://faerie.retrofuture.tech (free, GitHub OAuth)
-- Drop it in `<vault>/.faerie-token` (gitignored, stays on your machine)
+- Get a faerie MCP bearer token from https://swarmy.retrofuture.tech (free, GitHub OAuth)
+- Drop it in `<vault>/.swarmy-token` (gitignored, stays on your machine)
 - Run **`faerie: install canonical configs`** to drop in linter rules + Breadcrumbs setup + visual-language CSS
 
 
@@ -196,20 +196,20 @@ The MCP token is how the plugin authenticates against the faerie server. **Get o
 
 ### One-click (recommended — requires plugin v2.1+)
 
-Run command **`faerie: grab MCP token`** → opens GitHub OAuth in your default browser → after you approve, faerie redirects back with a one-time token download → plugin auto-saves to `<vault>/.faerie-token` (gitignored). Done.
+Run command **`faerie: grab MCP token`** → opens GitHub OAuth in your default browser → after you approve, faerie redirects back with a one-time token download → plugin auto-saves to `<vault>/.swarmy-token` (gitignored). Done.
 
 ### Manual (works today)
 
 ```bash
 # Open the OAuth flow in your browser:
-open https://faerie.retrofuture.tech
+open https://swarmy.retrofuture.tech
 # (or visit it manually — sign in with GitHub, approve the app)
 
 # After approval you'll see your token. Copy it, then:
-echo "your-token-here" > /path/to/vault/.faerie-token
+echo "your-token-here" > /path/to/vault/.swarmy-token
 
 # Lock down permissions (optional but recommended):
-chmod 600 /path/to/vault/.faerie-token
+chmod 600 /path/to/vault/.swarmy-token
 ```
 
 The token is a 200-char base64url string. Treat it like an SSH private key — never commit it, never paste in chat.
@@ -221,12 +221,12 @@ The token is a 200-char base64url string. Treat it like an SSH private key — n
 # "faerie: rotate MCP token"  → invalidates the old token, issues a new one, auto-saves
 
 # Or from the VPS as admin:
-docker exec faerie2-mcp python3 deploy/scripts/manage-tokens.py rotate <user>
+docker exec swarmy-mcp python3 deploy/scripts/manage-tokens.py rotate <user>
 ```
 
 ### Provisioning new users (admin only)
 
-GitHub OAuth handles this — anyone in `GITHUB_ALLOWED_USERS` (set in faerie's `.env`) can sign in at `https://faerie.retrofuture.tech` and gets a token + an Ed25519 signing keypair (one-time download, zero-knowledge — faerie keeps only the public key).
+GitHub OAuth handles this — anyone in `GITHUB_ALLOWED_USERS` (set in faerie's `.env`) can sign in at `https://swarmy.retrofuture.tech` and gets a token + an Ed25519 signing keypair (one-time download, zero-knowledge — faerie keeps only the public key).
 
 ```bash
 # Add a new user to the allow list (VPS admin):
@@ -244,7 +244,7 @@ For the full provisioning + key-rotation flow (B2 buckets, signing keys, custome
 Settings → Hive →
 
 - **MCP URL** (default `https://api.retrofuture.tech/mcp`)
-- **MCP token path** (default `.faerie-token` in vault root)
+- **MCP token path** (default `.swarmy-token` in vault root)
 - **Daily folder** (default `00-SHARED/Daily/`)
 - **Human folder** (default `Human/` — your annotations live here, separate from AI's chain of custody)
 - **Blueprint folder** (default `Blueprints/`)

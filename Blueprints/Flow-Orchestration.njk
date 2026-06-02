@@ -1,0 +1,86 @@
+---
+name: Flow-Orchestration
+description: Multi-agent orchestration — piston wave spawning, W1/W2/W3, manifest returns, stigmergic routing. TD layout.
+triggers:
+  - "orchestration"
+  - "spawn"
+  - "piston"
+  - "wave"
+  - "swarm"
+  - "multi-agent"
+---
+{#
+  Flow-Orchestration.njk
+  Variables:
+    title   — diagram title
+    mission — mission label
+    caption — optional note
+#}
+{% set title = title | default("Multi-Agent Orchestration") %}
+{% set mission = mission | default("active mission") %}
+
+## {{ title }}{% if mission %} — {{ mission }}{% endif %}
+
+```mermaid
+flowchart TD
+    subgraph QUEEN["Queen (Main Context)"]
+        BRIEF["📋 Mission Brief\n+ frontier read"]
+        PLAN["Count task atoms\n≥2 → spawn"]
+        FUEL{"Context fill\n(altimeter)"}
+    end
+
+    subgraph W1["W1 — LIFTOFF (≤25% ctx)"]
+        A1["🧭 Navigator\nN-bearing: unblock"]
+        A2["🔨 Maker\nS-bearing: ship"]
+        A3["🌉 Bridge\nE-bearing: sync"]
+        A4["🔬 Deep-Diver\nW-bearing: validate"]
+    end
+
+    subgraph W2["W2 — CRUISE (≤65% ctx)"]
+        B1["🔬 Synthesizer\ncross-manifest"]
+        B2["🔨 Maker ×2\nparallel tracks"]
+    end
+
+    subgraph W3["W3 — INSERTION (≤95% ctx)"]
+        C1["🌉 Summarizer\ndashboard compression"]
+    end
+
+    subgraph STIGMERGY["Stigmergic Layer"]
+        MANIFEST["📋 Manifest\n{task_id, bearing, dashboard_line}"]
+        INDEX["manifest-index.jsonl\nin_flight count"]
+        GRAPH["mission-graph.json\ncompass DAG"]
+    end
+
+    subgraph RETURN["Return & Promote"]
+        TASKNOTIF["TaskNotification\n(auto)"]
+        READ["Queen reads\ndashboard_line only"]
+        PROMOTE["0x_promote_to_forensics.py\nsymlink → canonical"]
+        COC["COC entry\nhash-chained"]
+    end
+
+    BRIEF --> PLAN --> FUEL
+    FUEL -- W1 --> A1 & A2 & A3 & A4
+    FUEL -- W2 --> B1 & B2
+    FUEL -- W3 --> C1
+
+    A1 & A2 & A3 & A4 --> MANIFEST
+    B1 & B2 --> MANIFEST
+    C1 --> MANIFEST
+
+    MANIFEST --> INDEX
+    MANIFEST --> GRAPH
+    MANIFEST --> TASKNOTIF --> READ
+    MANIFEST --> PROMOTE --> COC
+
+    style A1 fill:#EFF6FF,stroke:#0891B2
+    style A2 fill:#ECFDF5,stroke:#059669
+    style A3 fill:#F3EEFF,stroke:#8B5CF6
+    style A4 fill:#FFFBEB,stroke:#D97706
+    style MANIFEST fill:#F9F1E0,stroke:#C73E1D,stroke-width:2px
+    style COC fill:#ECFDF5,stroke:#059669
+    style FUEL fill:#F3EEFF,stroke:#8B5CF6
+```
+
+{% if caption %}
+> *{{ caption }}*
+{% endif %}

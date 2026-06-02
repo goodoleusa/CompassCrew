@@ -9,7 +9,7 @@
  * The ontology is also documented in:
  *   - CLAUDE.md  (Five Principles section)
  *   - HONEY.md   (canonical bearings entry)
- *   - faerie2/prompts/partials/bearings.njk
+ *   - swarmy/prompts/partials/bearings.njk
  *
  * If you change anything here, also update those three files. The ontology
  * is the topology of the mission graph; drifting definitions = drifting

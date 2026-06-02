@@ -54,6 +54,13 @@ const FILTERS: Record<string, (v: any, ...args: any[]) => any> = {
   float: (v) => parseFloat(String(v ?? "0")) || 0,
   int: (v) => parseInt(String(v ?? "0"), 10) || 0,
   string: (v) => String(v ?? ""),
+  json: (v) => JSON.stringify(v),
+  dump: (v) => JSON.stringify(v),
+  b64: (v) => btoa(unescape(encodeURIComponent(String(v ?? "")))),
+  b64encode: (v) => btoa(unescape(encodeURIComponent(String(v ?? "")))),
+  urlencode: (v) => encodeURIComponent(String(v ?? "")),
+  trim: (v) => String(v ?? "").trim(),
+  truncate: (v, n = 50, end = "…") => { const s = String(v ?? ""); return s.length > n ? s.slice(0, n) + end : s; },
 };
 
 function evalLiteral(s: string, ctx: Ctx): any {

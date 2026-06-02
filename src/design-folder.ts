@@ -4,11 +4,52 @@ import * as path from "path";
 import { BEARING_COLOR, BEARING_LABEL, BEARINGS, Bearing } from "./bearings";
 
 /**
+ * Excalidraw soft-dependency check — invoked at command time, not load time.
+ * Returns true if Excalidraw is present and usable; false if absent (after
+ * showing the user a graceful "install Excalidraw" prompt + Notice). Caller
+ * should early-return when this returns false.
+ */
+function ensureExcalidrawAvailable(app: App): boolean {
+  const plug = (app as any).plugins?.plugins?.["obsidian-excalidraw-plugin"];
+  if (plug) return true;
+  new Notice(
+    "Bearing topology design needs Excalidraw — install it from Community Plugins to continue.",
+    10000
+  );
+  // Open a lightweight modal pointing at the community plugins page so the
+  // user has a clickable affordance, not just a transient toast.
+  class InstallExcalidrawModal extends Modal {
+    onOpen() {
+      const { contentEl } = this;
+      contentEl.createEl("h2", { text: "Excalidraw required" });
+      contentEl.createEl("p", {
+        text: "Bearing topology design (pollinate / scan-and-propose / auto-layout) renders to Excalidraw canvases. Install the Excalidraw community plugin to enable these commands.",
+      });
+      const row = contentEl.createEl("div", { cls: "swarmy-install-excalidraw-row" });
+      row.style.cssText = "display:flex;gap:8px;margin-top:12px;";
+      const btn = row.createEl("button", { text: "Open Community Plugins" });
+      btn.onclick = () => {
+        try {
+          (this.app as any).setting?.open?.();
+          (this.app as any).setting?.openTabById?.("community-plugins");
+        } catch { /* fallback: do nothing */ }
+        this.close();
+      };
+      const cancel = row.createEl("button", { text: "Not now" });
+      cancel.onclick = () => this.close();
+    }
+    onClose() { this.contentEl.empty(); }
+  }
+  try { new InstallExcalidrawModal(app).open(); } catch { /* ignore */ }
+  return false;
+}
+
+/**
  * design-folder.ts — "Point at any folder" experience.
  *
  * Three commands implementing the draw → AI → system loop for arbitrary folders:
  *
- *   1. `faerie: pollinate`
+ *   1. `swarmy: pollinate`
  *      Right-click (or active file's parent) → scan folder for notes →
  *      generate Excalidraw canvas with one box per note positioned by
  *      current implicit structure (folder depth = y, sibling order = x,
@@ -18,8 +59,8 @@ import { BEARING_COLOR, BEARING_LABEL, BEARINGS, Bearing } from "./bearings";
  *
  *      Status: WORKING (seed scene + open canvas).
  *
- *   2. `faerie: scan and propose bearings`
- *      Folder scan → POSTs to MCP `faerie_propose_bearings`. Server
+ *   2. `swarmy: scan and propose bearings`
+ *      Folder scan → POSTs to MCP `swarmy_propose_bearings`. Server
  *      runs an offline heuristic (mutual outlinks → E, directed
  *      outlinks → N/S pairs, hub note → W anchor) and filters out
  *      bearings already declared in recent manifests. The reply opens
@@ -28,7 +69,7 @@ import { BEARING_COLOR, BEARING_LABEL, BEARINGS, Bearing } from "./bearings";
  *
  *      Status: WORKING (2026-05-19) — MCP server tool live.
  *
- *   3. `faerie: auto-layout from frontmatter`
+ *   3. `swarmy: auto-layout from frontmatter`
  *      Reads active Excalidraw note → re-positions bearing-rectangles
  *      using a deterministic layered/ordered-tree layout (N above,
  *      S below, E right, W left; sorted by label, evenly spaced).
@@ -130,6 +171,7 @@ function buildSeedScene(notes: FolderNote[]): { elements: any[] } {
 }
 
 async function pollinate(plugin: Plugin, folder?: TFolder) {
+  if (!ensureExcalidrawAvailable(plugin.app)) return;
   const tgt = resolveTargetFolder(plugin.app, folder);
   if (!tgt) { new Notice("No folder context — open a note or right-click a folder."); return; }
   const notes = await scanFolder(plugin.app, tgt);
@@ -146,7 +188,7 @@ async function pollinate(plugin: Plugin, folder?: TFolder) {
   const body = [
     "---",
     "excalidraw-plugin: parsed",
-    "tags: [excalidraw, faerie-draft, folder-design]",
+    "tags: [excalidraw, swarmy-draft, folder-design]",
     `design_for_folder: "${tgt.path}"`,
     `note_count: ${notes.length}`,
     `created: ${new Date().toISOString()}`,
@@ -156,7 +198,7 @@ async function pollinate(plugin: Plugin, folder?: TFolder) {
     `> ${notes.length} notes seeded from \`${tgt.path}\`. Existing wikilinks shown as gray arrows.`,
     "> Drag boxes into the four quadrants by bearing (color stroke to commit):",
     ...BEARINGS.map((b) => `> - <span style="color:${BEARING_COLOR[b]}">${BEARING_LABEL[b]}</span>`),
-    "> Then run **Faerie: commit folder design → frontmatter** (re-uses ExcaliBrain commit pipeline per-note).",
+    "> Then run **Swarmy: commit folder design → frontmatter** (re-uses ExcaliBrain commit pipeline per-note).",
     "",
     "# Excalidraw Data",
     "",
@@ -168,7 +210,7 @@ async function pollinate(plugin: Plugin, folder?: TFolder) {
     "",
     "## Drawing",
     "```json",
-    JSON.stringify({ type: "excalidraw", version: 2, source: "faerie-hive-plugin:design-folder", elements: scene.elements, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
+    JSON.stringify({ type: "excalidraw", version: 2, source: "swarmy-hive-plugin:design-folder", elements: scene.elements, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
     "```",
     "%%",
   ].join("\n");
@@ -196,16 +238,16 @@ class ProposalReviewModal extends Modal {
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.addClass("faerie-proposal-modal");
+    contentEl.addClass("swarmy-proposal-modal");
     contentEl.createEl("h2", { text: "Proposed bearings — review" });
     if (this.proposals.length === 0) {
       contentEl.createEl("p", { text: "No proposals returned. (Check MCP connection / token, or the folder may have no inter-note wikilinks for the heuristic to chew on.)" });
       return;
     }
     const accepted: Set<number> = new Set(this.proposals.map((_, i) => i));
-    const list = contentEl.createEl("div", { cls: "faerie-proposal-list" });
+    const list = contentEl.createEl("div", { cls: "swarmy-proposal-list" });
     this.proposals.forEach((p, i) => {
-      const row = list.createEl("div", { cls: "faerie-proposal-row" });
+      const row = list.createEl("div", { cls: "swarmy-proposal-row" });
       const cb = row.createEl("input", { type: "checkbox" }) as HTMLInputElement;
       cb.checked = true;
       cb.onchange = () => { if (cb.checked) accepted.add(i); else accepted.delete(i); };
@@ -221,18 +263,19 @@ class ProposalReviewModal extends Modal {
 }
 
 async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
+  if (!ensureExcalidrawAvailable(plugin.app)) return;
   const tgt = resolveTargetFolder(plugin.app, folder);
   if (!tgt) { new Notice("No folder context."); return; }
   const notes = await scanFolder(plugin.app, tgt);
   if (notes.length === 0) { new Notice(`No notes in ${tgt.path}.`); return; }
 
-  // POST to MCP faerie_propose_bearings. Server runs an offline heuristic
+  // POST to MCP swarmy_propose_bearings. Server runs an offline heuristic
   // (mutual outlinks → E, directed outlinks → N/S pairs, hub note → W
   // anchor) and filters out bearings already declared in recent manifests.
-  // See faerie2/deploy/mcp-server/server.py::faerie_propose_bearings.
+  // See swarmy/deploy/mcp-server/server.py::swarmy_propose_bearings.
   const settings: any = ((plugin.app as any).plugins?.plugins?.["hive"]?.hiveSettings) || {};
   const mcpUrl: string = settings.mcpUrl || "http://localhost:8765";
-  const tokenPath: string = settings.tokenPath || ".faerie-token";
+  const tokenPath: string = settings.tokenPath || ".swarmy-token";
   let token: string | null = null;
   try { token = fs.readFileSync(path.join(vaultRoot(plugin.app), tokenPath), "utf8").trim(); } catch { token = null; }
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -245,7 +288,7 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
 
   let proposals: BearingProposal[] = [];
   try {
-    const r = await fetch(mcpUrl.replace(/\/+$/, "") + "/tools/faerie_propose_bearings", {
+    const r = await fetch(mcpUrl.replace(/\/+$/, "") + "/tools/swarmy_propose_bearings", {
       method: "POST", headers, body: JSON.stringify(payload),
     });
     if (r.ok) {
@@ -260,7 +303,7 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
           rationale: String(p.rationale ?? ""),
         }))
         .filter((p) => (BEARINGS as readonly string[]).includes(p.bearing));
-      new Notice(`Faerie proposed ${proposals.length} bearings for ${tgt.name}.`, 5000);
+      new Notice(`Swarmy proposed ${proposals.length} bearings for ${tgt.name}.`, 5000);
     } else {
       new Notice(`MCP propose_bearings failed: HTTP ${r.status}`, 6000);
     }
@@ -286,6 +329,7 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
 // --- Feature 3: auto-layout from frontmatter (STUB algorithm) ---------------
 
 async function autoLayoutFromFrontmatter(plugin: Plugin) {
+  if (!ensureExcalidrawAvailable(plugin.app)) return;
   const file = plugin.app.workspace.getActiveFile();
   if (!file || file.extension !== "md") { new Notice("Open an Excalidraw note."); return; }
   const raw = await plugin.app.vault.read(file);
@@ -370,20 +414,20 @@ async function autoLayoutFromFrontmatter(plugin: Plugin) {
 
 export function registerDesignFolder(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-pollinate",
-    name: "🐝 Faerie: pollinate (sketch + commit topology for any folder)",
+    id: "swarmy-pollinate",
+    name: "🐝 Swarmy: pollinate (sketch + commit topology for any folder)",
     callback: () => pollinate(plugin),
   });
 
   plugin.addCommand({
-    id: "faerie-scan-and-propose-bearings",
-    name: "Faerie: scan folder and propose bearings (AI round-trip, review modal)",
+    id: "swarmy-scan-and-propose-bearings",
+    name: "Swarmy: scan folder and propose bearings (AI round-trip, review modal)",
     callback: () => scanAndProposeBearings(plugin),
   });
 
   plugin.addCommand({
-    id: "faerie-auto-layout-from-frontmatter",
-    name: "Faerie: auto-layout Excalidraw from frontmatter",
+    id: "swarmy-auto-layout-from-frontmatter",
+    name: "Swarmy: auto-layout Excalidraw from frontmatter",
     callback: () => autoLayoutFromFrontmatter(plugin),
   });
 
@@ -393,13 +437,13 @@ export function registerDesignFolder(plugin: Plugin) {
       if (!(fileOrFolder instanceof TFolder)) return;
       menu.addItem((item) =>
         item
-          .setTitle("🐝 Faerie: pollinate")
+          .setTitle("🐝 Swarmy: pollinate")
           .setIcon("compass")
           .onClick(() => pollinate(plugin, fileOrFolder))
       );
       menu.addItem((item) =>
         item
-          .setTitle("Faerie: scan & propose bearings")
+          .setTitle("Swarmy: scan & propose bearings")
           .setIcon("wand-2")
           .onClick(() => scanAndProposeBearings(plugin, fileOrFolder))
       );

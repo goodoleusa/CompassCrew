@@ -27,7 +27,7 @@ FALSIFIABLE_CLAIM: <verifiable statement: "After fix: X will be Y after N sessio
 
 Charter path: `~/.claude/templates/charters/active/`
 If no active charter exists: create one from `~/.claude/templates/charters/system-tweak-charter-template.json` first.
-Archiver script: `$FAERIE_REPO/scripts/4x_charter_archiver.py`
+Archiver script: `$SWARMY_REPO/scripts/4x_charter_archiver.py`
 
 Spawns without pre-reg entries for system-file changes are BLOCKED pending charter creation.
 
@@ -104,10 +104,10 @@ Override with `--team agent1,agent2,agent3,agent4`.
    **DO NOT use Skill("spawn") recursively.** You are already in the /spawn context. Call Agent() directly.
 
 4. **Wait for all Agent() calls to return** (for W1/W2; W3 runs async in background)
-   - Agents write manifests to `$FAERIE_FORENSICS/{YYYY-MM-DD}/{mission}/` automatically
+   - Agents write manifests to `$SWARMY_FORENSICS/{YYYY-MM-DD}/{mission}/` automatically
    - You will receive TaskNotification events when agents complete
 
-5. **Read manifests from `$FAERIE_FORENSICS/{YYYY-MM-DD}/{mission}/`** to understand what agents produced
+5. **Read manifests from `$SWARMY_FORENSICS/{YYYY-MM-DD}/{mission}/`** to understand what agents produced
    - Manifest format: `{ISO_TIMESTAMP}__{mission}__{task_id}__{agent}__manifest.json`
    - Read only manifest, NOT full transcript (manifest is ≤5KB, transcript is 50KB+)
 
@@ -132,7 +132,7 @@ If user calls `/spawn "Analyze token metrics" --investigation-label token-analys
    Agent(subagent_type="knowledge-synthesizer", prompt="[bundle for agent 4]", model="haiku", run_in_background=False)
    ```
 4. Wait for TaskNotification from all 4 agents
-5. Read manifests from `$FAERIE_FORENSICS/2026-MM-DD/token-analysis/` to understand what they found
+5. Read manifests from `$SWARMY_FORENSICS/2026-MM-DD/token-analysis/` to understand what they found
 6. Return dashboard_line (≤80 chars) summarizing results
 
 ---

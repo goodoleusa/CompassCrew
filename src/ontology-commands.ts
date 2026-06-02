@@ -40,8 +40,8 @@ class PresetPicker extends FuzzySuggestModal<{ name: string; absPath: string }> 
 
 export function registerOntologyCommands(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-switch-ontology-preset",
-    name: "Faerie: switch ontology preset",
+    id: "swarmy-switch-ontology-preset",
+    name: "Swarmy: switch ontology preset",
     callback: () => {
       const presets = listPresets(plugin);
       if (!presets.length) { new Notice("No presets found in plugin's presets/ folder."); return; }
@@ -59,8 +59,8 @@ export function registerOntologyCommands(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-export-ontology",
-    name: "Faerie: export current ontology",
+    id: "swarmy-export-ontology",
+    name: "Swarmy: export current ontology",
     callback: () => {
       const o: Ontology = getActiveOntology();
       const date = new Date().toISOString().slice(0, 10);
@@ -73,8 +73,8 @@ export function registerOntologyCommands(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-ontology-doctor",
-    name: "Faerie: ontology doctor",
+    id: "swarmy-ontology-doctor",
+    name: "Swarmy: ontology doctor",
     callback: () => {
       const report = ontologyDoctor(getActiveOntology());
       if (report.ok) {

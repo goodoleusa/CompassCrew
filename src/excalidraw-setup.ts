@@ -20,7 +20,7 @@ import { BEARINGS, BEARING_COLOR, BEARING_LABEL } from "./bearings";
  *     (parents/children/friends) as draggable shapes, so the user can
  *     RE-DRAW a proposed graph topology before committing it back to
  *     frontmatter. Sketch → review → commit.
- *  4. Install Faerie-curated professional fonts (Inter, IBM Plex Sans,
+ *  4. Install Swarmy-curated professional fonts (Inter, IBM Plex Sans,
  *     JetBrains Mono) into Excalidraw's font directory and select them
  *     as defaults.
  */
@@ -35,7 +35,7 @@ interface ExcalidrawProSettings {
 }
 
 /** Professional preset — smooth, bold, sans-serif, readable. */
-const FAERIE_EXCALIDRAW_PRESET: ExcalidrawProSettings = {
+const SWARMY_EXCALIDRAW_PRESET: ExcalidrawProSettings = {
   defaultFontFamily: 2,          // Helvetica (clean sans) — overridden by local fonts below if installed
   defaultStrokeStyle: "solid",
   defaultRoughness: 0,           // ARCHITECT — perfectly smooth lines, no hand-drawn jitter
@@ -45,7 +45,7 @@ const FAERIE_EXCALIDRAW_PRESET: ExcalidrawProSettings = {
 };
 
 /** Fonts to install — all open-license, professional sans + mono. */
-const FAERIE_FONTS = [
+const SWARMY_FONTS = [
   {
     name: "Inter",
     url: "https://rsms.me/inter/font-files/Inter-Bold.woff2",
@@ -125,8 +125,8 @@ function findEaScriptsRepo(): string | null {
 
 export function registerExcalidrawSetup(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-excalidraw-apply-pro-preset",
-    name: "Faerie: apply professional Excalidraw preset (smooth, bold, sans)",
+    id: "swarmy-excalidraw-apply-pro-preset",
+    name: "Swarmy: apply professional Excalidraw preset (smooth, bold, sans)",
     callback: async () => {
       const anyApp = plugin.app as any;
       const ex = anyApp.plugins?.plugins?.["obsidian-excalidraw-plugin"];
@@ -137,11 +137,11 @@ export function registerExcalidrawSetup(plugin: Plugin) {
       try {
         const s = ex.settings ?? {};
         // Apply preset keys (we use the documented Excalidraw setting names)
-        s.defaultFontFamily = FAERIE_EXCALIDRAW_PRESET.defaultFontFamily;
-        s.defaultRoughness = FAERIE_EXCALIDRAW_PRESET.defaultRoughness;
-        s.defaultStrokeWidth = FAERIE_EXCALIDRAW_PRESET.defaultStrokeWidth;
-        s.defaultFontSize = FAERIE_EXCALIDRAW_PRESET.defaultFontSize;
-        s.curvedArrows = FAERIE_EXCALIDRAW_PRESET.curvedArrows;
+        s.defaultFontFamily = SWARMY_EXCALIDRAW_PRESET.defaultFontFamily;
+        s.defaultRoughness = SWARMY_EXCALIDRAW_PRESET.defaultRoughness;
+        s.defaultStrokeWidth = SWARMY_EXCALIDRAW_PRESET.defaultStrokeWidth;
+        s.defaultFontSize = SWARMY_EXCALIDRAW_PRESET.defaultFontSize;
+        s.curvedArrows = SWARMY_EXCALIDRAW_PRESET.curvedArrows;
         s.previewMatchObsidianTheme = true;
         ex.settings = s;
         await ex.saveSettings?.();
@@ -156,8 +156,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-excalidraw-install-fonts",
-    name: "Faerie: install professional Excalidraw fonts (Inter, IBM Plex, JetBrains Mono)",
+    id: "swarmy-excalidraw-install-fonts",
+    name: "Swarmy: install professional Excalidraw fonts (Inter, IBM Plex, JetBrains Mono)",
     callback: async () => {
       const anyApp = plugin.app as any;
       const ex = anyApp.plugins?.plugins?.["obsidian-excalidraw-plugin"];
@@ -165,7 +165,7 @@ export function registerExcalidrawSetup(plugin: Plugin) {
       const dest = path.join(vaultRoot(plugin.app), fontPath);
       fs.mkdirSync(dest, { recursive: true });
       let ok = 0, fail = 0;
-      for (const f of FAERIE_FONTS) {
+      for (const f of SWARMY_FONTS) {
         const out = path.join(dest, f.filename);
         if (fs.existsSync(out)) { ok++; continue; }
         try {
@@ -175,7 +175,7 @@ export function registerExcalidrawSetup(plugin: Plugin) {
           fs.writeFileSync(out, buf);
           ok++;
         } catch (e) {
-          console.warn("[faerie] font download failed", f.filename, e);
+          console.warn("[swarmy] font download failed", f.filename, e);
           fail++;
         }
       }
@@ -184,8 +184,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-excalidraw-install-scripts",
-    name: "Faerie: install curated Excalidraw scripts library",
+    id: "swarmy-excalidraw-install-scripts",
+    name: "Swarmy: install curated Excalidraw scripts library",
     callback: async () => {
       const repo = findEaScriptsRepo();
       if (!repo) {
@@ -216,8 +216,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
    * note's frontmatter.
    */
   plugin.addCommand({
-    id: "faerie-draft-excalibrain",
-    name: "Faerie: draft ExcaliBrain (sketch next mission-graph version)",
+    id: "swarmy-draft-excalibrain",
+    name: "Swarmy: draft ExcaliBrain (sketch next mission-graph version)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
@@ -272,13 +272,13 @@ export function registerExcalidrawSetup(plugin: Plugin) {
       const body = [
         "---",
         "excalidraw-plugin: parsed",
-        "tags: [excalidraw, faerie-draft, excalibrain-draft]",
+        "tags: [excalidraw, swarmy-draft, excalibrain-draft]",
         `draft_for: "${file.path}"`,
         `created: ${new Date().toISOString()}`,
         "---",
         "",
         "> [!brood] Draft ExcaliBrain — sketch your next topology",
-        "> Rearrange, add, delete, then run **Faerie: commit ExcaliBrain draft** to write changes back to `" + file.path + "` frontmatter.",
+        "> Rearrange, add, delete, then run **Swarmy: commit ExcaliBrain draft** to write changes back to `" + file.path + "` frontmatter.",
         "> Legend:",
         ...BEARINGS.map((b) => `> - <span style=\"color:${BEARING_COLOR[b]}\">${BEARING_LABEL[b]}</span>`),
         "",
@@ -292,7 +292,7 @@ export function registerExcalidrawSetup(plugin: Plugin) {
         "",
         "## Drawing",
         "```json",
-        JSON.stringify({ type: "excalidraw", version: 2, source: "faerie-hive-plugin", elements: nodes, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
+        JSON.stringify({ type: "excalidraw", version: 2, source: "swarmy-hive-plugin", elements: nodes, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
         "```",
         "%%",
       ].join("\n");
@@ -308,8 +308,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-commit-excalibrain-draft",
-    name: "Faerie: commit ExcaliBrain draft → frontmatter",
+    id: "swarmy-commit-excalibrain-draft",
+    name: "Swarmy: commit ExcaliBrain draft → frontmatter",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) return;

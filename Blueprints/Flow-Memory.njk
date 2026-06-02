@@ -1,0 +1,75 @@
+---
+name: Flow-Memory
+description: Agent memory flow — pollen → NECTAR → HONEY → droplets. Shows the full crystallization pipeline. TD layout.
+triggers:
+  - "memory"
+  - "crystallize"
+  - "HONEY"
+  - "NECTAR"
+  - "pollen"
+  - "droplet"
+---
+{#
+  Flow-Memory.njk
+  Variables:
+    title   — diagram title
+    caption — optional note
+#}
+{% set title = title | default("Memory Flow — Loom Crystallization Pipeline") %}
+
+## {{ title }}
+
+```mermaid
+flowchart TD
+    subgraph SESSION["Session (ephemeral)"]
+        WORK["🐝 Agent Work\ntask atoms"]
+        MANIFEST["📋 Manifest\n{task_id, bearing, dashboard_line}"]
+        POLLEN["🌸 Pollen\nraw observations, flags"]
+    end
+
+    subgraph PROMOTE["Promotion Pipeline"]
+        EPHEMERAL["forensics/ephemeral/{date}/{task_id}/"]
+        HOOK["PostToolUse Hook\n0x_promote_to_forensics.py"]
+        COC["⛓ COC Entry\nSHA256 hash-chained"]
+    end
+
+    subgraph REVIEW["Review Queue"]
+        INBOX["REVIEW-INBOX\nflags + decisions pending"]
+        GATE{"Crystallization gate\nTrue across ALL sessions?"}
+    end
+
+    subgraph MEMORY["Crystallized Memory"]
+        NECTAR["🧊 NECTAR\ntail-30 recent facts\n(project-specific)"]
+        HONEY["🍯 HONEY\npermanent principles\n(cross-session truth)"]
+        DROPLET["💧 Droplet\nthematic mini-doc\nin vault/Daily/"]
+    end
+
+    subgraph WORM["Immutable Backup"]
+        B2["☁ B2 WORM\nappend-only bucket"]
+    end
+
+    WORK --> MANIFEST
+    WORK --> POLLEN
+    MANIFEST --> EPHEMERAL
+    POLLEN --> EPHEMERAL
+    EPHEMERAL --> HOOK
+    HOOK --> COC
+    HOOK --> INBOX
+    INBOX --> GATE
+    GATE -- yes --> HONEY
+    GATE -- scoped --> NECTAR
+    GATE -- narrative --> DROPLET
+    NECTAR --> DROPLET
+    COC --> B2
+
+    style HONEY   fill:#FFFBEB,stroke:#D97706,stroke-width:2px
+    style NECTAR  fill:#EFF6FF,stroke:#0891B2
+    style DROPLET fill:#F3EEFF,stroke:#8B5CF6
+    style COC     fill:#ECFDF5,stroke:#059669
+    style GATE    fill:#FFF9F0,stroke:#D97706
+    style B2      fill:#F9F1E0,stroke:#C73E1D
+```
+
+{% if caption %}
+> *{{ caption }}*
+{% endif %}

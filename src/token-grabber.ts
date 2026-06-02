@@ -4,25 +4,25 @@ import { App, Modal, Notice, Plugin, Setting } from "obsidian";
  * One-click MCP token grab.
  *
  * Flow:
- *  1. User runs "Faerie: grab MCP token" or clicks the Settings button.
- *  2. We open https://faerie.retrofuture.tech/auth/grab?return=obsidian://faerie-token-callback
+ *  1. User runs "Swarmy: grab MCP token" or clicks the Settings button.
+ *  2. We open https://swarmy.retrofuture.tech/auth/grab?return=obsidian://swarmy-token-callback
  *  3. Server (when implemented) authenticates the user and redirects to the
  *     obsidian protocol URI with `?token=...&signing_key=...`.
- *  4. `registerObsidianProtocolHandler("faerie-token-callback", ...)` fires;
- *     we atomically write `.faerie-token` + `.faerie-user-key` to the vault
+ *  4. `registerObsidianProtocolHandler("swarmy-token-callback", ...)` fires;
+ *     we atomically write `.swarmy-token` + `.swarmy-user-key` to the vault
  *     root and show a Notice.
  *  5. If the redirect doesn't arrive within 60s, we surface a manual paste
  *     modal so the user can paste the token directly.
  *
  * TODO(server): /auth/grab endpoint may not yet exist on
- * faerie.retrofuture.tech. Until then, the manual-paste fallback is the
+ * swarmy.retrofuture.tech. Until then, the manual-paste fallback is the
  * primary path. Once the server endpoint ships, the redirect path will
  * Just Work without plugin changes.
  */
 
-const TOKEN_FILE = ".faerie-token";
-const KEY_FILE = ".faerie-user-key";
-const GRAB_URL = "https://faerie.retrofuture.tech/auth/grab?return=obsidian://faerie-token-callback";
+const TOKEN_FILE = ".swarmy-token";
+const KEY_FILE = ".swarmy-user-key";
+const GRAB_URL = "https://swarmy.retrofuture.tech/auth/grab?return=obsidian://swarmy-token-callback";
 
 async function atomicWrite(app: App, vaultRelPath: string, content: string): Promise<void> {
   const adapter = app.vault.adapter as any;
@@ -79,7 +79,7 @@ class PasteTokenModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: "Paste MCP token" });
-    contentEl.createEl("p", { text: "Get your token at https://faerie.retrofuture.tech and paste it below." });
+    contentEl.createEl("p", { text: "Get your token at https://swarmy.retrofuture.tech and paste it below." });
     contentEl.createEl("label", { text: "Token:" });
     this.tokenEl = contentEl.createEl("textarea");
     this.tokenEl.style.width = "100%"; this.tokenEl.rows = 3;
@@ -106,11 +106,11 @@ export function registerTokenGrabber(plugin: Plugin) {
   let awaitingCallback = false;
   let callbackTimer: number | null = null;
 
-  plugin.registerObsidianProtocolHandler("faerie-token-callback", async (params) => {
+  plugin.registerObsidianProtocolHandler("swarmy-token-callback", async (params) => {
     const token = (params.token || "").trim();
     const key = (params.signing_key || params.key || "").trim();
     if (!token) {
-      new Notice("faerie-token-callback: missing token param.", 8000);
+      new Notice("swarmy-token-callback: missing token param.", 8000);
       return;
     }
     try {
@@ -118,19 +118,19 @@ export function registerTokenGrabber(plugin: Plugin) {
       if (key) await atomicWrite(plugin.app, KEY_FILE, key + "\n");
       awaitingCallback = false;
       if (callbackTimer !== null) { window.clearTimeout(callbackTimer); callbackTimer = null; }
-      new Notice("Faerie token saved. Hive is wired.", 6000);
+      new Notice("Swarmy token saved. Hive is wired.", 6000);
     } catch (e) {
       new Notice("Token write failed: " + (e as Error).message, 8000);
     }
   });
 
   plugin.addCommand({
-    id: "faerie-token-grab",
-    name: "Faerie: grab MCP token",
+    id: "swarmy-token-grab",
+    name: "Swarmy: grab MCP token",
     callback: async () => {
       awaitingCallback = true;
       window.open(GRAB_URL);
-      new Notice("Opened faerie.retrofuture.tech — waiting up to 60s for callback…", 8000);
+      new Notice("Opened swarmy.retrofuture.tech — waiting up to 60s for callback…", 8000);
       if (callbackTimer !== null) window.clearTimeout(callbackTimer);
       callbackTimer = window.setTimeout(() => {
         if (!awaitingCallback) return;
@@ -149,8 +149,8 @@ export function registerTokenGrabber(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-token-rotate",
-    name: "Faerie: rotate MCP token",
+    id: "swarmy-token-rotate",
+    name: "Swarmy: rotate MCP token",
     callback: async () => {
       const anyApp = plugin.app as any;
       const hive = anyApp.plugins?.plugins?.["hive"];
@@ -163,7 +163,7 @@ export function registerTokenGrabber(plugin: Plugin) {
         return;
       }
       try {
-        const resp = await fetch(`${mcpUrl.replace(/\/$/, "")}/tools/faerie_token_rotate`, {
+        const resp = await fetch(`${mcpUrl.replace(/\/$/, "")}/tools/swarmy_token_rotate`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${curToken}`, "Content-Type": "application/json" },
           body: JSON.stringify({}),
@@ -183,11 +183,11 @@ export function registerTokenGrabber(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-token-fingerprint",
-    name: "Faerie: show token fingerprint",
+    id: "swarmy-token-fingerprint",
+    name: "Swarmy: show token fingerprint",
     callback: async () => {
       const fp = await readTokenFingerprint(plugin.app);
-      if (!fp) { new Notice("No token saved. Run 'Faerie: grab MCP token'.", 8000); return; }
+      if (!fp) { new Notice("No token saved. Run 'Swarmy: grab MCP token'.", 8000); return; }
       const when = fp.lastModified ? new Date(fp.lastModified).toISOString().slice(0, 10) : "?";
       new Notice(`Token: ${fp.short}… sha8=${fp.sha8} (rotated ${when})`, 10000);
     },

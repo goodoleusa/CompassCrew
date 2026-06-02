@@ -11,11 +11,11 @@ import { renderString as microNjkRender } from "./vendor/micro-njk";
 
 export interface BlueprintSettings {
   blueprintsDir: string; // vault-relative
-  faerieRepoBlueprintsDir?: string; // absolute path to faerie2 blueprints (optional override)
+  swarmyRepoBlueprintsDir?: string; // absolute path to swarmy blueprints (optional override)
 }
 
 export const DEFAULT_BLUEPRINT_SETTINGS: BlueprintSettings = {
-  blueprintsDir: "00-SHARED/Blueprints",
+  blueprintsDir: "Blueprints",
 };
 
 function vaultRoot(app: App): string {
@@ -28,9 +28,9 @@ function listBlueprints(app: App, settings: BlueprintSettings): string[] {
   if (fs.existsSync(v)) {
     for (const f of fs.readdirSync(v)) if (f.endsWith(".njk")) candidates.push(path.join(v, f));
   }
-  if (settings.faerieRepoBlueprintsDir && fs.existsSync(settings.faerieRepoBlueprintsDir)) {
-    for (const f of fs.readdirSync(settings.faerieRepoBlueprintsDir))
-      if (f.endsWith(".njk")) candidates.push(path.join(settings.faerieRepoBlueprintsDir, f));
+  if (settings.swarmyRepoBlueprintsDir && fs.existsSync(settings.swarmyRepoBlueprintsDir)) {
+    for (const f of fs.readdirSync(settings.swarmyRepoBlueprintsDir))
+      if (f.endsWith(".njk")) candidates.push(path.join(settings.swarmyRepoBlueprintsDir, f));
   }
   return candidates;
 }
@@ -88,8 +88,8 @@ export function registerBlueprintEngine(
   };
 
   plugin.addCommand({
-    id: "faerie-apply-blueprint",
-    name: "Faerie: apply blueprint to current note",
+    id: "swarmy-apply-blueprint",
+    name: "Swarmy: apply blueprint to current note",
     checkCallback: (checking: boolean) => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file || file.extension !== "md") return false;
@@ -118,8 +118,8 @@ export function registerBlueprintEngine(
   });
 
   plugin.addCommand({
-    id: "faerie-render-blueprint-clipboard",
-    name: "Faerie: render blueprint to clipboard",
+    id: "swarmy-render-blueprint-clipboard",
+    name: "Swarmy: render blueprint to clipboard",
     callback: () => {
       const items = listBlueprints(plugin.app, getSettings());
       if (!items.length) {
@@ -136,8 +136,8 @@ export function registerBlueprintEngine(
   });
 
   plugin.addCommand({
-    id: "faerie-apply-blueprint-folder",
-    name: "Faerie: apply blueprint to folder (current note's folder)",
+    id: "swarmy-apply-blueprint-folder",
+    name: "Swarmy: apply blueprint to folder (current note's folder)",
     callback: () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }

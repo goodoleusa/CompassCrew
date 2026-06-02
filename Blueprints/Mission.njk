@@ -1,0 +1,61 @@
+---
+type: mission
+status: {{ frontmatter.status | default("open") }}
+mission_id: {{ frontmatter.mission_id | default(file.basename) }}
+mission_label: {{ frontmatter.mission_label | default(file.basename) }}
+task_count: {{ frontmatter.task_count | default(0) }}
+bearing_summary:
+  S: {{ frontmatter.bearing_summary.S | default(0) }}
+  N: {{ frontmatter.bearing_summary.N | default(0) }}
+  E: {{ frontmatter.bearing_summary.E | default(0) }}
+  W: {{ frontmatter.bearing_summary.W | default(0) }}
+charter_ids: {{ frontmatter.charter_ids | default([]) | join(", ") }}
+last_ts: {{ frontmatter.last_ts | default("") }}
+canonical_repo_path: {{ frontmatter.canonical_repo_path | default("forensics/mission-graph.json") }}
+created: {{ now }}
+tags: [mission, pseudosystem]
+---
+
+> [!propolis] Mission — {{ frontmatter.mission_id | default(file.basename) }}
+> **Status:** `{{ frontmatter.status | default("open") }}` · **Tasks:** {{ frontmatter.task_count | default(0) }} · **Last activity:** {{ frontmatter.last_ts | default("—") }}
+>
+> Vault dossier for mission `{{ frontmatter.mission_id | default(file.basename) }}`.
+> The canonical mission graph lives at `forensics/mission-graph.json` in the repo.
+> This note is the operator's navigable dossier — history, state, related charters, open work.
+
+## Current State
+
+| Metric | Value |
+|--------|-------|
+| Task count | {{ frontmatter.task_count | default("—") }} |
+| Bearings (S/N/E/W) | {{ frontmatter.bearing_summary.S | default(0) }} / {{ frontmatter.bearing_summary.N | default(0) }} / {{ frontmatter.bearing_summary.E | default(0) }} / {{ frontmatter.bearing_summary.W | default(0) }} |
+| Last activity | {{ frontmatter.last_ts | default("—") }} |
+| Charter(s) | {% for c in frontmatter.charter_ids | default([]) %}[[{{ c }}]] {% endfor %} |
+
+## Related Charters
+
+{% for c in frontmatter.charter_ids | default([]) %}- [[{{ c }}]]
+{% endfor %}
+
+## Open Work
+
+| Bearing | Task ID | Rationale |
+|---------|---------|-----------|
+
+## Completed Manifests
+
+```dataview
+TABLE bearing, agent_type, dashboard_line
+FROM "Manifests"
+WHERE mission = "{{ frontmatter.mission_id | default(file.basename) }}"
+SORT file.ctime DESC
+LIMIT 20
+```
+
+## Narrative History
+
+<!-- 3–5 sentences: how this mission emerged, what it accomplished, what remains. -->
+
+---
+
+*Mission graph derived from `forensics/mission-graph.json`. Query: `corpus_size`, `missions`, `open_work_missions`.*

@@ -16,6 +16,7 @@ const OPTIONAL_PLUGINS = [
   "juggl",                        // optional alternative graph view
   "extended-graph",               // optional richer graph styling
   "advanced-uri",                 // enables CLI-driven QuickAdd shell macros
+  "mehrmaid",                     // full Markdown + KaTeX inside Mermaid node labels
 ];
 
 const FORBIDDEN_PLUGINS = ["templater-obsidian"];
@@ -27,12 +28,12 @@ const CANONICAL_CONFIGS: Array<{
   destFile: string;
 }> = [
   {
-    source: "00-SHARED/Snippets/linter-settings-faerie.json",
+    source: "00-SHARED/Snippets/linter-settings-swarmy.json",
     destPluginId: "obsidian-linter",
     destFile: "data.json",
   },
   {
-    source: "00-SHARED/Snippets/breadcrumbs-config-faerie.json",
+    source: "00-SHARED/Snippets/breadcrumbs-config-swarmy.json",
     destPluginId: "breadcrumbs",
     destFile: "data.json",
   },
@@ -78,7 +79,7 @@ class DoctorReportModal extends Modal {
   onOpen() {
     const { contentEl, report } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Faerie Doctor — Plugin Health" });
+    contentEl.createEl("h2", { text: "Swarmy Doctor — Plugin Health" });
     if (report.missing.length) {
       contentEl.createEl("h3", { text: "Missing (please install)" });
       const ul = contentEl.createEl("ul");
@@ -106,8 +107,8 @@ class DoctorReportModal extends Modal {
 
 export function registerDepOrchestrator(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-doctor",
-    name: "Faerie: doctor (check plugin dependencies)",
+    id: "swarmy-doctor",
+    name: "Swarmy: doctor (check plugin dependencies)",
     callback: () => {
       const dir = pluginsDir(plugin.app);
       let installed: string[] = [];
@@ -122,14 +123,14 @@ export function registerDepOrchestrator(plugin: Plugin) {
       const present = REQUIRED_PLUGINS.filter((p) => installed.includes(p));
       new DoctorReportModal(plugin.app, { missing, forbidden, present }).open();
       if (forbidden.length) {
-        new Notice(`⚠ Forbidden plugins detected: ${forbidden.join(", ")}. Faerie uses QuickAdd + Nunjucks, NOT Templater.`, 12000);
+        new Notice(`⚠ Forbidden plugins detected: ${forbidden.join(", ")}. Swarmy uses QuickAdd + Nunjucks, NOT Templater.`, 12000);
       }
     },
   });
 
   plugin.addCommand({
-    id: "faerie-install-canonical-configs",
-    name: "Faerie: install canonical configs",
+    id: "swarmy-install-canonical-configs",
+    name: "Swarmy: install canonical configs",
     callback: () => {
       const root = vaultRoot(plugin.app);
       const reports: string[] = [];
@@ -157,21 +158,26 @@ export function registerDepOrchestrator(plugin: Plugin) {
         reports.push(`OK   ${cfg.destPluginId} (merged)`);
       }
 
-      // CSS snippets
-      const snippetsSrc = path.join(root, "00-SHARED", "Snippets");
-      const snippetsDst = snippetsDir(plugin.app);
-      if (fs.existsSync(snippetsSrc)) {
-        try {
-          if (!fs.existsSync(snippetsDst)) fs.mkdirSync(snippetsDst, { recursive: true });
-          for (const f of fs.readdirSync(snippetsSrc)) {
-            if (f.startsWith("faerie-") && f.endsWith(".css")) {
-              fs.copyFileSync(path.join(snippetsSrc, f), path.join(snippetsDst, f));
-              reports.push(`CSS  ${f}`);
+      // CSS snippets — enable all swarmy-*.css in .obsidian/appearance.json
+      const snippetsDstDir = snippetsDir(plugin.app);
+      const appearancePath = path.join(vaultRoot(plugin.app), ".obsidian", "appearance.json");
+      try {
+        const existing = readJsonSafe(appearancePath) as Record<string, any> ?? {};
+        const enabled: string[] = Array.isArray(existing.enabledCssSnippets) ? existing.enabledCssSnippets : [];
+        let added = 0;
+        if (fs.existsSync(snippetsDstDir)) {
+          for (const f of fs.readdirSync(snippetsDstDir)) {
+            if (f.startsWith("swarmy-") && f.endsWith(".css")) {
+              const name = f.slice(0, -4); // strip .css
+              if (!enabled.includes(name)) { enabled.push(name); added++; }
             }
           }
-        } catch (e) {
-          reports.push(`CSS  error: ${(e as Error).message}`);
         }
+        existing.enabledCssSnippets = enabled;
+        fs.writeFileSync(appearancePath, JSON.stringify(existing, null, 2), "utf8");
+        reports.push(`CSS  ${added} snippet(s) enabled in appearance.json`);
+      } catch (e) {
+        reports.push(`CSS  error: ${(e as Error).message}`);
       }
 
       new Notice("Canonical configs:\n" + reports.join("\n"), 10000);

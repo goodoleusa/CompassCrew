@@ -1,10 +1,10 @@
 {
   "id": "hive",
-  "name": "Hive — Faerie Obsidian Orchestrator",
+  "name": "Swarmy — Hive Orchestrator",
   "version": "2.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Unified Faerie orchestrator: PDF export, blueprint engine (Nunjucks), trail-refs with bearings, annotations → MCP loop, compass overlay, dependency doctor, MCP bridge side panel, visual-language callouts, QuickAdd macros. Turns the vault into a creative cognitive substrate.",
+  "description": "Unified Swarmy orchestrator: PDF export (WSL pipeline + native print fallback), blueprint engine (Nunjucks), trail-refs with bearings, annotations → MCP loop, compass overlay (mermaid built-in; ExcaliBrain optional), dependency doctor, MCP bridge side panel, vendored Breadcrumbs + Dataview subsets, visual-language callouts, QuickAdd macros. One plugin, zero mandatory peers (Excalidraw + ExcaliBrain are optional). Turns the vault into a creative cognitive substrate.",
   "author": "goodoleusa / Persistech",
-  "authorUrl": "https://github.com/Persistech/faerie-hive-plugin",
+  "authorUrl": "https://github.com/Persistech/swarmy-hive-plugin",
   "isDesktopOnly": true
 }

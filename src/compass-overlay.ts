@@ -34,7 +34,7 @@ interface ExcaliBrainConfig {
   };
 }
 
-const FAERIE_EXCALIBRAIN_CONFIG: ExcaliBrainConfig = {
+const SWARMY_EXCALIBRAIN_CONFIG: ExcaliBrainConfig = {
   hierarchy: {
     parents: ["up", "north", "unblocks"],
     children: ["down", "next", "south", "ships"],
@@ -49,8 +49,8 @@ const FAERIE_EXCALIBRAIN_CONFIG: ExcaliBrainConfig = {
 
 export function registerCompassOverlay(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-compass-overlay",
-    name: "Faerie: compass overlay (ExcaliBrain bearings view)",
+    id: "swarmy-compass-overlay",
+    name: "Swarmy: compass overlay (ExcaliBrain bearings view, falls back to mermaid)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) {
@@ -61,10 +61,16 @@ export function registerCompassOverlay(plugin: Plugin) {
       const anyApp = plugin.app as any;
       const excaliBrain = anyApp.plugins?.plugins?.["excalibrain"];
       if (!excaliBrain) {
+        // Graceful degrade: ExcaliBrain is a soft dependency. If it's not
+        // installed, fall back to the inline mermaid compass view which
+        // is fully vendored in this plugin (no external deps).
         new Notice(
-          "ExcaliBrain not installed. Run 'Faerie: doctor' (requires ExcaliBrain + Excalidraw).",
-          10000
+          "ExcaliBrain not installed — using built-in mermaid compass view. Install ExcaliBrain for the neural-graph experience.",
+          7000
         );
+        try {
+          (plugin.app as any).commands?.executeCommandById?.("hive:swarmy-mermaid-compass");
+        } catch { /* the mermaid command registers itself; if missing, do nothing */ }
         return;
       }
 
@@ -77,9 +83,9 @@ export function registerCompassOverlay(plugin: Plugin) {
       for (const id of candidates) {
         if (anyApp.commands?.commands?.[id]) {
           anyApp.commands.executeCommandById(id);
-          document.body.classList.add("faerie-compass-overlay-active");
+          document.body.classList.add("swarmy-compass-overlay-active");
           setTimeout(
-            () => document.body.classList.remove("faerie-compass-overlay-active"),
+            () => document.body.classList.remove("swarmy-compass-overlay-active"),
             60_000
           );
           new Notice(`Compass (ExcaliBrain): ${file.basename} — bearings N/S/E/W.`);
@@ -91,13 +97,13 @@ export function registerCompassOverlay(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-write-excalibrain-config",
-    name: "Faerie: write recommended ExcaliBrain config (bearings)",
+    id: "swarmy-write-excalibrain-config",
+    name: "Swarmy: write recommended ExcaliBrain config (bearings)",
     callback: async () => {
       const anyApp = plugin.app as any;
       const excaliBrain = anyApp.plugins?.plugins?.["excalibrain"];
       if (!excaliBrain) {
-        new Notice("ExcaliBrain not installed.");
+        new Notice("ExcaliBrain not installed — this command requires it. The built-in mermaid compass view works without ExcaliBrain.", 8000);
         return;
       }
       // ExcaliBrain stores settings on plugin.settings; merge our values.
@@ -110,9 +116,9 @@ export function registerCompassOverlay(plugin: Plugin) {
         // ExcaliBrain v0.2.x uses these keys: hierarchy: { parents, children, friends }
         s.hierarchy = {
           ...(s.hierarchy || {}),
-          parents: Array.from(new Set([...(s.hierarchy?.parents || []), ...FAERIE_EXCALIBRAIN_CONFIG.hierarchy.parents])),
-          children: Array.from(new Set([...(s.hierarchy?.children || []), ...FAERIE_EXCALIBRAIN_CONFIG.hierarchy.children])),
-          friends: Array.from(new Set([...(s.hierarchy?.friends || []), ...FAERIE_EXCALIBRAIN_CONFIG.hierarchy.friends])),
+          parents: Array.from(new Set([...(s.hierarchy?.parents || []), ...SWARMY_EXCALIBRAIN_CONFIG.hierarchy.parents])),
+          children: Array.from(new Set([...(s.hierarchy?.children || []), ...SWARMY_EXCALIBRAIN_CONFIG.hierarchy.children])),
+          friends: Array.from(new Set([...(s.hierarchy?.friends || []), ...SWARMY_EXCALIBRAIN_CONFIG.hierarchy.friends])),
         };
         await excaliBrain.saveSettings?.();
         new Notice(
@@ -136,7 +142,7 @@ export function registerCompassOverlay(plugin: Plugin) {
  * renders a bearing-colored mermaid graph in a transient leaf.
  */
 
-const VIEW_TYPE_FAERIE_MERMAID_COMPASS = "faerie-mermaid-compass";
+const VIEW_TYPE_SWARMY_MERMAID_COMPASS = "swarmy-mermaid-compass";
 
 function stripLink(s: string): string {
   const m = s.match(/^\[\[([^\]|#]+)/);
@@ -174,17 +180,17 @@ function buildMermaid(noteName: string, bearings: Partial<Record<Bearing, string
   return lines.join("\n");
 }
 
-class FaerieMermaidCompassView extends ItemView {
+class SwarmyMermaidCompassView extends ItemView {
   private file: TFile | null = null;
   constructor(leaf: WorkspaceLeaf) { super(leaf); }
-  getViewType() { return VIEW_TYPE_FAERIE_MERMAID_COMPASS; }
-  getDisplayText() { return "Faerie Compass (mermaid)"; }
+  getViewType() { return VIEW_TYPE_SWARMY_MERMAID_COMPASS; }
+  getDisplayText() { return "Swarmy Compass (mermaid)"; }
   getIcon() { return "compass"; }
   setSourceFile(f: TFile) { this.file = f; }
   async render() {
     const root = this.containerEl.children[1] as HTMLElement;
     root.empty();
-    root.createEl("h3", { text: "Faerie Compass — bearings overlay" });
+    root.createEl("h3", { text: "Swarmy Compass — bearings overlay" });
     if (!this.file) {
       root.createEl("p", { text: "No active file when this view opened." });
       return;
@@ -196,7 +202,7 @@ class FaerieMermaidCompassView extends ItemView {
       return;
     }
     const mermaid = buildMermaid(this.file.basename, bearings);
-    const legend = root.createEl("div", { cls: "faerie-compass-legend" });
+    const legend = root.createEl("div", { cls: "swarmy-compass-legend" });
     for (const b of ["N", "S", "E", "W"] as Bearing[]) {
       const swatch = legend.createEl("span");
       swatch.style.display = "inline-block";
@@ -206,7 +212,7 @@ class FaerieMermaidCompassView extends ItemView {
       swatch.style.borderRadius = "4px";
       swatch.setText(BEARING_LABEL[b]);
     }
-    const host = root.createEl("div", { cls: "faerie-compass-mermaid" });
+    const host = root.createEl("div", { cls: "swarmy-compass-mermaid" });
     const code = "```mermaid\n" + mermaid + "\n```";
     const { MarkdownRenderer } = require("obsidian");
     await MarkdownRenderer.renderMarkdown(code, host, this.file.path, this);
@@ -216,20 +222,20 @@ class FaerieMermaidCompassView extends ItemView {
 }
 
 export function registerMermaidCompass(plugin: Plugin) {
-  plugin.registerView(VIEW_TYPE_FAERIE_MERMAID_COMPASS, (leaf) => new FaerieMermaidCompassView(leaf));
+  plugin.registerView(VIEW_TYPE_SWARMY_MERMAID_COMPASS, (leaf) => new SwarmyMermaidCompassView(leaf));
   plugin.addCommand({
-    id: "faerie-mermaid-compass",
-    name: "Faerie: mermaid compass (inline NSEW overlay)",
+    id: "swarmy-mermaid-compass",
+    name: "Swarmy: mermaid compass (inline NSEW overlay, no external deps)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
       const leaf = plugin.app.workspace.getLeaf(true);
-      await leaf.setViewState({ type: VIEW_TYPE_FAERIE_MERMAID_COMPASS, active: true });
-      const view = leaf.view as FaerieMermaidCompassView;
+      await leaf.setViewState({ type: VIEW_TYPE_SWARMY_MERMAID_COMPASS, active: true });
+      const view = leaf.view as SwarmyMermaidCompassView;
       view.setSourceFile(file);
       await view.render();
     },
   });
 }
 
-export { VIEW_TYPE_FAERIE_MERMAID_COMPASS };
+export { VIEW_TYPE_SWARMY_MERMAID_COMPASS };

@@ -31,8 +31,8 @@ class BearingPickerModal extends Modal {
 
 export function registerTrailRefs(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-highlight-with-bearing",
-    name: "Faerie: highlight selection with bearing (trail-ref)",
+    id: "swarmy-highlight-with-bearing",
+    name: "Swarmy: highlight selection with bearing (trail-ref)",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "H" }],
     editorCallback: (editor: Editor, _view: MarkdownView) => {
       const sel = editor.getSelection();
@@ -50,7 +50,7 @@ export function registerTrailRefs(plugin: Plugin) {
         // in the Breadcrumbs trail view (up/next/same/down) — see
         // breadcrumbs-threading.ts for the bearing→field map.
         const file = plugin.app.workspace.getActiveFile();
-        const addBc = (plugin as any).faerieAddBreadcrumb;
+        const addBc = (plugin as any).swarmyAddBreadcrumb;
         if (file && destPath !== "#" && typeof addBc === "function") {
           try { await addBc(file, b, destPath); } catch { /* ignore */ }
         }
@@ -60,8 +60,8 @@ export function registerTrailRefs(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-copy-trail-ref",
-    name: "Faerie: copy trail-ref to clipboard",
+    id: "swarmy-copy-trail-ref",
+    name: "Swarmy: copy trail-ref to clipboard",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "C" }],
     editorCallback: async (editor: Editor) => {
       const sel = editor.getSelection();
@@ -74,13 +74,13 @@ export function registerTrailRefs(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "faerie-toggle-all-trail-refs",
-    name: "Faerie: toggle all trail-refs (show/hide)",
+    id: "swarmy-toggle-all-trail-refs",
+    name: "Swarmy: toggle all trail-refs (show/hide)",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "S" }],
     callback: () => {
-      document.body.classList.toggle("faerie-trail-refs-collapsed");
+      document.body.classList.toggle("swarmy-trail-refs-collapsed");
       new Notice(
-        document.body.classList.contains("faerie-trail-refs-collapsed")
+        document.body.classList.contains("swarmy-trail-refs-collapsed")
           ? "Trail-refs collapsed."
           : "Trail-refs expanded."
       );
@@ -98,6 +98,6 @@ export function registerTrailRefs(plugin: Plugin) {
     const t = (a.getAttribute("title") || "").trim();
     if (!["N", "S", "E", "W"].includes(t)) return;
     evt.preventDefault();
-    a.classList.toggle("faerie-collapsed");
+    a.classList.toggle("swarmy-collapsed");
   });
 }

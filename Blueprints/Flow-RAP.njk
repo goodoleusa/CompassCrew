@@ -1,0 +1,76 @@
+---
+name: Flow-RAP
+description: Research-Analyze-Publish (RAP) pipeline — evidence collection through publication. TD layout.
+triggers:
+  - "RAP"
+  - "research"
+  - "analyze"
+  - "publish"
+  - "evidence"
+  - "investigation"
+---
+{#
+  Flow-RAP.njk
+  Variables:
+    title       — diagram title
+    hypothesis  — hypothesis label (e.g. "H1: Infrastructure Intrusion")
+    caption     — optional note
+#}
+{% set title = title | default("RAP Pipeline") %}
+{% set hypothesis = hypothesis | default("H1") %}
+
+## {{ title }}{% if hypothesis %} — {{ hypothesis }}{% endif %}
+
+```mermaid
+flowchart TD
+    subgraph RESEARCH["R — Research"]
+        COLLECT["📥 Evidence Collection\nShodan, BGP, DNS, WHOIS\ncerts, logs, IPs"]
+        TRIAGE["🔍 Triage\nrelevance + credibility"]
+        TIER{"Tier assignment\nT1 / T2 / T3 / T4"}
+    end
+
+    subgraph ANALYZE["A — Analyze"]
+        STAT["📊 Statistical Analysis\nZ-score, p-value, Bonferroni"]
+        CORR["🔗 Correlation\ncross-entity linkage"]
+        CONF{"Confidence\nthreshold ≥ 0.80?"}
+        HYPO["Hypothesis update\nH1–H5 scores"]
+    end
+
+    subgraph SYNTHESIZE["Synthesis"]
+        NECTAR["🧊 NECTAR entry\nfact + source + confidence"]
+        TIER1["Tier 1 Bundle\n≤15 smoking-gun items"]
+        BRIEF["📄 Journalist Brief\nnon-technical narrative"]
+    end
+
+    subgraph PUBLISH["P — Publish"]
+        REVIEW["Peer / Legal Review\ndisclosure obligations"]
+        FORMAT{"Format?"}
+        REPORT["📑 Technical Report\nfull COC, stats, appendix"]
+        NARRATIVE["📰 Public Narrative\nreadable, cited, credited"]
+        EMBARGO["⏸ Embargo\n(30/60/90 day hold)"]
+    end
+
+    COLLECT --> TRIAGE --> TIER
+    TIER -- T1/T2 --> STAT
+    TIER -- T3/T4 --> CORR
+    STAT --> CONF
+    CORR --> CONF
+    CONF -- yes --> HYPO --> NECTAR
+    CONF -- no  --> COLLECT
+    NECTAR --> TIER1 --> BRIEF
+
+    BRIEF --> REVIEW --> FORMAT
+    FORMAT -- technical --> REPORT
+    FORMAT -- public --> NARRATIVE
+    FORMAT -- sensitive --> EMBARGO
+
+    style TIER1  fill:#ECFDF5,stroke:#059669,stroke-width:2px
+    style NECTAR fill:#FFFBEB,stroke:#D97706
+    style REPORT fill:#EFF6FF,stroke:#0891B2
+    style EMBARGO fill:#FFF1F2,stroke:#DB2777
+    style CONF   fill:#F3EEFF,stroke:#8B5CF6
+```
+
+{% if caption %}
+> *{{ caption }}*
+{% endif %}

@@ -6,7 +6,7 @@ import * as path from "path";
  * Writes a set of QuickAdd-native JS macros into the vault so users can wire
  * them to QuickAdd's "User Script" choices. We do NOT modify QuickAdd's
  * data.json directly — the user adds the choices manually after running
- * "Faerie: install QuickAdd macros". This keeps Templater out of the loop
+ * "Swarmy: install QuickAdd macros". This keeps Templater out of the loop
  * entirely (QuickAdd's macros use plain async params/quickAddApi).
  */
 
@@ -16,8 +16,8 @@ function vaultRoot(app: App): string {
 
 const MACROS: Array<{ name: string; body: string }> = [
   {
-    name: "faerie-new-charter.js",
-    body: `// Faerie: New charter — wizard prompts 3 slots, writes basic-template, applies charter.njk blueprint.
+    name: "swarmy-new-charter.js",
+    body: `// Swarmy: New charter — wizard prompts 3 slots, writes basic-template, applies charter.njk blueprint.
 module.exports = async (params) => {
   const { quickAddApi, app } = params;
   const slot1 = await quickAddApi.inputPrompt("Charter slot 1 (title)");
@@ -48,13 +48,13 @@ module.exports = async (params) => {
   const file = await app.vault.create(filename, body);
   await app.workspace.getLeaf(true).openFile(file);
   // Apply blueprint via Hive command
-  app.commands.executeCommandById("hive:faerie-apply-blueprint");
+  app.commands.executeCommandById("hive:swarmy-apply-blueprint");
 };
 `,
   },
   {
-    name: "faerie-new-manifest.js",
-    body: `// Faerie: New manifest — requires charter_ref from dropdown.
+    name: "swarmy-new-manifest.js",
+    body: `// Swarmy: New manifest — requires charter_ref from dropdown.
 module.exports = async (params) => {
   const { quickAddApi, app } = params;
   const charters = app.vault.getMarkdownFiles().filter(f => f.path.includes("forensics/charters/"));
@@ -89,18 +89,18 @@ module.exports = async (params) => {
 `,
   },
   {
-    name: "faerie-promote-anchor.js",
-    body: `// Faerie: Promote anchor — calls faerie_anchor_promote MCP tool with current file.
+    name: "swarmy-promote-anchor.js",
+    body: `// Swarmy: Promote anchor — calls swarmy_anchor_promote MCP tool with current file.
 module.exports = async (params) => {
   const { app } = params;
   const file = app.workspace.getActiveFile();
   if (!file) return;
   const hive = app.plugins.plugins["hive"];
   if (!hive || !hive.settings) { new Notice("Hive plugin not loaded."); return; }
-  const url = hive.settings.mcpUrl.replace(/\\/+$/, "") + "/tools/faerie_anchor_promote";
+  const url = hive.settings.mcpUrl.replace(/\\/+$/, "") + "/tools/swarmy_anchor_promote";
   const fs = require("fs"); const pathmod = require("path");
   let token = null;
-  try { token = fs.readFileSync(pathmod.join(app.vault.adapter.basePath, hive.settings.tokenPath || ".faerie-token"), "utf8").trim(); } catch {}
+  try { token = fs.readFileSync(pathmod.join(app.vault.adapter.basePath, hive.settings.tokenPath || ".swarmy-token"), "utf8").trim(); } catch {}
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = "Bearer " + token;
   try {
@@ -111,8 +111,8 @@ module.exports = async (params) => {
 `,
   },
   {
-    name: "faerie-cap-honey.js",
-    body: `// Faerie: Cap honey droplet — crystallizes current note → forensics/honey/{date}/
+    name: "swarmy-cap-honey.js",
+    body: `// Swarmy: Cap honey droplet — crystallizes current note → forensics/honey/{date}/
 module.exports = async (params) => {
   const { app } = params;
   const file = app.workspace.getActiveFile();
@@ -142,8 +142,8 @@ module.exports = async (params) => {
 
 export function registerQuickAddMacros(plugin: Plugin) {
   plugin.addCommand({
-    id: "faerie-install-quickadd-macros",
-    name: "Faerie: install QuickAdd macros",
+    id: "swarmy-install-quickadd-macros",
+    name: "Swarmy: install QuickAdd macros",
     callback: () => {
       const root = vaultRoot(plugin.app);
       const dir = path.join(root, "00-SHARED", "QuickAdd-Macros");
