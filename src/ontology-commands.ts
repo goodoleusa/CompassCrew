@@ -40,8 +40,8 @@ class PresetPicker extends FuzzySuggestModal<{ name: string; absPath: string }> 
 
 export function registerOntologyCommands(plugin: Plugin) {
   plugin.addCommand({
-    id: "swarmy-switch-ontology-preset",
-    name: "Swarmy: switch ontology preset",
+    id: "reckon-switch-ontology-preset",
+    name: "Reckon: switch ontology preset",
     callback: () => {
       const presets = listPresets(plugin);
       if (!presets.length) { new Notice("No presets found in plugin's presets/ folder."); return; }
@@ -59,8 +59,8 @@ export function registerOntologyCommands(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "swarmy-export-ontology",
-    name: "Swarmy: export current ontology",
+    id: "reckon-export-ontology",
+    name: "Reckon: export current ontology",
     callback: () => {
       const o: Ontology = getActiveOntology();
       const date = new Date().toISOString().slice(0, 10);
@@ -73,15 +73,15 @@ export function registerOntologyCommands(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "swarmy-ontology-doctor",
-    name: "Swarmy: ontology doctor",
+    id: "reckon-ontology-doctor",
+    name: "Reckon: ontology doctor",
     callback: () => {
       const report = ontologyDoctor(getActiveOntology());
       if (report.ok) {
         new Notice(`Ontology "${report.ontology.name}" is healthy. ✓`, 5000);
       } else {
         new Notice(`Ontology issues:\n- ${report.issues.join("\n- ")}`, 12000);
-        console.warn("[hive] ontology doctor:", report.issues);
+        console.warn("[reckon] ontology doctor:", report.issues);
       }
     },
   });

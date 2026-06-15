@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Hive v2.0.0 — visual language stylesheet
+   Reckon v2.0.0 — visual language stylesheet
    Sections:
      1. Trail-ref bearings (N/S/E/W) — colored link styles
      2. Visual-language callouts — droplet, charter, anchor, waggle, honey,
@@ -187,10 +187,10 @@ body.faerie-compass-overlay-active {
 .faerie-chat-buttons { display: flex; gap: 8px; margin-top: 6px; }
 
 /* --------------------------------------------------------------------------
-   5. PDF export — preserved from hive-pdf v1
+   5. PDF export — preserved from reckon-pdf v1
    -------------------------------------------------------------------------- */
-.hive-pdf-modal h2 { font-family: var(--font-text); }
-.hive-pdf-modal .log-box {
+.reckon-pdf-modal h2 { font-family: var(--font-text); }
+.reckon-pdf-modal .log-box {
   background-color: var(--background-secondary);
   padding: 8px;
   font-family: var(--font-monospace);

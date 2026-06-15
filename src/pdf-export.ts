@@ -1,12 +1,12 @@
 /**
- * Hive PDF Export — Obsidian Plugin
+ * Reckon PDF Export — Obsidian Plugin
  * Wraps the /pdf CLI pipeline: mmdc → 9x_pdf_aspect_sizer.py → pandoc/xelatex
  * All subprocess calls go through WSL (wsl.exe) on Windows.
  * No inference at runtime — deterministic pipeline only.
  *
  * v1.1.0 additions:
  *   - Excalidraw embed pipeline (ExcalidrawAutomate API → PNG → aspect sizer)
- *   - "Insert Hive diagram from template" command + SuggestModal
+ *   - "Insert Reckon diagram from template" command + SuggestModal
  *   - Settings: includeExcalidraw toggle, excalidrawScale, templateFolder (read-only)
  */
 
@@ -28,7 +28,7 @@ const execAsync = promisify(exec);
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 
-interface HivePdfSettings {
+interface ReckonPdfSettings {
   outputDir: string;            // "" = same folder as note
   filenamePattern: string;      // e.g. "{basename}-{timestamp}.pdf"
   mmdcScale: number;            // mmdc -s flag
@@ -54,12 +54,12 @@ interface HivePdfSettings {
 //   faerie2/.agents/skills/pdf/scripts/build_pdf.sh
 // Both pipelines share `print-ready-header.tex` and the same shaded-stub.tex.
 // When you add or modify a preset, update BOTH so an agent running headlessly
-// (e.g. on the swarmy VPS) produces visually-identical output to a user
+// (e.g. on the reckon VPS) produces visually-identical output to a user
 // exporting from inside Obsidian.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Presets: clean defaults per common use case. Operator can override individually.
-function applyPreset(s: HivePdfSettings): HivePdfSettings {
+function applyPreset(s: ReckonPdfSettings): ReckonPdfSettings {
   if (s.preset === "business") {
     // Client-facing decks, proposals — larger type, tighter margins
     return { ...s, fontSize: "14pt", marginInches: 0.75, mainFont: "DejaVu Sans",
@@ -90,7 +90,7 @@ function applyPreset(s: HivePdfSettings): HivePdfSettings {
   return s;  // custom — operator manages all fields directly
 }
 
-const DEFAULT_SETTINGS: HivePdfSettings = {
+const DEFAULT_SETTINGS: ReckonPdfSettings = {
   outputDir: "",
   filenamePattern: "{basename}-{timestamp}.pdf",
   mmdcScale: 2,
@@ -135,14 +135,14 @@ function getEA(app: App): ExcalidrawAutomate | null {
 
 // ─── Template definitions ──────────────────────────────────────────────────
 
-interface HiveTemplate {
+interface ReckonTemplate {
   id: string;
   name: string;
   description: string;
   filename: string;
 }
 
-const HIVE_TEMPLATES: HiveTemplate[] = [
+const RECKON_TEMPLATES: ReckonTemplate[] = [
   {
     id: "architecture",
     name: "Architecture (3-tier)",
@@ -259,7 +259,7 @@ class BuildLog {
 
   constructor(logPath: string) {
     this.logPath = logPath;
-    this.append(`=== Hive PDF Build Log — ${new Date().toISOString()} ===\n`);
+    this.append(`=== Reckon PDF Build Log — ${new Date().toISOString()} ===\n`);
   }
 
   append(line: string) {
@@ -352,7 +352,7 @@ async function exportExcalidrawToPng(
     const arrayBuf = await blob.arrayBuffer();
     return Buffer.from(arrayBuf);
   } catch (err) {
-    console.warn("[hive-pdf] Excalidraw export failed:", err);
+    console.warn("[reckon-pdf] Excalidraw export failed:", err);
     return null;
   }
 }
@@ -388,7 +388,7 @@ function sizeAnnotation(w: number, h: number): string {
 
 async function buildPdf(
   noteAbsPath: string,
-  settings: HivePdfSettings,
+  settings: ReckonPdfSettings,
   distro: string,
   app: App
 ): Promise<{ pdfPath: string; log: BuildLog }> {
@@ -437,14 +437,14 @@ async function buildPdf(
   let excalidrawCount = 0;
 
   if (settings.includeExcalidraw) {
-    new Notice("Hive PDF: checking for Excalidraw embeds…");
+    new Notice("Reckon PDF: checking for Excalidraw embeds…");
     log.append("\n[Step 0] Excalidraw embed pipeline");
 
     const ea = getEA(app);
 
     if (!ea) {
       log.append("  [warn] obsidian-excalidraw-plugin not installed/enabled — skipping Excalidraw embeds");
-      new Notice("Hive PDF: Excalidraw plugin not found — skipping embedded diagrams (mermaid-only mode)", 5000);
+      new Notice("Reckon PDF: Excalidraw plugin not found — skipping embedded diagrams (mermaid-only mode)", 5000);
     } else {
       // We need the TFile for the note to resolve relative links
       const noteFile = app.vault.getAbstractFileByPath(
@@ -533,7 +533,7 @@ async function buildPdf(
   const preprocessedMdWsl = winToWsl(preprocessedMdPath);
 
   // ── Step 1: Extract mermaid blocks and write .mmd files ──────────────────
-  new Notice("Hive PDF: extracting Mermaid diagrams…");
+  new Notice("Reckon PDF: extracting Mermaid diagrams…");
   log.append("\n[Step 1] Extract mermaid blocks");
 
   const mermaidRegex = /```mermaid\n([\s\S]*?)\n```/g;
@@ -551,7 +551,7 @@ async function buildPdf(
   log.append(`  total: ${diagramCount} mermaid diagram(s)`);
 
   // ── Step 2: Render each .mmd → .png via mmdc ─────────────────────────────
-  new Notice(`Hive PDF: rendering ${diagramCount} mermaid diagram(s)…`);
+  new Notice(`Reckon PDF: rendering ${diagramCount} mermaid diagram(s)…`);
   log.append("\n[Step 2] Render diagrams via mmdc");
 
   const mermaidConfig = JSON.stringify({
@@ -596,7 +596,7 @@ async function buildPdf(
   }
 
   // ── Step 3: aspect sizer ──────────────────────────────────────────────────
-  new Notice("Hive PDF: sizing diagrams…");
+  new Notice("Reckon PDF: sizing diagrams…");
   log.append("\n[Step 3] 9x_pdf_aspect_sizer.py");
 
   const sizerScript = "/mnt/d/0LOCAL/.claude/scripts/9x_pdf_aspect_sizer.py";
@@ -626,7 +626,7 @@ async function buildPdf(
   // source (stays under URL length limits); plain base64url for shorter ones.
   // Cache key: SHA-256(source) → mermaid-{hex16}.png in diagramsDir.
   // On mermaid.ink error: leave a visible placeholder comment in the markdown.
-  new Notice("Hive PDF: resolving remaining Mermaid blocks via mermaid.ink…");
+  new Notice("Reckon PDF: resolving remaining Mermaid blocks via mermaid.ink…");
   log.append("\n[Step 3.5] mermaid.ink fallback for remaining mermaid blocks");
 
   const readyMdPath = path.join(buildDir, "note.ready.md");
@@ -668,7 +668,7 @@ async function buildPdf(
   /** Fetch a URL and return the body as Buffer, or null on error */
   const fetchPng = (url: string): Promise<Buffer | null> =>
     new Promise((resolve) => {
-      const req = https.get(url, { headers: { "User-Agent": "swarmy-hive-plugin/1.1" } }, (res) => {
+      const req = https.get(url, { headers: { "User-Agent": "reckon-vault-plugin/1.1" } }, (res) => {
         const chunks: Buffer[] = [];
         res.on("data", (chunk: Buffer) => chunks.push(chunk));
         res.on("end", () => {
@@ -750,14 +750,14 @@ async function buildPdf(
   }
 
   // ── Step 4: pandoc → PDF ──────────────────────────────────────────────────
-  // 2026-05-23: parameterized via HivePdfSettings.preset (note/business/academic/custom)
+  // 2026-05-23: parameterized via ReckonPdfSettings.preset (note/business/academic/custom)
   // + applyPreset() at top of file. Inline -V flags so plugin is self-contained.
   // External LaTeX header for no-split floats + hyperref config now supported via
-  // latexHeaderPath setting (see HivePdfSettings).
+  // latexHeaderPath setting (see ReckonPdfSettings).
   // 2026-05-25: upgraded colorlinks to NavyBlue; added highlight-style=tango;
   //   added --include-in-header support for print-ready-header.tex (no-split floats,
   //   needspace, booktabs, widow/orphan penalties).
-  new Notice("Hive PDF: running pandoc…");
+  new Notice("Reckon PDF: running pandoc…");
   log.append("\n[Step 4] pandoc → xelatex → PDF");
 
   const s = applyPreset(this.settings ?? DEFAULT_SETTINGS);
@@ -824,32 +824,32 @@ async function buildPdf(
 
 // ─── Template picker modal ─────────────────────────────────────────────────
 
-class TemplateSuggestModal extends FuzzySuggestModal<HiveTemplate> {
-  private onChoose: (template: HiveTemplate) => void;
+class TemplateSuggestModal extends FuzzySuggestModal<ReckonTemplate> {
+  private onChoose: (template: ReckonTemplate) => void;
 
-  constructor(app: App, onChoose: (template: HiveTemplate) => void) {
+  constructor(app: App, onChoose: (template: ReckonTemplate) => void) {
     super(app);
     this.onChoose = onChoose;
-    this.setPlaceholder("Pick a Hive diagram template…");
+    this.setPlaceholder("Pick a Reckon diagram template…");
   }
 
-  getItems(): HiveTemplate[] {
-    return HIVE_TEMPLATES;
+  getItems(): ReckonTemplate[] {
+    return RECKON_TEMPLATES;
   }
 
-  getItemText(item: HiveTemplate): string {
+  getItemText(item: ReckonTemplate): string {
     return `${item.name} — ${item.description}`;
   }
 
-  onChooseItem(item: HiveTemplate, _evt: MouseEvent | KeyboardEvent): void {
+  onChooseItem(item: ReckonTemplate, _evt: MouseEvent | KeyboardEvent): void {
     this.onChoose(item);
   }
 }
 
 // ─── Plugin ────────────────────────────────────────────────────────────────
 
-export default class HivePdfPlugin extends Plugin {
-  settings!: HivePdfSettings;
+export default class ReckonPdfPlugin extends Plugin {
+  settings!: ReckonPdfSettings;
   private detectedDistro: string | null = null;
 
   async onload() {
@@ -857,8 +857,8 @@ export default class HivePdfPlugin extends Plugin {
 
     // Command 1: existing PDF export
     this.addCommand({
-      id: "export-hive-pdf",
-      name: "Export to Hive PDF (smart-sized diagrams)",
+      id: "export-reckon-pdf",
+      name: "Export to Reckon PDF (smart-sized diagrams)",
       checkCallback: (checking: boolean) => {
         const file = this.app.workspace.getActiveFile();
         if (!file || file.extension !== "md") return false;
@@ -869,10 +869,10 @@ export default class HivePdfPlugin extends Plugin {
       },
     });
 
-    // Command 2: insert Hive diagram from template
+    // Command 2: insert Reckon diagram from template
     this.addCommand({
-      id: "insert-hive-diagram",
-      name: "Insert Hive diagram from template",
+      id: "insert-reckon-diagram",
+      name: "Insert Reckon diagram from template",
       checkCallback: (checking: boolean) => {
         const file = this.app.workspace.getActiveFile();
         if (!file || file.extension !== "md") return false;
@@ -883,7 +883,7 @@ export default class HivePdfPlugin extends Plugin {
       },
     });
 
-    this.addSettingTab(new HivePdfSettingTab(this.app, this));
+    this.addSettingTab(new ReckonPdfSettingTab(this.app, this));
 
     void detectWsl().then((d) => {
       this.detectedDistro = d;
@@ -904,7 +904,7 @@ export default class HivePdfPlugin extends Plugin {
     modal.open();
   }
 
-  async insertTemplate(file: TFile, template: HiveTemplate) {
+  async insertTemplate(file: TFile, template: ReckonTemplate) {
     const vaultRoot = (this.app.vault.adapter as unknown as { basePath: string }).basePath;
     const noteAbsPath = path.join(vaultRoot, file.path);
     const noteDir = path.dirname(noteAbsPath);
@@ -930,8 +930,8 @@ export default class HivePdfPlugin extends Plugin {
 
     // Copy template file
     if (!fs.existsSync(srcAbsPath)) {
-      new Notice(`Hive PDF: template not found: ${srcAbsPath}`, 8000);
-      console.error("[hive-pdf] Template missing:", srcAbsPath);
+      new Notice(`Reckon PDF: template not found: ${srcAbsPath}`, 8000);
+      console.error("[reckon-pdf] Template missing:", srcAbsPath);
       return;
     }
 
@@ -947,19 +947,19 @@ export default class HivePdfPlugin extends Plugin {
       const editor = activeView.editor;
       const cursor = editor.getCursor();
       editor.replaceRange(`\n${embedText}\n`, cursor);
-      new Notice(`Hive PDF: inserted ${template.name} template`, 4000);
+      new Notice(`Reckon PDF: inserted ${template.name} template`, 4000);
     } else {
       // Fallback: append to file
       const existing = await this.app.vault.read(file);
       await this.app.vault.modify(file, `${existing}\n${embedText}\n`);
-      new Notice(`Hive PDF: appended ${template.name} template to note`, 4000);
+      new Notice(`Reckon PDF: appended ${template.name} template to note`, 4000);
     }
   }
 
   async runExport(file: TFile) {
     if (process.platform !== "win32") {
       new Notice(
-        "Hive PDF: currently only supports Windows + WSL. See README for Mac/Linux workaround.",
+        "Reckon PDF: currently only supports Windows + WSL. See README for Mac/Linux workaround.",
         8000
       );
       return;
@@ -970,7 +970,7 @@ export default class HivePdfPlugin extends Plugin {
     }
     if (this.detectedDistro === null) {
       new Notice(
-        "Hive PDF: wsl.exe not found. Install WSL2 and ensure pandoc/mmdc/xelatex are inside it.",
+        "Reckon PDF: wsl.exe not found. Install WSL2 and ensure pandoc/mmdc/xelatex are inside it.",
         10000
       );
       return;
@@ -981,12 +981,12 @@ export default class HivePdfPlugin extends Plugin {
     const vaultRoot = (this.app.vault.adapter as unknown as { basePath: string }).basePath;
     const noteAbsPath = path.join(vaultRoot, file.path);
 
-    new Notice("Hive PDF: starting pipeline…");
+    new Notice("Reckon PDF: starting pipeline…");
 
     try {
       const { pdfPath } = await buildPdf(noteAbsPath, this.settings, distro, this.app);
 
-      const msg = `Hive PDF ready: ${path.basename(pdfPath)}`;
+      const msg = `Reckon PDF ready: ${path.basename(pdfPath)}`;
       new Notice(msg, 8000);
 
       if (this.settings.openAfterBuild) {
@@ -996,8 +996,8 @@ export default class HivePdfPlugin extends Plugin {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const snippet = message.slice(0, 300);
-      new Notice(`Hive PDF FAILED:\n${snippet}`, 15000);
-      console.error("[hive-pdf] Build error:", message);
+      new Notice(`Reckon PDF FAILED:\n${snippet}`, 15000);
+      console.error("[reckon-pdf] Build error:", message);
     }
   }
 
@@ -1012,10 +1012,10 @@ export default class HivePdfPlugin extends Plugin {
 
 // ─── Settings tab ──────────────────────────────────────────────────────────
 
-class HivePdfSettingTab extends PluginSettingTab {
-  plugin: HivePdfPlugin;
+class ReckonPdfSettingTab extends PluginSettingTab {
+  plugin: ReckonPdfPlugin;
 
-  constructor(app: App, plugin: HivePdfPlugin) {
+  constructor(app: App, plugin: ReckonPdfPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -1024,7 +1024,7 @@ class HivePdfSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Hive PDF Export — Settings" });
+    containerEl.createEl("h2", { text: "Reckon PDF Export — Settings" });
 
     // ── Output ──────────────────────────────────────────────────────────────
 

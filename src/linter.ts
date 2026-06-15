@@ -1,9 +1,9 @@
 /**
- * linter — vendored markdown / frontmatter linter for swarmy vaults.
+ * linter — vendored markdown / frontmatter linter for reckon vaults.
  *
  * Why vendor a linter: configuring obsidian-linter is the most annoying
  * part of standing up an Obsidian vault. We ship a curated rule set that
- * matches the swarmy frontmatter conventions out of the box — no third
+ * matches the reckon frontmatter conventions out of the box — no third
  * party plugin install, no rule-by-rule toggling.
  *
  * Rules (all default-on, individually toggleable in settings):
@@ -21,8 +21,8 @@
  *   - bullet-dash-style: convert `*` and `+` bullets to `-` for consistency.
  *
  * Commands:
- *   - `swarmy-lint-current-file` — applies enabled rules to active note.
- *   - `swarmy-lint-vault`        — applies enabled rules to every md file
+ *   - `reckon-lint-current-file` — applies enabled rules to active note.
+ *   - `reckon-lint-vault`        — applies enabled rules to every md file
  *     (confirmation modal first).
  *
  * Settings tab section is contributed via getLinterSettingsRenderer().
@@ -225,8 +225,8 @@ export function registerLinter(
   _save: () => Promise<void>,
 ) {
   plugin.addCommand({
-    id: "swarmy-lint-current-file",
-    name: "Swarmy: lint current note (frontmatter + markdown style)",
+    id: "reckon-lint-current-file",
+    name: "Reckon: lint current note (frontmatter + markdown style)",
     checkCallback: (checking: boolean) => {
       const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
       if (!view || !view.file) return false;
@@ -235,7 +235,7 @@ export function registerLinter(
         const file = view.file!;
         const raw = await plugin.app.vault.read(file);
         const s = getSettings();
-        if (!s.lintEnabled) { new Notice("Swarmy linter disabled in settings."); return; }
+        if (!s.lintEnabled) { new Notice("Reckon linter disabled in settings."); return; }
         const { out, changed } = lintMarkdown(raw, s);
         if (changed) {
           await plugin.app.vault.modify(file, out);
@@ -249,11 +249,11 @@ export function registerLinter(
   });
 
   plugin.addCommand({
-    id: "swarmy-lint-vault",
-    name: "Swarmy: lint entire vault (frontmatter + markdown style)",
+    id: "reckon-lint-vault",
+    name: "Reckon: lint entire vault (frontmatter + markdown style)",
     callback: () => {
       const s = getSettings();
-      if (!s.lintEnabled) { new Notice("Swarmy linter disabled in settings."); return; }
+      if (!s.lintEnabled) { new Notice("Reckon linter disabled in settings."); return; }
       const files = plugin.app.vault.getMarkdownFiles();
       new LintVaultConfirmModal(plugin.app, files.length, async () => {
         let changed = 0;

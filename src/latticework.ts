@@ -1,5 +1,5 @@
 /**
- * latticework.ts — Latticework-inspired UX for swarmy artifacts in Obsidian.
+ * latticework.ts — Latticework-inspired UX for reckon artifacts in Obsidian.
  *
  * Inspired by Matthew Siu's Latticework prototype
  * (https://github.com/Siunami/Latticework, paper:
@@ -8,7 +8,7 @@
  *
  * Four cuts, all toggleable via plugin settings:
  *
- *   A. Peek-on-hover  — hover any link to a swarmy artifact (manifest /
+ *   A. Peek-on-hover  — hover any link to a reckon artifact (manifest /
  *      charter / mission-graph node / coc.jsonl#L*) with CMD/Ctrl held →
  *      destination opens in an adjacent panel without losing your place.
  *
@@ -47,8 +47,8 @@ export const DEFAULT_LATTICEWORK_SETTINGS: LatticeworkSettings = {
   latticework_collapsed_by_default: false,
 };
 
-// Path predicates — what counts as a "swarmy artifact" for peek/inline logic.
-const SWARMY_ARTIFACT_PATTERNS = [
+// Path predicates — what counts as a "reckon artifact" for peek/inline logic.
+const RECKON_ARTIFACT_PATTERNS = [
   /forensics\/manifests\//,
   /forensics\/charters\//,
   /forensics\/coc\.jsonl/,
@@ -56,8 +56,8 @@ const SWARMY_ARTIFACT_PATTERNS = [
   /forensics\/mission-graph\.json/,
 ];
 
-function isSwarmyArtifact(path: string): boolean {
-  return SWARMY_ARTIFACT_PATTERNS.some((re) => re.test(path));
+function isReckonArtifact(path: string): boolean {
+  return RECKON_ARTIFACT_PATTERNS.some((re) => re.test(path));
 }
 
 // Read + parse a manifest JSON file from the vault. Returns null if missing
@@ -99,27 +99,27 @@ function previewFromManifest(m: any): ManifestPreview {
 // hover. We register an additional "hover-link source" so the popup is
 // available even outside markdown editor contexts (e.g. on rendered
 // dataview tables, our own custom UI). The "Editor" source is registered
-// by default; we add "swarmy" so any element with data-hover-link-source
-// = "swarmy" gets popups.
+// by default; we add "reckon" so any element with data-hover-link-source
+// = "reckon" gets popups.
 function registerPeekOnHover(plugin: Plugin & { settings: LatticeworkSettings }) {
   if (!plugin.settings.latticework_peek_on_hover) return;
 
   // The hover-link-source registration is how plugins opt into the
   // built-in page-preview UX.
-  (plugin.app.workspace as any).registerHoverLinkSource?.("swarmy", {
-    display: "Swarmy artifacts",
+  (plugin.app.workspace as any).registerHoverLinkSource?.("reckon", {
+    display: "Reckon artifacts",
     defaultMod: true, // require CMD/Ctrl held to peek
   });
 
-  // Render-side: when our markdown processor wraps a swarmy link in an
-  // element with data-hover-link-source="swarmy", Obsidian's page-preview
+  // Render-side: when our markdown processor wraps a reckon link in an
+  // element with data-hover-link-source="reckon", Obsidian's page-preview
   // core plugin handles the rest. No additional listener needed here.
 }
 
 // ─── CUT B — Inline text-references with dashboard_line ───────────────────
 //
 // A markdown post-processor that, for every internal link pointing at a
-// swarmy artifact, asynchronously fetches the destination's manifest JSON,
+// reckon artifact, asynchronously fetches the destination's manifest JSON,
 // extracts dashboard_line, and rewrites the rendered link to a structured
 // preview:
 //
@@ -137,10 +137,10 @@ function registerInlineTextReferences(
     const links = el.querySelectorAll("a.internal-link");
     for (const a of Array.from(links) as HTMLAnchorElement[]) {
       const href = a.getAttribute("data-href") || a.getAttribute("href") || "";
-      if (!href || !isSwarmyArtifact(href)) continue;
+      if (!href || !isReckonArtifact(href)) continue;
 
-      // Mark as a swarmy-source for the peek-on-hover plugin
-      a.setAttribute("data-hover-link-source", "swarmy");
+      // Mark as a reckon-source for the peek-on-hover plugin
+      a.setAttribute("data-hover-link-source", "reckon");
       a.addClass("latticework-text-ref");
 
       // Skip the fetch if collapsed-by-default is on — render the chip
@@ -195,7 +195,7 @@ function registerMarginaliaTooltips(
     if (!plugin.settings.latticework_marginalia_tooltips) return;
 
     // Marginalia is opt-in per chip — only render if the chip carries
-    // a [data-rationale] attribute (set by other swarmy renderers that
+    // a [data-rationale] attribute (set by other reckon renderers that
     // know the rationale).
     const chips = el.querySelectorAll(".latticework-chip[data-rationale]");
     for (const chip of Array.from(chips) as HTMLElement[]) {

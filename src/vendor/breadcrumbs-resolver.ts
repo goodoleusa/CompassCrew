@@ -5,7 +5,7 @@
  * License: MIT (see THIRD_PARTY_NOTICES.md)
  *
  * We vendor only the YAML-frontmatter edge-resolution surface — the part
- * of Breadcrumbs that swarmy actually relies on. The upstream plugin's
+ * of Breadcrumbs that reckon actually relies on. The upstream plugin's
  * matrix view, juggl integration, statblock, etc., are NOT included.
  *
  * Public surface:
@@ -15,7 +15,7 @@
  *   - renderRelationsMd(rel)      → markdown-only block (no HTML)
  *
  * "up"/"down"/"same"/"prev" are the canonical breadcrumbs edge keys we
- * use across the swarmy charter + manifest model. NSEW aliases (north /
+ * use across the reckon charter + manifest model. NSEW aliases (north /
  * south / east / west) are accepted as fallbacks so a vault that uses
  * either convention works without re-tagging.
  */
@@ -123,7 +123,7 @@ export function renderRelations(rel: BreadcrumbsRelations, title = "Breadcrumbs"
       .map((s) => `<a class="internal-link" href="${esc(s)}">${esc(s)}</a>`)
       .join(", ");
     return (
-      `<div class="swarmy-breadcrumbs-row" style="border-left:3px solid ${color};padding-left:8px;margin:2px 0;">` +
+      `<div class="reckon-breadcrumbs-row" style="border-left:3px solid ${color};padding-left:8px;margin:2px 0;">` +
       `<strong>${label}</strong>&nbsp;${inner}</div>`
     );
   };
@@ -133,8 +133,8 @@ export function renderRelations(rel: BreadcrumbsRelations, title = "Breadcrumbs"
     row("E (same)", rel.same, "#FF8E3C") +
     row("W (prev)", rel.prev, "#3B6EA5");
   return (
-    `<div class="swarmy-breadcrumbs-block" style="margin:8px 0;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;">` +
-    `<div class="swarmy-breadcrumbs-title" style="font-weight:600;margin-bottom:4px;">${esc(title)}</div>` +
+    `<div class="reckon-breadcrumbs-block" style="margin:8px 0;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;">` +
+    `<div class="reckon-breadcrumbs-title" style="font-weight:600;margin-bottom:4px;">${esc(title)}</div>` +
     body +
     `</div>`
   );

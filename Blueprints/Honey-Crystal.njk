@@ -1,0 +1,45 @@
+---
+type: honey-droplet
+crystal_of_cluster: {{ crystal_of_cluster | default(frontmatter.crystal_of_cluster) | default("—") }}
+crystal_task_id: {{ crystal_task_id | default(frontmatter.crystal_task_id) | default("—") }}
+survivor_score: {{ survivor_score | default(frontmatter.survivor_score) | default(0) }}
+superseded_task_ids: [{{ superseded_task_ids | join(", ") if superseded_task_ids else (frontmatter.superseded_task_ids | join(", ") if frontmatter.superseded_task_ids else "") }}]
+content_sha: {{ content_sha | default(frontmatter.content_sha) | default("—") }}
+created: {{ created | default(frontmatter.created) | default(now) }}
+date: {{ date | default(frontmatter.date) | default("") }}
+tags: [honey, crystal, memory]
+source: {{ source | default(frontmatter.source) | default("forensics/honey") }}
+blueprint: "[[Honey-Crystal]]"
+---
+
+> [!honey] Crystal: {{ crystal_of_cluster | default("—") }}
+> **Crystal task_id:** `{{ crystal_task_id | default("—") }}` · **Survivor score:** {{ survivor_score | default(0) }} · **Crystallized:** {{ created | default(now) }}
+
+# Crystal: {{ crystal_of_cluster | default("—") }}
+
+{% if summary %}{{ summary }}{% else %}_(no extractive summary available)_{% endif %}
+
+## Why this one won
+
+> [!anchor] Elected survivor
+> The cluster `{{ crystal_of_cluster | default("—") }}` collapsed to a single crystal. `{{ crystal_task_id | default("—") }}` scored **{{ survivor_score | default(0) }}** on the survivor function (charter anchoring + discovered-work reach + body density − pivots) and outranked its siblings.
+
+## What it superseded
+
+{% if superseded_task_ids and (superseded_task_ids | length) > 0 %}{% for sid in superseded_task_ids %}- `{{ sid }}` — retired into `forensics/ephemeral/{{ date | default("") }}/retired/`
+{% endfor %}{% else %}_No siblings retired (singleton or first-of-cluster)._
+{% endif %}
+
+## Chain of custody
+
+> [!example]- Forensic anchor
+> - **content_sha:** `{{ content_sha | default("—") }}`
+> - **source cluster:** `{{ crystal_of_cluster | default("—") }}`
+> - **canonical droplet:** `forensics/honey/{{ date | default("") }}/{{ slug | default("") }}.md`
+
+## Link back to canonical source
+
+The authoritative, hash-chained droplet lives in the forensic selvage — this vault note is a derivative human-readable mirror.
+
+- Canonical: `forensics/honey/{{ date | default("") }}/{{ slug | default("") }}.md`
+- Cluster prefix / w4w address: `{{ crystal_of_cluster | default("—") }}`

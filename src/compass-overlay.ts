@@ -34,7 +34,7 @@ interface ExcaliBrainConfig {
   };
 }
 
-const SWARMY_EXCALIBRAIN_CONFIG: ExcaliBrainConfig = {
+const RECKON_EXCALIBRAIN_CONFIG: ExcaliBrainConfig = {
   hierarchy: {
     parents: ["up", "north", "unblocks"],
     children: ["down", "next", "south", "ships"],
@@ -49,8 +49,8 @@ const SWARMY_EXCALIBRAIN_CONFIG: ExcaliBrainConfig = {
 
 export function registerCompassOverlay(plugin: Plugin) {
   plugin.addCommand({
-    id: "swarmy-compass-overlay",
-    name: "Swarmy: compass overlay (ExcaliBrain bearings view, falls back to mermaid)",
+    id: "reckon-compass-overlay",
+    name: "Reckon: compass overlay (ExcaliBrain bearings view, falls back to mermaid)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) {
@@ -69,7 +69,7 @@ export function registerCompassOverlay(plugin: Plugin) {
           7000
         );
         try {
-          (plugin.app as any).commands?.executeCommandById?.("hive:swarmy-mermaid-compass");
+          (plugin.app as any).commands?.executeCommandById?.("reckon:reckon-mermaid-compass");
         } catch { /* the mermaid command registers itself; if missing, do nothing */ }
         return;
       }
@@ -83,9 +83,9 @@ export function registerCompassOverlay(plugin: Plugin) {
       for (const id of candidates) {
         if (anyApp.commands?.commands?.[id]) {
           anyApp.commands.executeCommandById(id);
-          document.body.classList.add("swarmy-compass-overlay-active");
+          document.body.classList.add("reckon-compass-overlay-active");
           setTimeout(
-            () => document.body.classList.remove("swarmy-compass-overlay-active"),
+            () => document.body.classList.remove("reckon-compass-overlay-active"),
             60_000
           );
           new Notice(`Compass (ExcaliBrain): ${file.basename} — bearings N/S/E/W.`);
@@ -97,8 +97,8 @@ export function registerCompassOverlay(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "swarmy-write-excalibrain-config",
-    name: "Swarmy: write recommended ExcaliBrain config (bearings)",
+    id: "reckon-write-excalibrain-config",
+    name: "Reckon: write recommended ExcaliBrain config (bearings)",
     callback: async () => {
       const anyApp = plugin.app as any;
       const excaliBrain = anyApp.plugins?.plugins?.["excalibrain"];
@@ -116,9 +116,9 @@ export function registerCompassOverlay(plugin: Plugin) {
         // ExcaliBrain v0.2.x uses these keys: hierarchy: { parents, children, friends }
         s.hierarchy = {
           ...(s.hierarchy || {}),
-          parents: Array.from(new Set([...(s.hierarchy?.parents || []), ...SWARMY_EXCALIBRAIN_CONFIG.hierarchy.parents])),
-          children: Array.from(new Set([...(s.hierarchy?.children || []), ...SWARMY_EXCALIBRAIN_CONFIG.hierarchy.children])),
-          friends: Array.from(new Set([...(s.hierarchy?.friends || []), ...SWARMY_EXCALIBRAIN_CONFIG.hierarchy.friends])),
+          parents: Array.from(new Set([...(s.hierarchy?.parents || []), ...RECKON_EXCALIBRAIN_CONFIG.hierarchy.parents])),
+          children: Array.from(new Set([...(s.hierarchy?.children || []), ...RECKON_EXCALIBRAIN_CONFIG.hierarchy.children])),
+          friends: Array.from(new Set([...(s.hierarchy?.friends || []), ...RECKON_EXCALIBRAIN_CONFIG.hierarchy.friends])),
         };
         await excaliBrain.saveSettings?.();
         new Notice(
@@ -142,7 +142,7 @@ export function registerCompassOverlay(plugin: Plugin) {
  * renders a bearing-colored mermaid graph in a transient leaf.
  */
 
-const VIEW_TYPE_SWARMY_MERMAID_COMPASS = "swarmy-mermaid-compass";
+const VIEW_TYPE_RECKON_MERMAID_COMPASS = "reckon-mermaid-compass";
 
 function stripLink(s: string): string {
   const m = s.match(/^\[\[([^\]|#]+)/);
@@ -180,17 +180,17 @@ function buildMermaid(noteName: string, bearings: Partial<Record<Bearing, string
   return lines.join("\n");
 }
 
-class SwarmyMermaidCompassView extends ItemView {
+class ReckonMermaidCompassView extends ItemView {
   private file: TFile | null = null;
   constructor(leaf: WorkspaceLeaf) { super(leaf); }
-  getViewType() { return VIEW_TYPE_SWARMY_MERMAID_COMPASS; }
-  getDisplayText() { return "Swarmy Compass (mermaid)"; }
+  getViewType() { return VIEW_TYPE_RECKON_MERMAID_COMPASS; }
+  getDisplayText() { return "Reckon Compass (mermaid)"; }
   getIcon() { return "compass"; }
   setSourceFile(f: TFile) { this.file = f; }
   async render() {
     const root = this.containerEl.children[1] as HTMLElement;
     root.empty();
-    root.createEl("h3", { text: "Swarmy Compass — bearings overlay" });
+    root.createEl("h3", { text: "Reckon Compass — bearings overlay" });
     if (!this.file) {
       root.createEl("p", { text: "No active file when this view opened." });
       return;
@@ -202,7 +202,7 @@ class SwarmyMermaidCompassView extends ItemView {
       return;
     }
     const mermaid = buildMermaid(this.file.basename, bearings);
-    const legend = root.createEl("div", { cls: "swarmy-compass-legend" });
+    const legend = root.createEl("div", { cls: "reckon-compass-legend" });
     for (const b of ["N", "S", "E", "W"] as Bearing[]) {
       const swatch = legend.createEl("span");
       swatch.style.display = "inline-block";
@@ -212,7 +212,7 @@ class SwarmyMermaidCompassView extends ItemView {
       swatch.style.borderRadius = "4px";
       swatch.setText(BEARING_LABEL[b]);
     }
-    const host = root.createEl("div", { cls: "swarmy-compass-mermaid" });
+    const host = root.createEl("div", { cls: "reckon-compass-mermaid" });
     const code = "```mermaid\n" + mermaid + "\n```";
     const { MarkdownRenderer } = require("obsidian");
     await MarkdownRenderer.renderMarkdown(code, host, this.file.path, this);
@@ -222,20 +222,20 @@ class SwarmyMermaidCompassView extends ItemView {
 }
 
 export function registerMermaidCompass(plugin: Plugin) {
-  plugin.registerView(VIEW_TYPE_SWARMY_MERMAID_COMPASS, (leaf) => new SwarmyMermaidCompassView(leaf));
+  plugin.registerView(VIEW_TYPE_RECKON_MERMAID_COMPASS, (leaf) => new ReckonMermaidCompassView(leaf));
   plugin.addCommand({
-    id: "swarmy-mermaid-compass",
-    name: "Swarmy: mermaid compass (inline NSEW overlay, no external deps)",
+    id: "reckon-mermaid-compass",
+    name: "Reckon: mermaid compass (inline NSEW overlay, no external deps)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
       const leaf = plugin.app.workspace.getLeaf(true);
-      await leaf.setViewState({ type: VIEW_TYPE_SWARMY_MERMAID_COMPASS, active: true });
-      const view = leaf.view as SwarmyMermaidCompassView;
+      await leaf.setViewState({ type: VIEW_TYPE_RECKON_MERMAID_COMPASS, active: true });
+      const view = leaf.view as ReckonMermaidCompassView;
       view.setSourceFile(file);
       await view.render();
     },
   });
 }
 
-export { VIEW_TYPE_SWARMY_MERMAID_COMPASS };
+export { VIEW_TYPE_RECKON_MERMAID_COMPASS };

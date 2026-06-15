@@ -25,7 +25,7 @@ function ensureExcalidrawAvailable(app: App): boolean {
       contentEl.createEl("p", {
         text: "Bearing topology design (pollinate / scan-and-propose / auto-layout) renders to Excalidraw canvases. Install the Excalidraw community plugin to enable these commands.",
       });
-      const row = contentEl.createEl("div", { cls: "swarmy-install-excalidraw-row" });
+      const row = contentEl.createEl("div", { cls: "reckon-install-excalidraw-row" });
       row.style.cssText = "display:flex;gap:8px;margin-top:12px;";
       const btn = row.createEl("button", { text: "Open Community Plugins" });
       btn.onclick = () => {
@@ -49,7 +49,7 @@ function ensureExcalidrawAvailable(app: App): boolean {
  *
  * Three commands implementing the draw → AI → system loop for arbitrary folders:
  *
- *   1. `swarmy: pollinate`
+ *   1. `reckon: pollinate`
  *      Right-click (or active file's parent) → scan folder for notes →
  *      generate Excalidraw canvas with one box per note positioned by
  *      current implicit structure (folder depth = y, sibling order = x,
@@ -59,8 +59,8 @@ function ensureExcalidrawAvailable(app: App): boolean {
  *
  *      Status: WORKING (seed scene + open canvas).
  *
- *   2. `swarmy: scan and propose bearings`
- *      Folder scan → POSTs to MCP `swarmy_propose_bearings`. Server
+ *   2. `reckon: scan and propose bearings`
+ *      Folder scan → POSTs to MCP `reckon_mission` verb=propose_bearings. Server
  *      runs an offline heuristic (mutual outlinks → E, directed
  *      outlinks → N/S pairs, hub note → W anchor) and filters out
  *      bearings already declared in recent manifests. The reply opens
@@ -69,7 +69,7 @@ function ensureExcalidrawAvailable(app: App): boolean {
  *
  *      Status: WORKING (2026-05-19) — MCP server tool live.
  *
- *   3. `swarmy: auto-layout from frontmatter`
+ *   3. `reckon: auto-layout from frontmatter`
  *      Reads active Excalidraw note → re-positions bearing-rectangles
  *      using a deterministic layered/ordered-tree layout (N above,
  *      S below, E right, W left; sorted by label, evenly spaced).
@@ -188,7 +188,7 @@ async function pollinate(plugin: Plugin, folder?: TFolder) {
   const body = [
     "---",
     "excalidraw-plugin: parsed",
-    "tags: [excalidraw, swarmy-draft, folder-design]",
+    "tags: [excalidraw, reckon-draft, folder-design]",
     `design_for_folder: "${tgt.path}"`,
     `note_count: ${notes.length}`,
     `created: ${new Date().toISOString()}`,
@@ -198,7 +198,7 @@ async function pollinate(plugin: Plugin, folder?: TFolder) {
     `> ${notes.length} notes seeded from \`${tgt.path}\`. Existing wikilinks shown as gray arrows.`,
     "> Drag boxes into the four quadrants by bearing (color stroke to commit):",
     ...BEARINGS.map((b) => `> - <span style="color:${BEARING_COLOR[b]}">${BEARING_LABEL[b]}</span>`),
-    "> Then run **Swarmy: commit folder design → frontmatter** (re-uses ExcaliBrain commit pipeline per-note).",
+    "> Then run **Reckon: commit folder design → frontmatter** (re-uses ExcaliBrain commit pipeline per-note).",
     "",
     "# Excalidraw Data",
     "",
@@ -210,7 +210,7 @@ async function pollinate(plugin: Plugin, folder?: TFolder) {
     "",
     "## Drawing",
     "```json",
-    JSON.stringify({ type: "excalidraw", version: 2, source: "swarmy-hive-plugin:design-folder", elements: scene.elements, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
+    JSON.stringify({ type: "excalidraw", version: 2, source: "reckon-vault-plugin:design-folder", elements: scene.elements, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
     "```",
     "%%",
   ].join("\n");
@@ -238,16 +238,16 @@ class ProposalReviewModal extends Modal {
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.addClass("swarmy-proposal-modal");
+    contentEl.addClass("reckon-proposal-modal");
     contentEl.createEl("h2", { text: "Proposed bearings — review" });
     if (this.proposals.length === 0) {
       contentEl.createEl("p", { text: "No proposals returned. (Check MCP connection / token, or the folder may have no inter-note wikilinks for the heuristic to chew on.)" });
       return;
     }
     const accepted: Set<number> = new Set(this.proposals.map((_, i) => i));
-    const list = contentEl.createEl("div", { cls: "swarmy-proposal-list" });
+    const list = contentEl.createEl("div", { cls: "reckon-proposal-list" });
     this.proposals.forEach((p, i) => {
-      const row = list.createEl("div", { cls: "swarmy-proposal-row" });
+      const row = list.createEl("div", { cls: "reckon-proposal-row" });
       const cb = row.createEl("input", { type: "checkbox" }) as HTMLInputElement;
       cb.checked = true;
       cb.onchange = () => { if (cb.checked) accepted.add(i); else accepted.delete(i); };
@@ -269,11 +269,11 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
   const notes = await scanFolder(plugin.app, tgt);
   if (notes.length === 0) { new Notice(`No notes in ${tgt.path}.`); return; }
 
-  // POST to MCP swarmy_propose_bearings. Server runs an offline heuristic
+  // POST to MCP reckon_mission verb=propose_bearings. Server runs an offline heuristic
   // (mutual outlinks → E, directed outlinks → N/S pairs, hub note → W
   // anchor) and filters out bearings already declared in recent manifests.
-  // See swarmy/deploy/mcp-server/server.py::swarmy_propose_bearings.
-  const settings: any = ((plugin.app as any).plugins?.plugins?.["hive"]?.hiveSettings) || {};
+  // See reckon/deploy/mcp-server/tools/mission.py::reckon_mission (verb=propose_bearings).
+  const settings: any = ((plugin.app as any).plugins?.plugins?.["reckon"]?.reckonSettings) || {};
   const mcpUrl: string = settings.mcpUrl || "http://localhost:8765";
   const tokenPath: string = settings.tokenPath || ".swarmy-token";
   let token: string | null = null;
@@ -282,13 +282,14 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const payload = {
+    verb: "propose_bearings",
     folder: tgt.path,
     notes: notes.map((n) => ({ basename: n.file.basename, excerpt: n.excerpt, outLinks: n.outLinks })),
   };
 
   let proposals: BearingProposal[] = [];
   try {
-    const r = await fetch(mcpUrl.replace(/\/+$/, "") + "/tools/swarmy_propose_bearings", {
+    const r = await fetch(mcpUrl.replace(/\/+$/, "") + "/tools/reckon_mission", {
       method: "POST", headers, body: JSON.stringify(payload),
     });
     if (r.ok) {
@@ -303,7 +304,7 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
           rationale: String(p.rationale ?? ""),
         }))
         .filter((p) => (BEARINGS as readonly string[]).includes(p.bearing));
-      new Notice(`Swarmy proposed ${proposals.length} bearings for ${tgt.name}.`, 5000);
+      new Notice(`Reckon proposed ${proposals.length} bearings for ${tgt.name}.`, 5000);
     } else {
       new Notice(`MCP propose_bearings failed: HTTP ${r.status}`, 6000);
     }
@@ -414,20 +415,20 @@ async function autoLayoutFromFrontmatter(plugin: Plugin) {
 
 export function registerDesignFolder(plugin: Plugin) {
   plugin.addCommand({
-    id: "swarmy-pollinate",
-    name: "🐝 Swarmy: pollinate (sketch + commit topology for any folder)",
+    id: "reckon-pollinate",
+    name: "🐝 Reckon: pollinate (sketch + commit topology for any folder)",
     callback: () => pollinate(plugin),
   });
 
   plugin.addCommand({
-    id: "swarmy-scan-and-propose-bearings",
-    name: "Swarmy: scan folder and propose bearings (AI round-trip, review modal)",
+    id: "reckon-scan-and-propose-bearings",
+    name: "Reckon: scan folder and propose bearings (AI round-trip, review modal)",
     callback: () => scanAndProposeBearings(plugin),
   });
 
   plugin.addCommand({
-    id: "swarmy-auto-layout-from-frontmatter",
-    name: "Swarmy: auto-layout Excalidraw from frontmatter",
+    id: "reckon-auto-layout-from-frontmatter",
+    name: "Reckon: auto-layout Excalidraw from frontmatter",
     callback: () => autoLayoutFromFrontmatter(plugin),
   });
 
@@ -437,13 +438,13 @@ export function registerDesignFolder(plugin: Plugin) {
       if (!(fileOrFolder instanceof TFolder)) return;
       menu.addItem((item) =>
         item
-          .setTitle("🐝 Swarmy: pollinate")
+          .setTitle("🐝 Reckon: pollinate")
           .setIcon("compass")
           .onClick(() => pollinate(plugin, fileOrFolder))
       );
       menu.addItem((item) =>
         item
-          .setTitle("Swarmy: scan & propose bearings")
+          .setTitle("Reckon: scan & propose bearings")
           .setIcon("wand-2")
           .onClick(() => scanAndProposeBearings(plugin, fileOrFolder))
       );

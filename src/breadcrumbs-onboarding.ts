@@ -77,7 +77,7 @@ class QuickThreadModal extends Modal {
     this.searchEl.style.width = "100%";
     this.searchEl.addEventListener("input", () => this.refresh());
 
-    this.resultsEl = contentEl.createDiv({ cls: "swarmy-thread-results" });
+    this.resultsEl = contentEl.createDiv({ cls: "reckon-thread-results" });
     this.resultsEl.style.maxHeight = "300px";
     this.resultsEl.style.overflowY = "auto";
     this.resultsEl.style.marginTop = "0.5em";
@@ -102,14 +102,14 @@ class QuickThreadModal extends Modal {
       : this.files.slice(0, 30);
     this.resultsEl.empty();
     this.filtered.forEach((f) => {
-      const row = this.resultsEl.createEl("div", { cls: "swarmy-thread-row" });
+      const row = this.resultsEl.createEl("div", { cls: "reckon-thread-row" });
       row.style.padding = "4px 8px";
       row.style.cursor = "pointer";
       row.style.borderBottom = "1px solid var(--background-modifier-border)";
       row.createEl("strong", { text: f.basename });
-      row.createEl("span", { text: ` — ${f.parent?.path || ""}`, cls: "swarmy-thread-path" });
-      (row.querySelector(".swarmy-thread-path") as HTMLElement).style.opacity = "0.6";
-      (row.querySelector(".swarmy-thread-path") as HTMLElement).style.fontSize = "0.85em";
+      row.createEl("span", { text: ` — ${f.parent?.path || ""}`, cls: "reckon-thread-path" });
+      (row.querySelector(".reckon-thread-path") as HTMLElement).style.opacity = "0.6";
+      (row.querySelector(".reckon-thread-path") as HTMLElement).style.fontSize = "0.85em";
       row.onclick = () => this.pick(f);
       row.onmouseenter = () => (row.style.backgroundColor = "var(--background-modifier-hover)");
       row.onmouseleave = () => (row.style.backgroundColor = "");
@@ -136,11 +136,11 @@ class ThreadSuggestionsModal extends Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Breadcrumbs threading suggestions" });
     contentEl.createEl("p", {
-      text: `Swarmy scanned your vault and found ${this.suggestions.length} relationships that could be threaded. Review and accept the ones that look right.`,
+      text: `Reckon scanned your vault and found ${this.suggestions.length} relationships that could be threaded. Review and accept the ones that look right.`,
     });
     const accepted: ThreadSuggestion[] = [];
     this.suggestions.slice(0, 50).forEach((s, i) => {
-      const row = contentEl.createDiv({ cls: "swarmy-suggestion-row" });
+      const row = contentEl.createDiv({ cls: "reckon-suggestion-row" });
       row.style.padding = "8px";
       row.style.borderBottom = "1px solid var(--background-modifier-border)";
       row.style.display = "flex";
@@ -284,7 +284,7 @@ function registerInlineWidget(plugin: Plugin) {
     // Only render at the top of a document
     const file = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
     if (!(file instanceof TFile)) return;
-    if (el.querySelector(".swarmy-thread-widget")) return; // dedupe
+    if (el.querySelector(".reckon-thread-widget")) return; // dedupe
     // Only attach to the first .markdown-preview-section child
     const isTop = el.parentElement?.classList.contains("markdown-preview-section");
     if (!isTop) return;
@@ -296,7 +296,7 @@ function registerInlineWidget(plugin: Plugin) {
     const sames = ([] as string[]).concat(fm.same || []);
     if (ups.length + downs.length + sames.length === 0) return;
 
-    const widget = el.createDiv({ cls: "swarmy-thread-widget" });
+    const widget = el.createDiv({ cls: "reckon-thread-widget" });
     widget.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-radius:6px;background:var(--background-secondary);margin-bottom:1em;";
 
     const pill = (text: string, color: string, label: string) => {
@@ -317,7 +317,7 @@ function registerInlineWidget(plugin: Plugin) {
     const addBtn = widget.createEl("span", { text: "+ thread" });
     addBtn.style.cssText = "padding:2px 8px;border-radius:12px;background:var(--background-primary);cursor:pointer;font-size:0.85em;opacity:0.6;";
     addBtn.onclick = () => {
-      (plugin.app as any).commands.executeCommandById("hive:swarmy-quick-thread");
+      (plugin.app as any).commands.executeCommandById("reckon:reckon-quick-thread");
     };
   });
 }
@@ -325,8 +325,8 @@ function registerInlineWidget(plugin: Plugin) {
 export function registerBreadcrumbsOnboarding(plugin: Plugin) {
   // (1) Quick-thread modal — Cmd+Shift+T
   plugin.addCommand({
-    id: "swarmy-quick-thread",
-    name: "Swarmy: quick-thread (pick a note, pick a direction)",
+    id: "reckon-quick-thread",
+    name: "Reckon: quick-thread (pick a note, pick a direction)",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "T" }],
     callback: () => {
       const file = plugin.app.workspace.getActiveFile();
@@ -350,8 +350,8 @@ export function registerBreadcrumbsOnboarding(plugin: Plugin) {
 
   // (2) Auto-suggest from folders + mutual links
   plugin.addCommand({
-    id: "swarmy-suggest-threads",
-    name: "Swarmy: suggest threads (auto-detect from folder + link structure)",
+    id: "reckon-suggest-threads",
+    name: "Reckon: suggest threads (auto-detect from folder + link structure)",
     callback: async () => {
       const suggestions = [
         ...suggestFromFolders(plugin.app),
@@ -369,8 +369,8 @@ export function registerBreadcrumbsOnboarding(plugin: Plugin) {
 
   // (3) Tutorial: open a guided walkthrough
   plugin.addCommand({
-    id: "swarmy-breadcrumbs-tutorial",
-    name: "Swarmy: breadcrumbs tutorial (interactive)",
+    id: "reckon-breadcrumbs-tutorial",
+    name: "Reckon: breadcrumbs tutorial (interactive)",
     callback: async () => {
       const root = (plugin.app.vault.adapter as any).basePath;
       const fs = require("fs"); const path = require("path");
@@ -381,7 +381,7 @@ export function registerBreadcrumbsOnboarding(plugin: Plugin) {
         const tut = [
           "---",
           "type: tutorial",
-          "tags: [swarmy, breadcrumbs, threading]",
+          "tags: [reckon, breadcrumbs, threading]",
           "---",
           "",
           "# Breadcrumbs Threading — the intuitive way",
@@ -402,7 +402,7 @@ export function registerBreadcrumbsOnboarding(plugin: Plugin) {
           "",
           "1. **Cmd+Shift+T** — opens the quick-thread modal. Pick a note, pick a direction, done.",
           "2. **Cmd+Shift+H** on selected text — creates a trail-ref *and* adds the breadcrumb field automatically.",
-          "3. **Swarmy: suggest threads** — scans your vault and proposes threads from folder structure + mutual links.",
+          "3. **Reckon: suggest threads** — scans your vault and proposes threads from folder structure + mutual links.",
           "",
           "## The mental model",
           "",
@@ -414,7 +414,7 @@ export function registerBreadcrumbsOnboarding(plugin: Plugin) {
           "",
           "## Visual feedback",
           "",
-          "Hive's inline thread widget renders at the top of every threaded note:",
+          "Reckon's inline thread widget renders at the top of every threaded note:",
           "",
           "> ↑ up: Parent-MOC  ↔ same: Sister-Note  ↓ next: Next-Phase  + thread",
           "",

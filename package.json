@@ -1,14 +1,14 @@
 {
-  "name": "faerie-hive-plugin",
+  "name": "reckon-vault-plugin",
   "version": "2.0.0",
-  "description": "Hive — Faerie Obsidian Orchestrator. The vault-side counterpart to the Faerie hive-mind. Zero runtime dependencies.",
+  "description": "Reckon — Faerie Obsidian Orchestrator. The vault-side counterpart to the Faerie reckon-mind. Zero runtime dependencies.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["obsidian", "faerie", "hive", "blueprint", "mcp", "compass", "excalibrain"],
+  "keywords": ["obsidian", "faerie", "reckon", "blueprint", "mcp", "compass", "excalibrain"],
   "author": "goodoleusa",
   "license": "MIT",
   "devDependencies": {

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * Hand-rolled CSV reader and Markdown table renderer for the `swarmy-csv`
+ * Hand-rolled CSV reader and Markdown table renderer for the `reckon-csv`
  * codeblock + clipboard-path preview command.
  *
  * - Tolerant of quoted fields containing commas, escaped double-quotes ("")
@@ -108,7 +108,7 @@ function resolveCsvPath(app: App, p: string): string {
 
 export function registerCsvPreview(plugin: Plugin) {
   plugin.registerMarkdownCodeBlockProcessor(
-    "swarmy-csv",
+    "reckon-csv",
     async (source: string, el: HTMLElement, _ctx: MarkdownPostProcessorContext) => {
       try {
         const lines = source.split(/\r?\n/);
@@ -121,16 +121,16 @@ export function registerCsvPreview(plugin: Plugin) {
           if (mr) maxRows = parseInt(mr[2], 10);
         }
         if (!pathLine) {
-          el.createEl("pre", { text: "swarmy-csv: missing `path:` directive" });
+          el.createEl("pre", { text: "reckon-csv: missing `path:` directive" });
           return;
         }
         const abs = resolveCsvPath(plugin.app, pathLine);
         if (!fs.existsSync(abs)) {
-          el.createEl("pre", { text: `swarmy-csv: file not found: ${abs}` });
+          el.createEl("pre", { text: `reckon-csv: file not found: ${abs}` });
           return;
         }
         const preview = readCsvPreview(abs, maxRows);
-        const tbl = el.createEl("table", { cls: "swarmy-csv-preview" });
+        const tbl = el.createEl("table", { cls: "reckon-csv-preview" });
         const thead = tbl.createEl("thead").createEl("tr");
         for (const h of preview.header) thead.createEl("th", { text: h });
         const tbody = tbl.createEl("tbody");
@@ -141,18 +141,18 @@ export function registerCsvPreview(plugin: Plugin) {
         if (preview.truncated) {
           el.createEl("div", {
             text: `…showing ${preview.rows.length} of ${preview.totalRows} rows.`,
-            cls: "swarmy-csv-truncated",
+            cls: "reckon-csv-truncated",
           });
         }
       } catch (e) {
-        el.createEl("pre", { text: "swarmy-csv error: " + (e as Error).message });
+        el.createEl("pre", { text: "reckon-csv error: " + (e as Error).message });
       }
     },
   );
 
   plugin.addCommand({
-    id: "swarmy-csv-preview-clipboard",
-    name: "Swarmy: preview CSV from clipboard path",
+    id: "reckon-csv-preview-clipboard",
+    name: "Reckon: preview CSV from clipboard path",
     callback: async () => {
       const cb = await navigator.clipboard.readText().catch(() => "");
       const p = cb.trim();

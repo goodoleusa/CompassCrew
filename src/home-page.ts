@@ -4,7 +4,7 @@
  * Aligns with the one-plugin philosophy: no external Home Tab plugin required.
  * Settings tab gets a "Home page path" field (default 00-SHARED/Dashboards/00-Home.md).
  * On layout-ready, if no file is active, opens the home page.
- * Also registers `Swarmy: open home` command for manual jump.
+ * Also registers `Reckon: open home` command for manual jump.
  *
  * Graceful degradation: if the configured file doesn't exist, shows a Notice
  * with the configured path so user can fix it; does not crash.
@@ -28,7 +28,7 @@ export async function openHomePage(app: App, settings: HomePageSettings): Promis
   const file = app.vault.getAbstractFileByPath(path);
   if (!file || !(file instanceof TFile)) {
     new Notice(
-      `Swarmy home page not found at "${path}". Set a valid path in plugin Settings → Home Page.`,
+      `Reckon home page not found at "${path}". Set a valid path in plugin Settings → Home Page.`,
       8000,
     );
     return;
@@ -55,8 +55,8 @@ export function registerHomePage(
 
   // Manual jump command
   plugin.addCommand({
-    id: "swarmy-open-home",
-    name: "Swarmy: open home",
+    id: "reckon-open-home",
+    name: "Reckon: open home",
     callback: async () => {
       await openHomePage(plugin.app, getSettings());
     },

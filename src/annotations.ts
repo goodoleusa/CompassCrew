@@ -3,9 +3,8 @@
  * an AI artifact and POSTs to the MCP server for COC capture.
  *
  * Vocabulary lock (task #37): folder = `Human/` (vault root), noun =
- * "annotation". MCP tool name is `swarmy_record_annotation`; we fall
- * back to the legacy `swarmy_record_marginalia` for one release while
- * the swarmy server publishes an alias.
+ * "annotation". MCP contract is `reckon_collab` verb=record_annotation
+ * (content + address).
  */
 import { App, Modal, Notice, Plugin } from "obsidian";
 import * as fs from "fs";
@@ -76,21 +75,13 @@ class AnnotationModal extends Modal {
   onClose() { this.contentEl.empty(); }
 }
 
-async function postAnnotation(baseUrl: string, headers: Record<string, string>, body: any): Promise<{ ok: boolean; status: number; usedLegacy: boolean }> {
+async function postAnnotation(baseUrl: string, headers: Record<string, string>, body: any): Promise<{ ok: boolean; status: number }> {
   const base = baseUrl.replace(/\/+$/, "");
-  // Try new tool name first.
-  let res = await fetch(`${base}/tools/swarmy_record_annotation`, {
+  // Canonical contract: reckon_collab verb=record_annotation (content + address).
+  const res = await fetch(`${base}/tools/reckon_collab`, {
     method: "POST", headers, body: JSON.stringify(body),
   });
-  if (res.ok) return { ok: true, status: res.status, usedLegacy: false };
-  if (res.status === 404 || res.status === 405) {
-    // Legacy fallback (one-release transition window).
-    res = await fetch(`${base}/tools/swarmy_record_marginalia`, {
-      method: "POST", headers, body: JSON.stringify(body),
-    });
-    return { ok: res.ok, status: res.status, usedLegacy: true };
-  }
-  return { ok: false, status: res.status, usedLegacy: false };
+  return { ok: res.ok, status: res.status };
 }
 
 async function maybeOfferMigration(plugin: Plugin) {
@@ -104,7 +95,7 @@ async function maybeOfferMigration(plugin: Plugin) {
   (plugin as any)._annotationMigrationPromptShown = true;
 
   const notice = new Notice(
-    "Swarmy: legacy 00-SHARED/Marginalia/ found. Click to migrate to Human/.",
+    "Reckon: legacy 00-SHARED/Marginalia/ found. Click to migrate to Human/.",
     0,
   );
   // @ts-ignore obsidian's Notice exposes noticeEl
@@ -153,8 +144,8 @@ export function registerAnnotations(
   maybeOfferMigration(plugin);
 
   plugin.addCommand({
-    id: "swarmy-drop-annotation",
-    name: "Swarmy: drop annotation (attach to current note)",
+    id: "reckon-drop-annotation",
+    name: "Reckon: drop annotation (attach to current note)",
     callback: () => {
       const file = plugin.app.workspace.getActiveFile();
       const defaultRef = file ? file.path : "";
@@ -188,16 +179,15 @@ export function registerAnnotations(
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         if (token) headers["Authorization"] = `Bearer ${token}`;
         const body = {
-          annotation_path: path.join(annDir, date, filename),
-          // legacy alias for one transition release
-          marginalia_path: path.join(annDir, date, filename),
-          references: { path: refPath, sha256: sha },
-          note,
+          verb: "record_annotation",
+          content: note,
+          address: path.join(annDir, date, filename),
+          references_ai_artifact: { path: refPath, sha256: sha },
         };
         try {
           const r = await postAnnotation(settings.mcpUrl, headers, body);
           if (r.ok) {
-            new Notice(`Annotation saved + MCP recorded (${filename})${r.usedLegacy ? " [legacy tool name]" : ""}.`);
+            new Notice(`Annotation saved + MCP recorded (${filename}).`);
           } else {
             new Notice(`Annotation saved locally; MCP POST failed: ${r.status}`, 6000);
           }
@@ -210,10 +200,10 @@ export function registerAnnotations(
 
   // Back-compat command id (so existing user keybindings keep working).
   plugin.addCommand({
-    id: "swarmy-add-margin-note",
-    name: "Swarmy: add margin note (deprecated alias)",
+    id: "reckon-add-margin-note",
+    name: "Reckon: add margin note (deprecated alias)",
     callback: () => {
-      (plugin as any).app.commands.executeCommandById(`${plugin.manifest.id}:swarmy-drop-annotation`);
+      (plugin as any).app.commands.executeCommandById(`${plugin.manifest.id}:reckon-drop-annotation`);
     },
   });
 }

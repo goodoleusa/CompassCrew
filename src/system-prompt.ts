@@ -1,14 +1,14 @@
 import { App, Notice, Plugin } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
-import { DEMO_BEARER } from "./mcp-bridge";
+import { DEMO_BEARER, RECKON_SIGNUP_URL } from "./mcp-bridge";
 
 /**
  * System-prompt round-trip flow:
  *
- *   swarmy/prompts/system/swarmy.njk
+ *   reckon/prompts/system/reckon.njk
  *           │
- *           │  (1) "Swarmy: import system prompt"
+ *           │  (1) "Reckon: import system prompt"
  *           ▼
  *   vault/00-SHARED/SystemPrompts/<name>.md  (mirror, with frontmatter)
  *           │
@@ -16,27 +16,27 @@ import { DEMO_BEARER } from "./mcp-bridge";
  *           ▼
  *   vault/Human/<date>/a-*.md  (linked back to source)
  *           │
- *           │  (3) "Swarmy: push prompt back" → POST swarmy_update_system_prompt
+ *           │  (3b) "Reckon: push prompt back" → POST reckon_prompt verb=update
  *           ▼
- *   swarmy repo branch + PR  (commit-only, never pushed without user)
+ *   reckon repo branch + PR  (commit-only, never pushed without user)
  *           │
  *           │  (4) Next session reads updated prompt
  *           ▼
  *   loop closed.
  *
- * The plugin never writes to swarmy directly. It hands the assembled diff
+ * The plugin never writes to reckon directly. It hands the assembled diff
  * + annotations to the MCP tool and lets the server-side perform the git
  * operation under user-controlled credentials.
  */
 
 export interface SystemPromptSettings {
-  promptsDir: string;       // absolute path to swarmy/prompts/system
+  promptsDir: string;       // absolute path to reckon/prompts/system
   mcpUrl: string;
   tokenPath: string;
 }
 
 export const DEFAULT_SYSTEM_PROMPT_SETTINGS: SystemPromptSettings = {
-  promptsDir: "/mnt/d/0local/gitrepos/swarmy/prompts/system",
+  promptsDir: "/mnt/d/0local/gitrepos/reckon/prompts/system",
   mcpUrl: "http://localhost:8765",
   tokenPath: ".swarmy-token",
 };
@@ -58,8 +58,8 @@ function readToken(app: App, s: SystemPromptSettings): string {
 
 export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPromptSettings) {
   plugin.addCommand({
-    id: "swarmy-import-system-prompt",
-    name: "Swarmy: import system prompt (mirror into vault)",
+    id: "reckon-import-system-prompt",
+    name: "Reckon: import system prompt (mirror into vault)",
     callback: async () => {
       const s = getSettings();
       if (!fs.existsSync(s.promptsDir)) {
@@ -83,7 +83,7 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
           "---",
           "",
           "> [!propolis] Source-of-truth mirror",
-          `> Canonical file: \`prompts/system/${f}\` in **swarmy**. Annotate via Human annotations (CMD+Shift+M). Push edits back with \`Swarmy: push prompt back\`.`,
+          `> Canonical file: \`prompts/system/${f}\` in **reckon**. Annotate via Human annotations (CMD+Shift+M). Push edits back with \`Reckon: push prompt back\`.`,
           "",
           "```njk",
           src,
@@ -98,8 +98,8 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
   });
 
   plugin.addCommand({
-    id: "swarmy-push-system-prompt",
-    name: "Swarmy: push prompt back (annotations → MCP → swarmy PR)",
+    id: "reckon-push-system-prompt",
+    name: "Reckon: push prompt back (annotations → MCP → reckon PR)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a system-prompt mirror note first."); return; }
@@ -110,7 +110,7 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
 
       const s = getSettings();
       const token = readToken(plugin.app, s);
-      const url = s.mcpUrl.replace(/\/+$/, "") + "/tools/swarmy_update_system_prompt";
+      const url = s.mcpUrl.replace(/\/+$/, "") + "/tools/reckon_prompt";
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
@@ -124,22 +124,21 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
           method: "POST",
           headers,
           body: JSON.stringify({
-            prompt_file: promptFile,
-            proposed_body: proposed,
-            mirror_note_path: file.path,
-            human_id: process.env.USER || process.env.USERNAME || "obsidian",
+            verb: "update",
+            prompt_name: promptFile,
+            new_content: proposed,
           }),
         });
         if (!r.ok) { new Notice(`Push failed: ${r.status}`, 8000); return; }
         const data = await r.json();
         if (data?.error_type === "tier_gate") {
           new Notice(
-            `Sign-in required to push prompts.\nUpgrade: ${data.upgrade_url || "https://swarmy.retrofuture.tech/signup"}`,
+            `Sign-in required to push prompts.\nUpgrade: ${data.upgrade_url || RECKON_SIGNUP_URL}`,
             10000
           );
           return;
         }
-        new Notice("Prompt update submitted — MCP will open PR on swarmy.");
+        new Notice("Prompt update submitted — MCP will open PR on reckon.");
       } catch (e) {
         new Notice(`MCP unreachable: ${(e as Error).message}`, 8000);
       }
@@ -147,18 +146,18 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
   });
 
   /**
-   * "Push system prompt to session" — D3 hive command.
+   * "Push system prompt to session" — D3 reckon command.
    *
    * Reads the current note (must be in OH-System-Prompts/ or 00-SHARED/SystemPrompts/).
-   * Calls swarmy_prompt verb=update via MCP to write back to the .njk file and
+   * Calls reckon_prompt verb=update via MCP to write back to the .njk file and
    * broadcast a reload signal so active OH sessions pick up the new prompt on
    * the next agent turn.
    *
    * On tier_gate (demo or free caller) — shows the upgrade prompt modal.
    */
   plugin.addCommand({
-    id: "swarmy-push-system-prompt-to-session",
-    name: "Swarmy: push system prompt to OH session (pro required)",
+    id: "reckon-push-system-prompt-to-session",
+    name: "Reckon: push system prompt to OH session (pro required)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open an OH-System-Prompts note first."); return; }
@@ -188,7 +187,7 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
 
       const s = getSettings();
       const token = readToken(plugin.app, s);
-      const url = s.mcpUrl.replace(/\/+$/, "") + "/tools/swarmy_prompt";
+      const url = s.mcpUrl.replace(/\/+$/, "") + "/tools/reckon_prompt";
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
@@ -209,7 +208,7 @@ export function registerSystemPrompt(plugin: Plugin, getSettings: () => SystemPr
         if (data?.error_type === "tier_gate") {
           new Notice(
             `Pro subscription required to push system prompts to OH sessions.\n` +
-            `Upgrade at: ${data.upgrade_url || "https://swarmy.retrofuture.tech/signup"}`,
+            `Upgrade at: ${data.upgrade_url || RECKON_SIGNUP_URL}`,
             12000
           );
           return;

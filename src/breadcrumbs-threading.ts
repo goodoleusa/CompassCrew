@@ -102,8 +102,8 @@ export function registerBreadcrumbsThreading(
   getEmitAliases: () => boolean = () => true,
 ) {
   plugin.addCommand({
-    id: "swarmy-thread-add",
-    name: "Swarmy: add Breadcrumbs thread link (bearing → up/next/same)",
+    id: "reckon-thread-add",
+    name: "Reckon: add Breadcrumbs thread link (bearing → up/next/same)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
@@ -116,16 +116,16 @@ export function registerBreadcrumbsThreading(
     },
   });
 
-  (plugin as any).swarmyAddBreadcrumb = async (file: TFile, bearing: Bearing, dest: string) => {
+  (plugin as any).reckonAddBreadcrumb = async (file: TFile, bearing: Bearing, dest: string) => {
     if (!isBearing(bearing)) return;
     await addBreadcrumbThread(plugin.app, file, bearing, dest, getEmitAliases());
   };
 
-  (plugin as any).swarmyReadBearings = (file: TFile) => readBearingFrontmatter(plugin.app, file);
+  (plugin as any).reckonReadBearings = (file: TFile) => readBearingFrontmatter(plugin.app, file);
 
   plugin.addCommand({
-    id: "swarmy-thread-open",
-    name: "Swarmy: open Breadcrumbs trail view",
+    id: "reckon-thread-open",
+    name: "Reckon: open Breadcrumbs trail view",
     callback: () => {
       const anyApp = plugin.app as any;
       const candidates = ["breadcrumbs:open-trail-view", "breadcrumbs:show-trail", "breadcrumbs:open-matrix-view"];
@@ -135,7 +135,7 @@ export function registerBreadcrumbsThreading(
           return;
         }
       }
-      new Notice("Breadcrumbs plugin command not found. Install/enable breadcrumbs (run Swarmy: doctor).", 8000);
+      new Notice("Breadcrumbs plugin command not found. Install/enable breadcrumbs (run Reckon: doctor).", 8000);
     },
   });
 }

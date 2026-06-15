@@ -27,7 +27,7 @@ export interface Ontology {
 }
 
 export const DEFAULT_ONTOLOGY: Ontology = {
-  name: "swarmy",
+  name: "reckon",
   bearings: {
     N: { label: "N — unblock predecessor", color: "#C73E1D", glyph: "↑", role: "North — unblock predecessor (reverse-dependency, upstream anchor)" },
     S: { label: "S — conclude downstream", color: "#2E8540", glyph: "↓", role: "South — conclude / ship downstream (forward-dependency, next deliverable)" },
@@ -35,7 +35,7 @@ export const DEFAULT_ONTOLOGY: Ontology = {
     W: { label: "W — return to baseline",  color: "#FFB300", glyph: "←", role: "West — return to baseline / re-seat assumptions (backtrack to HQ)" },
   },
   callouts: [],
-  blueprint_pack: "swarmy",
+  blueprint_pack: "reckon",
 };
 
 let ACTIVE: Ontology = JSON.parse(JSON.stringify(DEFAULT_ONTOLOGY));
@@ -198,7 +198,7 @@ function coerceOntology(raw: any): Ontology {
 }
 
 function vaultRoot(app: App): string { return (app.vault.adapter as unknown as { basePath: string }).basePath; }
-function ontologyPath(app: App): string { return path.join(vaultRoot(app), ".hive", "ontology.yaml"); }
+function ontologyPath(app: App): string { return path.join(vaultRoot(app), ".reckon", "ontology.yaml"); }
 
 export function loadOntologyFromVault(app: App): Ontology {
   const p = ontologyPath(app);

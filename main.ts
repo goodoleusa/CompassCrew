@@ -1,5 +1,5 @@
 import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
-import HivePdfPlugin from "./src/pdf-export";
+import ReckonPdfPlugin from "./src/pdf-export";
 import { registerDepOrchestrator } from "./src/dep-orchestrator";
 import {
   registerBlueprintEngine,
@@ -18,7 +18,7 @@ import {
   registerMcpBridge,
   DEFAULT_MCP_BRIDGE_SETTINGS,
   McpBridgeSettings,
-  VIEW_TYPE_SWARMY_LIVE,
+  VIEW_TYPE_RECKON_LIVE,
 } from "./src/mcp-bridge";
 import { registerFileDecorator } from "./src/file-decorator";
 import { registerQuickAddMacros } from "./src/quickadd-macros";
@@ -32,7 +32,7 @@ import {
   DEFAULT_SPIDERFOOT_SETTINGS,
   SpiderfootSettings,
 } from "./src/spiderfoot";
-import { registerChatPanel, VIEW_TYPE_SWARMY_CHAT } from "./src/chat-panel";
+import { registerChatPanel, VIEW_TYPE_RECKON_CHAT } from "./src/chat-panel";
 import { registerExcalidrawSetup } from "./src/excalidraw-setup";
 import { registerCanvasRecursive } from "./src/canvas-recursive";
 import { registerDesignFolder } from "./src/design-folder";
@@ -65,7 +65,7 @@ import {
   LATTICEWORK_STYLES,
 } from "./src/latticework";
 
-interface HiveSettings extends
+interface ReckonSettings extends
   BlueprintSettings,
   AnnotationSettings,
   McpBridgeSettings,
@@ -78,7 +78,7 @@ interface HiveSettings extends
   // PDF settings live on the parent class.
 }
 
-const DEFAULT_HIVE_SETTINGS: HiveSettings = {
+const DEFAULT_RECKON_SETTINGS: ReckonSettings = {
   ...DEFAULT_BLUEPRINT_SETTINGS,
   ...DEFAULT_ANNOTATION_SETTINGS,
   ...DEFAULT_MCP_BRIDGE_SETTINGS,
@@ -91,18 +91,18 @@ const DEFAULT_HIVE_SETTINGS: HiveSettings = {
 };
 
 /**
- * Hive — the unified Swarmy Obsidian orchestrator.
+ * Reckon — the unified Reckon Obsidian orchestrator.
  *
- * Extends the existing HivePdfPlugin so the PDF export commands keep working
+ * Extends the existing ReckonPdfPlugin so the PDF export commands keep working
  * untouched. All new feature modules are wired in `onload()` after the
  * superclass has booted.
  */
-export default class HivePlugin extends HivePdfPlugin {
-  hiveSettings!: HiveSettings;
+export default class ReckonPlugin extends ReckonPdfPlugin {
+  reckonSettings!: ReckonSettings;
 
   async onload() {
     await super.onload();
-    await this.loadHiveSettings();
+    await this.loadReckonSettings();
 
     // Initialize pluggable ontology (display layer for NSEW bearings) BEFORE
     // any UI module reads BEARING_LABEL/COLOR/GLYPH. The internal data model
@@ -116,13 +116,13 @@ export default class HivePlugin extends HivePdfPlugin {
     const vaultRoot = (this.app.vault.adapter as any).basePath as string;
     const pluginDir = this.manifest.dir ?? `.obsidian/plugins/${this.manifest.id}`;
     const bundledBlueprints = `${vaultRoot}/${pluginDir}/Blueprints`;
-    this.hiveSettings.swarmyRepoBlueprintsDir = this.hiveSettings.swarmyRepoBlueprintsDir || bundledBlueprints;
+    this.reckonSettings.reckonRepoBlueprintsDir = this.reckonSettings.reckonRepoBlueprintsDir || bundledBlueprints;
 
-    const getHiveSettings = () => this.hiveSettings;
+    const getReckonSettings = () => this.reckonSettings;
 
     registerDepOrchestrator(this);
-    registerBlueprintEngine(this, getHiveSettings);
-    registerBreadcrumbsThreading(this, () => this.hiveSettings.emitBreadcrumbsAliases);
+    registerBlueprintEngine(this, getReckonSettings);
+    registerBreadcrumbsThreading(this, () => this.reckonSettings.emitBreadcrumbsAliases);
     registerTrailRefs(this);
     registerLatticework(this);
     // Inject Latticework CSS so chip styles render without requiring
@@ -132,23 +132,23 @@ export default class HivePlugin extends HivePdfPlugin {
     lwStyle.textContent = LATTICEWORK_STYLES;
     document.head.appendChild(lwStyle);
     this.register(() => lwStyle.remove());
-    registerAnnotations(this, getHiveSettings);
+    registerAnnotations(this, getReckonSettings);
     registerCompassOverlay(this);
-    registerMcpBridge(this, getHiveSettings);
+    registerMcpBridge(this, getReckonSettings);
     registerFileDecorator(this);
     registerQuickAddMacros(this);
-    registerSystemPrompt(this, getHiveSettings);
-    registerSpiderfoot(this, getHiveSettings);
+    registerSystemPrompt(this, getReckonSettings);
+    registerSpiderfoot(this, getReckonSettings);
     registerChatPanel(this,
-      () => this.hiveSettings.mcpUrl,
-      () => this.hiveSettings.tokenPath,
+      () => this.reckonSettings.mcpUrl,
+      () => this.reckonSettings.tokenPath,
     );
     registerExcalidrawSetup(this);
     registerCanvasRecursive(this);
     registerDesignFolder(this);
     registerCharterDashboard(this,
-      () => this.hiveSettings.mcpUrl,
-      () => this.hiveSettings.tokenPath,
+      () => this.reckonSettings.mcpUrl,
+      () => this.reckonSettings.tokenPath,
     );
     registerBreadcrumbsOnboarding(this);
     registerOntologyCommands(this);
@@ -157,13 +157,13 @@ export default class HivePlugin extends HivePdfPlugin {
     registerTokenGrabber(this);
     registerMermaidCompass(this);
     registerNativePdfExport(this);
-    registerLinter(this, getHiveSettings, () => this.saveHiveSettings());
+    registerLinter(this, getReckonSettings, () => this.saveReckonSettings());
     registerMetaBind(this);
     registerHomePage(
       this,
-      getHiveSettings,
+      getReckonSettings,
       async () => {
-        await this.saveHiveSettings();
+        await this.saveReckonSettings();
       },
     );
 
@@ -210,7 +210,7 @@ export default class HivePlugin extends HivePdfPlugin {
         });
         if (replaced !== text) {
           const span = document.createElement("span");
-          span.className = "swarmy-inline-dataview";
+          span.className = "reckon-inline-dataview";
           span.textContent = replaced;
           node.parentNode?.replaceChild(span, node);
         }
@@ -220,7 +220,7 @@ export default class HivePlugin extends HivePdfPlugin {
     // Auto-render a Breadcrumbs relations banner at the top of any note
     // that has up/down/same/prev (or NSEW aliases) in frontmatter. This
     // replaces the vendored "matrix view" — the part of Breadcrumbs the
-    // swarmy vault actually relies on.
+    // reckon vault actually relies on.
     this.registerMarkdownPostProcessor((el, ctx) => {
       // Only render once per top-level section.
       if (!el.querySelector("h1, h2, h3, p, ul, ol")) return;
@@ -229,7 +229,7 @@ export default class HivePlugin extends HivePdfPlugin {
       // Only render if this is the first chunk of the document (avoid
       // injecting the banner before every section).
       const root = el.closest(".markdown-preview-section, .markdown-reading-view");
-      if (root && root.querySelector(".swarmy-breadcrumbs-block")) return;
+      if (root && root.querySelector(".reckon-breadcrumbs-block")) return;
       const rel = getRelations(this.app, file as any);
       const html = renderRelations(rel, "Breadcrumbs");
       if (!html) return;
@@ -238,82 +238,93 @@ export default class HivePlugin extends HivePdfPlugin {
       el.insertBefore(banner, el.firstChild);
     });
 
-    this.addSettingTab(new HiveSettingTab(this.app, this));
+    this.addSettingTab(new ReckonSettingTab(this.app, this));
 
-    new Notice("Swarmy v2.0.0 ready — run 'Swarmy: doctor' to check dependencies.", 5000);
+    new Notice("Reckon v2.0.0 ready — run 'Reckon: doctor' to check dependencies.", 5000);
   }
 
-  async loadHiveSettings() {
+  async loadReckonSettings() {
     const data = (await this.loadData()) || {};
-    this.hiveSettings = Object.assign({}, DEFAULT_HIVE_SETTINGS, data.hive || {});
+    // Settings persist under `data.reckon`. Migration: a vault that ran the
+    // pre-rebrand plugin stored them under the legacy `data.hive` key — read
+    // that as a fallback so existing users keep their configuration.
+    const persisted = data.reckon ?? data.hive ?? {};
+    this.reckonSettings = Object.assign({}, DEFAULT_RECKON_SETTINGS, persisted);
+
+    // Environment override for the MCP endpoint. RECKON_MCP_URL is the
+    // preferred variable; SWARMY_MCP_URL is honored as a deprecated alias so
+    // pre-rebrand operator configs keep working. An explicit env var wins over
+    // the persisted/default setting; if neither is set the saved value stands.
+    const envMcpUrl = process.env.RECKON_MCP_URL || process.env.SWARMY_MCP_URL;
+    if (envMcpUrl) this.reckonSettings.mcpUrl = envMcpUrl;
   }
 
-  async saveHiveSettings() {
+  async saveReckonSettings() {
     const data = (await this.loadData()) || {};
-    data.hive = this.hiveSettings;
+    data.reckon = this.reckonSettings;
     await this.saveData(data);
   }
 
   // Convenience getter so QuickAdd macros can fish out MCP url from
-  // `app.plugins.plugins["hive"].settings`.
-  get settings(): HiveSettings { return this.hiveSettings; }
+  // `app.plugins.plugins["reckon"].settings`.
+  get settings(): ReckonSettings { return this.reckonSettings; }
 }
 
-class HiveSettingTab extends PluginSettingTab {
-  constructor(app: App, private plugin: HivePlugin) { super(app, plugin); }
+class ReckonSettingTab extends PluginSettingTab {
+  constructor(app: App, private plugin: ReckonPlugin) { super(app, plugin); }
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Hive — Swarmy Orchestrator" });
+    containerEl.createEl("h2", { text: "Reckon — Orchestrator" });
 
     new Setting(containerEl)
       .setName("Blueprints directory (vault-relative)")
       .setDesc("Primary blueprint folder inside the vault. Plugin-bundled blueprints in Blueprints/ are also available.")
-      .addText((t) => t.setValue(this.plugin.hiveSettings.blueprintsDir)
-        .onChange(async (v) => { this.plugin.hiveSettings.blueprintsDir = v; await this.plugin.saveHiveSettings(); }));
+      .addText((t) => t.setValue(this.plugin.reckonSettings.blueprintsDir)
+        .onChange(async (v) => { this.plugin.reckonSettings.blueprintsDir = v; await this.plugin.saveReckonSettings(); }));
 
     new Setting(containerEl)
       .setName("Bundled Blueprints absolute path")
-      .setDesc("Auto-resolved to plugin's Blueprints/ folder. Override to point at a swarmy prompts dir if you want.")
-      .addText((t) => t.setValue(this.plugin.hiveSettings.swarmyRepoBlueprintsDir || "")
-        .onChange(async (v) => { this.plugin.hiveSettings.swarmyRepoBlueprintsDir = v; await this.plugin.saveHiveSettings(); }));
+      .setDesc("Auto-resolved to plugin's Blueprints/ folder. Override to point at a reckon prompts dir if you want.")
+      .addText((t) => t.setValue(this.plugin.reckonSettings.reckonRepoBlueprintsDir || "")
+        .onChange(async (v) => { this.plugin.reckonSettings.reckonRepoBlueprintsDir = v; await this.plugin.saveReckonSettings(); }));
 
     new Setting(containerEl)
       .setName("MCP URL")
-      .setDesc("Swarmy MCP server base URL")
-      .addText((t) => t.setValue(this.plugin.hiveSettings.mcpUrl)
+      .setDesc("Reckon MCP server base URL")
+      .addText((t) => t.setValue(this.plugin.reckonSettings.mcpUrl)
         .onChange(async (v) => {
-          this.plugin.hiveSettings.mcpUrl = v;
-          await this.plugin.saveHiveSettings();
+          this.plugin.reckonSettings.mcpUrl = v;
+          await this.plugin.saveReckonSettings();
         }));
 
     new Setting(containerEl)
       .setName("MCP token path (vault-relative)")
       .setDesc("File containing the bearer token. Should be gitignored.")
-      .addText((t) => t.setValue(this.plugin.hiveSettings.tokenPath)
-        .onChange(async (v) => { this.plugin.hiveSettings.tokenPath = v; await this.plugin.saveHiveSettings(); }));
+      .addText((t) => t.setValue(this.plugin.reckonSettings.tokenPath)
+        .onChange(async (v) => { this.plugin.reckonSettings.tokenPath = v; await this.plugin.saveReckonSettings(); }));
 
     new Setting(containerEl)
       .setName("Human folder (vault-relative)")
       .setDesc("Where annotations are written. Default: Human/ (vault root). Renamed from 'Marginalia folder'.")
-      .addText((t) => t.setValue(this.plugin.hiveSettings.annotationsDir)
-        .onChange(async (v) => { this.plugin.hiveSettings.annotationsDir = v || "Human"; await this.plugin.saveHiveSettings(); }));
+      .addText((t) => t.setValue(this.plugin.reckonSettings.annotationsDir)
+        .onChange(async (v) => { this.plugin.reckonSettings.annotationsDir = v || "Human"; await this.plugin.saveReckonSettings(); }));
 
     new Setting(containerEl)
       .setName("MCP refresh seconds (Live pane)")
-      .addText((t) => t.setValue(String(this.plugin.hiveSettings.refreshSeconds))
-        .onChange(async (v) => { this.plugin.hiveSettings.refreshSeconds = parseInt(v) || 60; await this.plugin.saveHiveSettings(); }));
+      .addText((t) => t.setValue(String(this.plugin.reckonSettings.refreshSeconds))
+        .onChange(async (v) => { this.plugin.reckonSettings.refreshSeconds = parseInt(v) || 60; await this.plugin.saveReckonSettings(); }));
 
     new Setting(containerEl)
-      .setName("System prompts dir (absolute, swarmy repo)")
-      .addText((t) => t.setValue(this.plugin.hiveSettings.promptsDir)
-        .onChange(async (v) => { this.plugin.hiveSettings.promptsDir = v; await this.plugin.saveHiveSettings(); }));
+      .setName("System prompts dir (absolute, reckon repo)")
+      .addText((t) => t.setValue(this.plugin.reckonSettings.promptsDir)
+        .onChange(async (v) => { this.plugin.reckonSettings.promptsDir = v; await this.plugin.saveReckonSettings(); }));
 
     new Setting(containerEl)
       .setName("Emit Breadcrumbs aliases (up/next/same)")
       .setDesc("Write canonical N/S/E/W keys AND legacy Breadcrumbs aliases. Disable to keep frontmatter NSEW-only.")
-      .addToggle((t) => t.setValue(this.plugin.hiveSettings.emitBreadcrumbsAliases)
-        .onChange(async (v) => { this.plugin.hiveSettings.emitBreadcrumbsAliases = v; await this.plugin.saveHiveSettings(); }));
+      .addToggle((t) => t.setValue(this.plugin.reckonSettings.emitBreadcrumbsAliases)
+        .onChange(async (v) => { this.plugin.reckonSettings.emitBreadcrumbsAliases = v; await this.plugin.saveReckonSettings(); }));
 
     // Plugin health
     containerEl.createEl("h3", { text: "Plugin Health" });
@@ -321,54 +332,54 @@ class HiveSettingTab extends PluginSettingTab {
       .setName("Health check")
       .setDesc("Verify required plugins are installed and no forbidden plugins are present.")
       .addButton((b) => b.setButtonText("🐝 Run doctor").onClick(() => {
-        (this.app as any).commands.executeCommandById("hive:swarmy-doctor");
+        (this.app as any).commands.executeCommandById("reckon:reckon-doctor");
       }));
     new Setting(containerEl)
       .setName("Install canonical configs")
-      .setDesc("Push linter + breadcrumbs configs from vault and enable all swarmy-*.css snippets.")
+      .setDesc("Push linter + breadcrumbs configs from vault and enable all reckon-*.css snippets.")
       .addButton((b) => b.setButtonText("⬇ Install configs").onClick(() => {
-        (this.app as any).commands.executeCommandById("hive:swarmy-install-canonical-configs");
+        (this.app as any).commands.executeCommandById("reckon:reckon-install-canonical-configs");
       }));
 
     // MCP token grab UI.
     containerEl.createEl("h3", { text: "MCP Token" });
-    const fpEl = containerEl.createEl("div", { cls: "swarmy-token-fingerprint", text: "Loading token fingerprint…" });
+    const fpEl = containerEl.createEl("div", { cls: "reckon-token-fingerprint", text: "Loading token fingerprint…" });
     getTokenFingerprint(this.app).then((fp) => {
       if (!fp) { fpEl.setText("No token saved."); return; }
       const when = fp.lastModified ? new Date(fp.lastModified).toISOString().slice(0, 10) : "?";
       fpEl.setText(`Token: ${fp.short}… sha8=${fp.sha8} (rotated ${when})`);
     });
     new Setting(containerEl)
-      .setName("Grab token from swarmy")
+      .setName("Grab token from reckon")
       .setDesc("Opens swarmy.retrofuture.tech and writes .swarmy-token / .swarmy-user-key on callback.")
-      .addButton((b) => b.setButtonText("🐝 Grab token from swarmy").onClick(() => {
-        (this.app as any).commands.executeCommandById("hive:swarmy-token-grab");
+      .addButton((b) => b.setButtonText("🐝 Grab token from reckon").onClick(() => {
+        (this.app as any).commands.executeCommandById("reckon:reckon-token-grab");
       }));
     new Setting(containerEl)
       .setName("Rotate token")
       .setDesc("Calls swarmy_token_rotate via the configured MCP URL.")
       .addButton((b) => b.setButtonText("Rotate token").onClick(() => {
-        (this.app as any).commands.executeCommandById("hive:swarmy-token-rotate");
+        (this.app as any).commands.executeCommandById("reckon:reckon-token-rotate");
       }));
 
     // Linter settings (vendored, no external plugin needed).
     renderLinterSettings(
       containerEl,
-      () => this.plugin.hiveSettings,
-      () => this.plugin.saveHiveSettings(),
+      () => this.plugin.reckonSettings,
+      () => this.plugin.saveReckonSettings(),
     );
 
     // Home page settings (vendored — vault opens to a configurable home).
     renderHomePageSettings(
       containerEl,
-      () => this.plugin.hiveSettings,
+      () => this.plugin.reckonSettings,
       async (next) => {
-        Object.assign(this.plugin.hiveSettings, next);
-        await this.plugin.saveHiveSettings();
+        Object.assign(this.plugin.reckonSettings, next);
+        await this.plugin.saveReckonSettings();
       },
     );
   }
 }
 
 // Re-export view types for completeness.
-export { VIEW_TYPE_SWARMY_LIVE, VIEW_TYPE_SWARMY_CHAT };
+export { VIEW_TYPE_RECKON_LIVE, VIEW_TYPE_RECKON_CHAT };

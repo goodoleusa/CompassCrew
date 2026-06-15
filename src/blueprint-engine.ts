@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Vendored micro-Nunjucks renderer — zero npm dependencies. Supports the
-// subset of Nunjucks syntax actually used by Hive blueprints: variables,
+// subset of Nunjucks syntax actually used by Reckon blueprints: variables,
 // dotted paths, default/upper/lower/length/join/replace/date filters,
 // {% if %} {% else %} {% endif %}, {% for x in xs %} {% endfor %}, and
 // {% set %}. See src/vendor/micro-njk.ts.
@@ -11,7 +11,7 @@ import { renderString as microNjkRender } from "./vendor/micro-njk";
 
 export interface BlueprintSettings {
   blueprintsDir: string; // vault-relative
-  swarmyRepoBlueprintsDir?: string; // absolute path to swarmy blueprints (optional override)
+  reckonRepoBlueprintsDir?: string; // absolute path to reckon blueprints (optional override)
 }
 
 export const DEFAULT_BLUEPRINT_SETTINGS: BlueprintSettings = {
@@ -28,9 +28,9 @@ function listBlueprints(app: App, settings: BlueprintSettings): string[] {
   if (fs.existsSync(v)) {
     for (const f of fs.readdirSync(v)) if (f.endsWith(".njk")) candidates.push(path.join(v, f));
   }
-  if (settings.swarmyRepoBlueprintsDir && fs.existsSync(settings.swarmyRepoBlueprintsDir)) {
-    for (const f of fs.readdirSync(settings.swarmyRepoBlueprintsDir))
-      if (f.endsWith(".njk")) candidates.push(path.join(settings.swarmyRepoBlueprintsDir, f));
+  if (settings.reckonRepoBlueprintsDir && fs.existsSync(settings.reckonRepoBlueprintsDir)) {
+    for (const f of fs.readdirSync(settings.reckonRepoBlueprintsDir))
+      if (f.endsWith(".njk")) candidates.push(path.join(settings.reckonRepoBlueprintsDir, f));
   }
   return candidates;
 }
@@ -88,8 +88,8 @@ export function registerBlueprintEngine(
   };
 
   plugin.addCommand({
-    id: "swarmy-apply-blueprint",
-    name: "Swarmy: apply blueprint to current note",
+    id: "reckon-apply-blueprint",
+    name: "Reckon: apply blueprint to current note",
     checkCallback: (checking: boolean) => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file || file.extension !== "md") return false;
@@ -118,8 +118,8 @@ export function registerBlueprintEngine(
   });
 
   plugin.addCommand({
-    id: "swarmy-render-blueprint-clipboard",
-    name: "Swarmy: render blueprint to clipboard",
+    id: "reckon-render-blueprint-clipboard",
+    name: "Reckon: render blueprint to clipboard",
     callback: () => {
       const items = listBlueprints(plugin.app, getSettings());
       if (!items.length) {
@@ -136,8 +136,8 @@ export function registerBlueprintEngine(
   });
 
   plugin.addCommand({
-    id: "swarmy-apply-blueprint-folder",
-    name: "Swarmy: apply blueprint to folder (current note's folder)",
+    id: "reckon-apply-blueprint-folder",
+    name: "Reckon: apply blueprint to folder (current note's folder)",
     callback: () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
