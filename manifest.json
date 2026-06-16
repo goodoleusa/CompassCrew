@@ -1,10 +1,10 @@
 {
   "id": "reckon",
-  "name": "Reckon — Orchestrator",
+  "name": "Reckon — Steer Your AI Fleet",
   "version": "2.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Unified Reckon orchestrator: PDF export (WSL pipeline + native print fallback), blueprint engine (Nunjucks), trail-refs with bearings, annotations → MCP loop, compass overlay (mermaid built-in; ExcaliBrain optional), dependency doctor, MCP bridge side panel, vendored Breadcrumbs + Dataview subsets, visual-language callouts, QuickAdd macros. One plugin, zero mandatory peers (Excalidraw + ExcaliBrain are optional). Turns the vault into a creative cognitive substrate.",
-  "author": "goodoleusa / Persistech",
+  "description": "Mission control for AI in Obsidian. Spawn agent crews, draw your knowledge on a recursive canvas, steer in real-time, and navigate your vault by bearings. One plugin, zero mandatory peers.",
+  "author": "goodoleusa",
   "authorUrl": "https://github.com/goodoleusa/reckon-vault-plugin",
   "isDesktopOnly": true
 }
