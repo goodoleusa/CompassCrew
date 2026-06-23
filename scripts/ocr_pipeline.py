@@ -3,6 +3,12 @@
 OCR pipeline for hypnosis corpus PDFs.
 Extracts text from image-based PDFs using tesseract + pymupdf.
 Preserves chapter structure and diacritics.
+
+Enhanced with ocrmypdf support for creating searchable PDFs.
+
+Usage:
+    python ocr_pipeline.py --pdf-dir <dir> --output-base <dir>
+    python ocr_pipeline.py --pdf-dir <dir> --output-base <dir> --enhance --output-pdf searchable.pdf
 """
 import fitz  # pymupdf
 import pytesseract
@@ -18,6 +24,41 @@ def ocr_page(page, dpi=DPI):
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     text = pytesseract.image_to_string(img, lang='eng')
     return text.strip()
+
+
+def enhance_pdf_with_ocr(input_pdf, output_pdf, dpi=DPI):
+    """Use ocrmypdf to add OCR layer to PDF, creating a searchable PDF.
+    
+    Args:
+        input_pdf: Path to input PDF
+        output_pdf: Path to output searchable PDF
+        dpi: DPI for OCR rendering
+    """
+    try:
+        import ocrmypdf
+        
+        print(f"  Enhancing PDF with OCR: {os.path.basename(input_pdf)}")
+        print(f"  Output: {output_pdf}")
+        
+        ocrmypdf.ocr(
+            input_pdf,
+            output_pdf,
+            language='eng',
+            dpi=dpi,
+            optimize=1,
+            progress_bar=True,
+            skip_text=True,  # Skip pages that already have text
+        )
+        
+        print(f"  Searchable PDF created: {output_pdf}")
+        return True
+        
+    except ImportError:
+        print("  Error: ocrmypdf not installed. Install with: pip install ocrmypdf")
+        return False
+    except Exception as e:
+        print(f"  Error enhancing PDF: {e}")
+        return False
 
 def extract_pdf(pdf_path, output_dir, slug):
     """Extract text from PDF, using OCR for image-only pages."""
@@ -105,10 +146,24 @@ def extract_pdf(pdf_path, output_dir, slug):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='OCR pipeline for hypnosis PDFs')
+    parser = argparse.ArgumentParser(
+        description='OCR pipeline for hypnosis PDFs with optional PDF enhancement',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --pdf-dir ./pdfs --output-base ./output
+  %(prog)s --pdf-dir ./pdfs --output-base ./output --enhance
+  %(prog)s --pdf-dir ./pdfs --output-base ./output --enhance --output-pdf searchable.pdf
+  %(prog)s --pdf-dir ./pdfs --output-base ./output --slug-map slugs.json
+        """
+    )
     parser.add_argument('--pdf-dir', required=True, help='Directory containing PDFs')
     parser.add_argument('--output-base', required=True, help='Base output directory')
     parser.add_argument('--slug-map', help='JSON mapping PDF filenames to slugs')
+    parser.add_argument('--enhance', action='store_true',
+                        help='Use ocrmypdf to create searchable PDF with OCR layer')
+    parser.add_argument('--output-pdf', help='Path for OCR-enhanced PDF (used with --enhance)')
+    parser.add_argument('--dpi', type=int, default=300, help='DPI for OCR rendering (default: 300)')
     args = parser.parse_args()
     
     pdf_dir = args.pdf_dir
@@ -137,11 +192,35 @@ if __name__ == '__main__':
         result = extract_pdf(pdf_path, output_dir, slug)
         result['slug'] = slug
         result['pdf'] = pdf_file
+        
+        # Enhance PDF with OCR if requested
+        if args.enhance:
+            if args.output_pdf:
+                # If output_pdf is a directory, create PDF there with original name
+                if os.path.isdir(args.output_pdf) or args.output_pdf.endswith('/'):
+                    os.makedirs(args.output_pdf, exist_ok=True)
+                    enhanced_pdf_path = os.path.join(args.output_pdf, f"enhanced_{pdf_file}")
+                else:
+                    enhanced_pdf_path = args.output_pdf
+                    # If processing multiple PDFs, append slug to avoid overwriting
+                    if len([f for f in os.listdir(pdf_dir) if f.endswith('.pdf')]) > 1:
+                        base, ext = os.path.splitext(enhanced_pdf_path)
+                        enhanced_pdf_path = f"{base}_{slug}{ext}"
+            else:
+                enhanced_pdf_path = os.path.join(output_base, slug, f"enhanced_{pdf_file}")
+            
+            os.makedirs(os.path.dirname(enhanced_pdf_path), exist_ok=True)
+            success = enhance_pdf_with_ocr(pdf_path, enhanced_pdf_path, args.dpi)
+            result['enhanced_pdf'] = enhanced_pdf_path if success else None
+            result['enhance_success'] = success
+        
         results.append(result)
     
     print(f"\n=== Summary ===", flush=True)
     for r in results:
         print(f"  {r['slug']}: {r['chapters']} chapters, {r['ocr_pages']}/{r['pages']} OCR pages", flush=True)
+        if r.get('enhanced_pdf'):
+            print(f"    Enhanced PDF: {r['enhanced_pdf']}", flush=True)
     
     with open(os.path.join(output_base, '_ocr_summary.json'), 'w') as f:
         json.dump(results, f, indent=2)
