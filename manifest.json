@@ -1,10 +1,10 @@
 {
   "id": "compass-crew",
-  "name": "CompassCrew — Steer Your AI Fleet",
-  "version": "2.0.0",
+  "name": "CompassCrew — Auditable Agent Fleet Control",
+  "version": "2.1.0",
   "minAppVersion": "0.15.0",
-  "description": "Mission control for AI in Obsidian. Spawn agent crews, draw your knowledge on a recursive canvas, steer in real-time, and navigate your vault by bearings. One plugin, zero mandatory peers.",
+  "description": "Control surface for AI agent crews in your vault: recursive Excalidraw canvas, 85 blueprints, and a direct MCP client for reckon's 76-tool surface. Verifies chain of custody in-client by reachability, not file adjacency. Signing keys are non-extractable and never leave the vault. Zero runtime dependencies.",
   "author": "goodoleusa",
-  "authorUrl": "https://github.com/goodoleusa/reckon-vault-plugin",
+  "authorUrl": "https://github.com/goodoleusa/CompassCrew",
   "isDesktopOnly": true
 }

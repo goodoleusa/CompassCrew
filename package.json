@@ -1,7 +1,7 @@
 {
   "name": "compass-crew",
   "version": "2.1.0",
-  "description": "CompassCrew \u2014 mission control for AI agent crews inside Obsidian: recursive canvas, bearings-based navigation, and an MCP bridge for steering agents from your vault. Zero runtime dependencies.",
+  "description": "CompassCrew — auditable agent-fleet control inside Obsidian: recursive canvas, bearings navigation, a direct reckon MCP client, and in-client chain-of-custody verification. Non-extractable signing keys. Zero runtime dependencies.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -13,11 +13,12 @@
   "keywords": [
     "obsidian",
     "agents",
-    "compass-crew",
-    "blueprint",
     "mcp",
-    "compass",
-    "excalibrain"
+    "chain-of-custody",
+    "excalidraw",
+    "provenance",
+    "compass-crew",
+    "ed25519"
   ],
   "author": "goodoleusa",
   "license": "MIT",

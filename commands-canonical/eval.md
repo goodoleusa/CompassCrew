@@ -1,151 +1,144 @@
-# /eval — Agent Evaluation Command Surface
+# `/eval` — agent evaluation over the reckon MCP surface
 
-Unified interface for baselining, running, training, comparing, and repeating agent evaluations.
-Delegates all work to `~/.claude/scripts/eval_harness.py` via Bash — no logic is inlined here.
+Baseline, run, compare and replay agent evaluations. **Every subcommand is one MCP tool call.**
+There is no local harness script, no parallel state directory, and no second scoring path.
 
-## Forward-Compatibility Note
+> **This file was rewritten 2026-08-22.** The previous version delegated every subcommand to
+> `~/.claude/scripts/eval_harness.py` and described a hand-rolled COC v2 manifest written into
+> `~/.claude/hooks/state/`, with a local `_build_coc_manifest()` fallback described as producing
+> "an identical schema" if the real builder was not importable. Three things were wrong with that,
+> and each is a pattern rather than a typo:
+>
+> 1. **The harness is not part of this plugin and never shipped with it.** A command that
+>    delegates to a file the user does not have fails at the Bash layer with a missing-file
+>    error, which reads as a broken command rather than as an unmet dependency.
+> 2. **A fallback that claims schema parity is a fork.** "Use the real builder if importable,
+>    otherwise this local copy with an identical schema" is two implementations of one contract
+>    with nothing comparing them. In this ecosystem that exact shape has already caused silent,
+>    key-shaped failures — see the drift ledger at the top of
+>    `reckon-lite/tools/revenant_vendor_sync_lite.py`.
+> 3. **It wrote eval state to a second home.** `~/.claude/hooks/state/evals/*.jsonl` plus
+>    `eval-config-history.jsonl` duplicated what the reckon server already keeps on the COC
+>    spine. Two homes for one fact, and no answer for which one is real.
+>
+> The reckon MCP server exposes all of this as first-class tools whose results land on the COC
+> chain automatically. Calling them is strictly less code and strictly more custody.
 
-Every `/eval` subcommand writes a COC v2 manifest to `~/.claude/hooks/state/eval-{subcmd}-{SESSION_ID8}-{AGENT_ID16}.json`.
-If `coc_manifest_builder` is importable in eval_harness.py, it is used automatically.
-If not, the local `_build_coc_manifest()` helper in eval_harness.py provides an identical schema.
-COC v2 required fields: session_id, agent_id, agent_type, spawn_ts, complete_ts,
-parent_finding_hash, trace_path, trace_hash, prev_entry_hash, entry_hash.
+---
 
-Every invocation is also appended to `~/.claude/hooks/state/eval-config-history.jsonl`
-(append-only, one JSON object per line) so `/eval repeat` can replay the last config.
+## The tools this maps onto
+
+Names are verbatim from `runtime/mcp-server/tools/REGISTRY.json`. These are verb-dispatchers:
+the verb is an argument, not part of the tool name.
+
+| Tool | Verbs used here | Tier |
+|---|---|---|
+| `reckon_metrics` | `eval`, `eval_compare`, `evolve`, `membench`, `read`, `emergence`, `usage`, `vibe_test` | free (`log` = pro) |
+| `reckon_evolve` | mutate → measure → keep/rollback | pro |
+| `reckon_metabolism` | fused eval intake ⇄ evolve adaptation | free |
+| `reckon_econ` | the live EvalHomeBase feed | free |
+| `reckon_coc` | `tail`, `for_charter` — read the custody trail an eval left | free |
+| `reckon_agent` | `team_status`, `spawn` | mixed |
 
 ---
 
 ## Subcommands
 
-### 1. baseline
+### `/eval baseline {agent_type}`
 
-**Usage:** `/eval baseline {agent_type} [--rubric path]`
+Establish or refresh an agent's zero-point reference.
 
-Establish or refresh an agent's zero-point reference score.
-Uses evalbot's 6-dimension rubric (Correctness, Completeness, Clarity, Safety, Efficiency, Velocity).
-Writes result to `~/.claude/hooks/state/evals/baseline-{agent_type}-{date}.jsonl` (hash-chained).
-Updates `## Last Training` section in `~/.claude/agents/{agent_type}.md` with source=evalbot.
-Records invocation in eval-config-history.jsonl.
-
-**Example:**
 ```
-/eval baseline evidence-curator
-/eval baseline security-auditor --rubric ~/.claude/rubrics/tier1-rubric.json
+reckon_metrics  verb=eval  mode=full
 ```
 
-**Bash delegate:**
-```bash
-python3 ~/.claude/scripts/eval_harness.py baseline {agent_type} [--rubric path]
+The run lands on the COC chain server-side. Read its custody trail back with
+`reckon_coc verb=tail` — that trail *is* the record, which is why there is no longer a
+`~/.claude/hooks/state/evals/baseline-*.jsonl` to keep in sync with it.
+
+### `/eval run {agent_type}`
+
+One-shot eval. `mode=quick` is the default; `probes` narrows the probe set.
+
+```
+reckon_metrics  verb=eval  mode=quick  probes=all
 ```
 
----
+### `/eval membench`
 
-### 2. run
+Universal memory-comparison probes (M1/M3/M8/M11/M12).
 
-**Usage:** `/eval run {agent_type} --task {task_id} [--synthetic]`
-
-One-shot eval on a given task. Accepts a real pending queue task ID or a synthetic
-held-out test (--synthetic generates a rubric-matched test case). Scores all 6 dimensions.
-Records delta vs baseline. Updates Last Training in agent card ONLY if new score beats baseline.
-Writes result manifest to `~/.claude/hooks/state/eval-run-{SESSION_ID8}-{AGENT_ID16}.json`.
-
-**Example:**
 ```
-/eval run evidence-curator --task train-016
-/eval run report-writer --synthetic
+reckon_metrics  verb=membench  probes=all
 ```
 
-**Bash delegate:**
-```bash
-python3 ~/.claude/scripts/eval_harness.py run {agent_type} --task {task_id} [--synthetic]
+### `/eval compare --a {run} --b {run}`
+
+A/B or cohort comparison. Hypotheses are pre-registered server-side before the data is read
+(anti-HARKing); null results are reported alongside significant ones.
+
+```
+reckon_metrics  verb=eval_compare  runs="<a>,<b>"  baseline="<baseline_id>"
 ```
 
----
+### `/eval emergence [--days N]`
 
-### 3. train
+Bearing diversity and mission velocity over a window — the emergence half of the metabolism.
 
-**Usage:** `/eval train {agent_type} --on-job [--n {N}]`
-
-Enables MINI_LEARNING mode for the agent's next N real spawns (default N=3).
-After those spawns, observations are collected and promoted to durable learnings in the
-agent card — but ONLY after a beat-baseline check (source=evalbot or source=self OTJ).
-Sets `MINI_LEARNING=true` in the agent's next spawn context via a tagged queue entry.
-Progress logged to training-queue.json and training-log.jsonl.
-
-**Example:**
 ```
-/eval train evidence-curator --on-job
-/eval train security-auditor --on-job --n 5
+reckon_metrics  verb=emergence  days=7
 ```
 
-**Bash delegate:**
-```bash
-python3 ~/.claude/scripts/eval_harness.py train {agent_type} --on-job [--n N]
+### `/eval fitness`
+
+Live M1–M11 fitness monitoring.
+
+```
+reckon_metrics  verb=evolve  evolve_metrics="M1,M3,M8,M11"
 ```
 
----
+### `/eval vibe {mission}`
 
-### 4. compare
+Dry-run a proposed mission change before committing to it.
 
-**Usage (A/B):** `/eval compare --a {run_id_1} --b {run_id_2}`
-**Usage (cohort):** `/eval compare --agent {agent_type} --runs last-{N}`
-
-A/B or cohort comparison with stats. Pre-registers hypotheses before reading data (anti-HARKing).
-Uses data-scientist rubric: all results reported (null and significant), no cherry-picking.
-Reads from eval-history.jsonl to find run records by run_id.
-Outputs side-by-side table (all 6 dimensions + composite), delta, confidence label (establishing/emerging/stable).
-
-**Example:**
 ```
-/eval compare --a run_20260418T194321 --b run_20260417T103045
-/eval compare --agent evidence-curator --runs last-3
+reckon_metrics  verb=vibe_test  mission="<name>"  change_type="<kind>"  change_details={…}
 ```
 
-**Bash delegate:**
-```bash
-python3 ~/.claude/scripts/eval_harness.py compare --a {run1} --b {run2}
-python3 ~/.claude/scripts/eval_harness.py compare --agent {agent_type} --runs last-{N}
+### `/eval usage [--range today]`
+
+The caller's own telemetry. Scope is explicit so a session read is never mistaken for a
+fleet-wide one.
+
+```
+reckon_metrics  verb=usage  scope=session  scope_id=current  range=today
 ```
 
 ---
 
-### 5. repeat
+## Reading the results
 
-**Usage:** `/eval repeat [--seed {s}]`
+**Three verdicts, never two.** PASS · FAIL · UNMEASURED-with-the-obstacle-named. A probe that
+could not run is a *different fact* from a probe that ran and scored zero, and the two must not
+be collapsed. A false RED costs exactly what a false GREEN costs, so a check that goes quiet
+when it cannot see is the worse of the two.
 
-Re-runs the most recent /eval config (any subcommand) from eval-config-history.jsonl.
-Preserves reproducibility: same agent_type, same subcommand, same flags.
-New seed (--seed) for synthetic tasks to avoid identical test replay.
-Records the repeat as a new entry in eval-config-history.jsonl (not an overwrite).
+**Scoring authority.**
 
-**Example:**
+- `source: evalbot` — authoritative, hash-chained, admissible. Used for tier promotion.
+- `source: self` — directional only, not auditable. Used for on-the-job redemption tracking.
+- Evalbot never reads its own prior scores before scoring (anti-bias).
+
+**Custody.** Every eval that mutates state appends to the COC chain server-side. To see what an
+eval actually left behind:
+
 ```
-/eval repeat
-/eval repeat --seed 42
+reckon_coc  verb=tail  n=20
+reckon_coc  verb=for_charter  charter_id="<id>"
 ```
 
-**Bash delegate:**
-```bash
-python3 ~/.claude/scripts/eval_harness.py repeat [--seed N]
-```
-
----
-
-## Output Paths
-
-| Subcommand | Primary output |
-|------------|----------------|
-| baseline   | `~/.claude/hooks/state/evals/baseline-{agent_type}-{date}.jsonl` |
-| run        | `~/.claude/hooks/state/eval-run-{SID8}-{AID16}.json` |
-| train      | training-queue.json + training-log.jsonl entries |
-| compare    | `~/.claude/hooks/state/eval-compare-{SID8}-{AID16}.json` |
-| repeat     | Same as the replayed subcommand |
-| all        | `~/.claude/hooks/state/eval-config-history.jsonl` (always appended) |
-
-## Scoring Authority
-
-- `source: evalbot` — authoritative. Hash-chained, court-admissible. Used for tier promotion.
-- `source: self` — directional only. Not auditable. Used for OTJ redemption tracking.
-- Evalbot NEVER reads its own prior scores before scoring (anti-bias rule).
-- Tier graduation: sustain >=0.90 x3 consecutive evalbot runs → tier up (see rules/agents.md Section 4).
+From inside Obsidian, **CompassCrew: verify chain of custody** runs that same read and verifies
+the returned chain locally — by REACHABILITY, not by file adjacency. Shards are storage; the
+chain is order. A verifier that requires line *N*'s `prev_entry_hash` to equal line *N−1*'s
+`entry_hash` is making a stronger claim than the chain ever made, and is false by construction
+for any shard whose storage order is not its link order.

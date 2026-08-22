@@ -13,7 +13,7 @@ effort: low
 
 ## PRE-REG GATE
 
-Any spawn touching faerie system files (`~/.claude/`) MUST have a pre-registration entry in the active charter BEFORE the agent is spawned.
+Any spawn touching agent system files (`$CLAUDE_HOME`, default `~/.claude/`) MUST have a pre-registration entry in the active charter BEFORE the agent is spawned.
 
 Required format for each change:
 ```
@@ -27,9 +27,32 @@ FALSIFIABLE_CLAIM: <verifiable statement: "After fix: X will be Y after N sessio
 
 Charter path: `~/.claude/templates/charters/active/`
 If no active charter exists: create one from `~/.claude/templates/charters/system-tweak-charter-template.json` first.
-Archiver script: `$SWARMY_REPO/scripts/4x_charter_archiver.py`
+Charter lifecycle over MCP: `reckon_charter verb=declare` (pro) opens one, `verb=close` retires it,
+`verb=validate` runs the MANIFEST-CHARTER-REF check. The archiver path that used to be named here
+(`$SWARMY_REPO/scripts/4x_charter_archiver.py`) referenced a pre-rebrand env var no current install
+sets, so the instruction resolved to `/scripts/4x_charter_archiver.py` and silently pointed nowhere.
 
 Spawns without pre-reg entries for system-file changes are BLOCKED pending charter creation.
+
+## SPAWN IDENTITY GATE
+
+The only identity value that crosses into a child is **`RECKON_SPAWN_ID`** — a PUBLIC label,
+safe in a transcript, a log or a screenshot. The child generates its own keypair IN PROCESS,
+claims its parent-opened slot by publishing only its PUBLIC key, and proves possession
+thereafter by signing a target-bound, single-use challenge. First claim wins; a filled slot
+refuses a second.
+
+`spawn.py` REFUSES, by name and with a non-zero exit, if either of these is set:
+
+| Env | Status |
+|---|---|
+| `RECKON_SPAWN_TOKEN` | RETIRED 2026-07-30 — a bearer secret; whoever holds it authenticates as the child |
+| `RECKON_SPAWN_KEY` | DEPRECATED 2026-08-01 — a raw private ed25519 seed in plaintext through the environment, process table, shell history and transcript |
+
+There is no parameter, environment read, or emitted field in this skill that can carry a private
+seed, mnemonic or salt, and there deliberately never will be. **No value that can sign may ever
+leave the process that made it.** Full rationale:
+`reckon-lite/tools/revenant_spawnkey_lite.py`, block "WHAT WAS TRIED, AND WHY EACH FAILED".
 
 ---
 

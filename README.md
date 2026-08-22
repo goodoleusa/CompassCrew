@@ -1,10 +1,38 @@
-# CompassCrew — Steer Your AI Fleet From Your Vault
+# CompassCrew — an auditable bridge between your vault and an agent fleet
 
-> You're not giving your vault to AI. You're giving AI a chair at your table.
+> Most "AI in your notes" plugins ask you to trust them. This one hands you the receipts.
 
-CompassCrew is an Obsidian plugin that gives you **mission control for AI** — right inside your vault. Draw your system on a canvas, spawn agent crews to work it, drill into anything, and steer with a click. One plugin. Zero magic.
+CompassCrew is an Obsidian plugin that turns a vault into a control surface for AI agent crews —
+and then **proves what happened**. It speaks the reckon MCP tool surface directly (76
+verb-dispatched tools), draws your knowledge on a recursive Excalidraw canvas you can drill into
+forever, renders 85 Nunjucks blueprints into real markdown, and verifies the chain of custody
+those agents leave behind *in the client*, without asking a server to grade its own homework.
 
-**You prompt once. The fleet executes. You see everything.**
+The custody verifier is the part worth reading the source for. It resolves parent links by
+**reachability against the set of all leaves — not by file adjacency** (adjacency is a stronger
+claim than a hash chain ever makes, and it is false by construction for any shard whose storage
+order is not its link order: 2,230 phantom "breaks" across 3,900 real leaves, measured). It
+recomputes canonical entry hashes byte-identically to the Python signer — cross-checked against
+`json.dumps(sort_keys=True, separators=(',',':'))` in the test suite, `ensure_ascii` escaping and
+all — and **names which of the two hash recipes matched**, because a leaf that verifies under a
+superseded recipe is a different fact from one that verifies under the current one. It carries
+the full historical link-alias set, because a partial one once made 26 real custody entries
+invisible to every verifier while verification reported clean. And it reports three verdicts,
+never two: PASS · FAIL · **UNMEASURED-with-the-obstacle-named**.
+
+Your signing key is generated inside your vault with `extractable: false` and held as a live
+WebCrypto handle. It can sign. It cannot be exported, printed, backed up, or transmitted — not
+by this plugin, not by any other, because the browser itself refuses. Only the public half ever
+crosses the wire. There is no code path here that reads a private key from an environment
+variable, a URL, or a file, and `RECKON_SPAWN_TOKEN` / `RECKON_SPAWN_KEY` are refused by name
+rather than silently ignored.
+
+TypeScript. esbuild. **Zero runtime dependencies.** Plain markdown on disk, git-tracked —
+uninstall it and your notes still work.
+
+```
+npm run verify      # tsc --noEmit + production build + 23-assertion smoke suite
+```
 
 ---
 
@@ -13,7 +41,7 @@ CompassCrew is an Obsidian plugin that gives you **mission control for AI** — 
 - 🎮 **Spawn an agent crew** — a researcher, a fact-checker, a writer. Give each one a bearing: who is upstream, who is downstream, what is parallel.
 - 🗺️ **Draw your knowledge** on an Excalidraw canvas — boxes for notes, colored lines for relationships. Double-click any box to drill down into that note's canvas. Navigate your whole vault spatially.
 - ✍️ **Steer in real-time** while your crew works — annotate, redirect, kill a bad thread. Or queue up notes at midnight for morning-you to review.
-- 📋 **Auto-generate structured docs** — charters, reports, timelines, findings — from 74 templates that render right into your notes.
+- 📋 **Auto-generate structured docs** — charters, reports, timelines, findings — from 85 blueprints that render right into your notes (plus 6 ready-made Excalidraw scenes).
 - 🔍 **Everything stays yours** — plain markdown, git-tracked, no lock-in. Uninstall and your notes still work.
 
 ---
@@ -78,7 +106,7 @@ Every note has a canvas showing its neighborhood. Every box on a canvas has its 
 ### ✍️ Live Steering
 Annotate while your crew works. Your edits sync in real time. Working alone? Queue annotations — they load as steering at the next session.
 
-### 📋 Blueprints (74 templates)
+### 📋 Blueprints (85 templates)
 Charters, reports, dashboards, timelines, findings — auto-rendered from templates. Your content lives in the note; the structure renders around it. Your edits are sacred.
 
 ### 🧵 Smart Threading
@@ -95,7 +123,7 @@ Every AI artifact and every human annotation is hashed and tracked. Two parallel
 ## Quick Clone-and-Go
 
 ```bash
-git clone https://github.com/goodoleusa/reckon-vault-plugin /path/to/your-vault/.obsidian/plugins/compasscrew
+git clone https://github.com/goodoleusa/CompassCrew /path/to/your-vault/.obsidian/plugins/compasscrew
 ```
 
 1. Open Obsidian

@@ -83,7 +83,16 @@ const { coc } = mod;
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const registryArg = process.argv.indexOf("--registry");
-const registryPath = registryArg > -1 ? process.argv[registryArg + 1] : null;
+//: Auto-discovery is a CONVENIENCE, never a substitute: if no registry is found the check
+//: reports UNMEASURED and names the reason rather than quietly passing.
+const REGISTRY_SEARCH = [
+  process.env.RECKON_REGISTRY,
+  join(REPO, "..", "reckon", "runtime", "mcp-server", "tools", "REGISTRY.json"),
+  join(process.env.HOME || "", "reckon", "runtime", "mcp-server", "tools", "REGISTRY.json"),
+].filter(Boolean);
+const registryPath = registryArg > -1
+  ? process.argv[registryArg + 1]
+  : REGISTRY_SEARCH.find((p) => existsSync(p)) ?? null;
 
 check("every TOOL name uses the reckon_ wire prefix (not a client-side rebrand)", () => {
   for (const [k, v] of Object.entries(mod.TOOL)) {

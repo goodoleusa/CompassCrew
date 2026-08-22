@@ -24,7 +24,7 @@ Templater + Excalidraw + ExcaliBrain — seven separate installs.
 ```bash
 # 1. Clone into your vault's plugins folder
 cd /path/to/your/vault/.obsidian/plugins
-git clone https://github.com/goodoleusa/reckon-vault-plugin.git compasscrew
+git clone https://github.com/goodoleusa/CompassCrew.git compasscrew
 cd compasscrew
 
 # 2. Install build deps (TypeScript + esbuild only — no runtime deps)

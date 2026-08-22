@@ -46,17 +46,35 @@ interface CompassCrewPdfSettings {
   monoFont: string;             // pandoc -V monofont
   useExternalLatexTemplate: boolean;  // false = inline -V flags only (cleaner); true = use latexTemplatePath
   latexTemplatePath: string;    // ignored when useExternalLatexTemplate=false
-  latexHeaderPath: string;      // --include-in-header path; empty = use faerie2 print-ready-header.tex if found
+  latexHeaderPath: string;      // --include-in-header path; empty = none (inline -V flags cover defaults)
   preset: "note" | "business" | "academic" | "comparison" | "custom";  // preset selector (drives the above)
+  aspectSizerPath: string;      // OPTIONAL diagram aspect sizer; "" = DEFAULT_ASPECT_SIZER, absent = skipped
 }
 
-// ─── Preset parity contract with faerie2/.agents/skills/pdf ───────────────────
-// IMPORTANT: Presets here MUST stay in lockstep with the headless skill at:
-//   faerie2/.agents/skills/pdf/scripts/build_pdf.sh
-// Both pipelines share `print-ready-header.tex` and the same shaded-stub.tex.
-// When you add or modify a preset, update BOTH so an agent running headlessly
-// (e.g. on the compasscrew VPS) produces visually-identical output to a user
-// exporting from inside Obsidian.
+/**
+ * Default location of the OPTIONAL diagram aspect sizer. It is not shipped with this plugin and
+ * is not required — see Step 3. Named here rather than inline so there is one place to change it.
+ */
+const DEFAULT_ASPECT_SIZER = "~/.claude/scripts/9x_pdf_aspect_sizer.py";
+
+// ─── Preset parity — what it is in lockstep WITH, corrected 2026-08-22 ───────
+// This block used to name `faerie2/.agents/skills/pdf/scripts/build_pdf.sh` as the counterpart
+// these presets must stay in lockstep with. That repo is two rebrands gone; nothing compares
+// the two, and a parity contract whose other side does not exist is not a contract, it is a
+// comment. (Same shape as the drift the ledger at the top of
+// `reckon-lite/tools/revenant_vendor_sync_lite.py` exists to catch: a copy no mechanism
+// compares is a fork that has not diverged yet.)
+//
+// The live headless counterpart is `corpus_pdf_lite.py` (vendored byte-identical into
+// `scripts/`, verb `gen`), reachable over MCP as `reckon_pdf`. It generates through
+// pandoc or weasyprint from markdown, which is the same destination this pipeline reaches
+// by a higher-fidelity route (mmdc-rendered diagrams -> xelatex).
+//
+// THE HONEST STATE OF THE PARITY, so the next hand does not assume more than is true: the two
+// paths are NOT byte-identical in output and no mechanism currently checks that they agree.
+// The presets below are this pipeline's own. If you need guaranteed visual parity between an
+// agent-generated PDF and a user-exported one, that check does not exist yet -- build it
+// rather than assuming this comment implies it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Presets: clean defaults per common use case. Operator can override individually.
@@ -83,7 +101,7 @@ function applyPreset(s: CompassCrewPdfSettings): CompassCrewPdfSettings {
     // Side-by-side tables, multi-column comparisons, glossary docs.
     // Slightly tighter margin than `note` so wide tables fit without splitting,
     // while keeping `note`'s readable type size.
-    // Matches faerie2/.agents/skills/pdf preset of the same name.
+    // Comparison preset — side-by-side tables, tight leading.
     return { ...s, fontSize: "11pt", marginInches: 0.85, mainFont: "DejaVu Sans",
              sansFont: "DejaVu Sans", monoFont: "DejaVu Sans Mono",
              useExternalLatexTemplate: false };
@@ -107,7 +125,8 @@ const DEFAULT_SETTINGS: CompassCrewPdfSettings = {
   monoFont: "DejaVu Sans Mono",
   useExternalLatexTemplate: false,
   latexTemplatePath: "",
-  latexHeaderPath: "",  // empty = auto-detect faerie2 print-ready-header.tex
+  latexHeaderPath: "",  // empty = no --include-in-header; inline -V flags cover the defaults
+  aspectSizerPath: "",  // empty = DEFAULT_ASPECT_SIZER; absent on disk = Step 3 is skipped
   preset: "note",
 };
 
@@ -387,6 +406,20 @@ function sizeAnnotation(w: number, h: number): string {
 
 // ─── Core pipeline ─────────────────────────────────────────────────────────
 
+/**
+ * Absolute path to a file under the plugin's own `assets/` directory.
+ *
+ * Resolved from the vault root + the plugin dir rather than from `__dirname`: after esbuild
+ * bundles everything into `main.js`, `__dirname` is the vault's plugin folder only by accident
+ * of how Obsidian loads the bundle, and relying on that has broken across Obsidian versions.
+ */
+function pluginAssetPath(app: App, name: string): string {
+  const vaultRoot = (app.vault.adapter as unknown as { basePath: string }).basePath;
+  const pluginDir = (app as unknown as { plugins?: { plugins?: Record<string, { manifest?: { dir?: string } }> } })
+    .plugins?.plugins?.["compasscrew"]?.manifest?.dir ?? ".obsidian/plugins/compasscrew";
+  return path.join(vaultRoot, pluginDir, "assets", name);
+}
+
 async function buildPdf(
   noteAbsPath: string,
   settings: CompassCrewPdfSettings,
@@ -598,24 +631,52 @@ async function buildPdf(
     }
   }
 
-  // ── Step 3: aspect sizer ──────────────────────────────────────────────────
+  // ── Step 3: aspect sizer (OPTIONAL) ───────────────────────────────────────
+  //
+  // WHAT THIS STEP IS FOR: it rewrites each diagram embed with an explicit width derived from
+  // the rendered PNG's aspect ratio, so a wide flowchart does not get letterboxed into a
+  // square box by LaTeX's default sizing. Nice to have. Not load-bearing.
+  //
+  // WHY IT IS NOW OPTIONAL (2026-08-22): the script it calls,
+  // `~/.claude/scripts/9x_pdf_aspect_sizer.py`, has never shipped with this plugin and does
+  // not exist on a clean install. This step threw on a non-zero exit, so on every machine
+  // that did not happen to have that file, the ENTIRE high-fidelity export died at Step 3 --
+  // after mmdc had already rendered the diagrams -- and reported "aspect_sizer failed (exit
+  // 2)". A missing optional enhancement was presenting as a hard pipeline failure.
+  //
+  // It is now: use it if it is there, and if it is not, say so by name and carry the
+  // preprocessed markdown forward unchanged. Diagrams still embed; they just use LaTeX's
+  // default sizing. UNMEASURED-and-continue, not FAIL.
   new Notice("CompassCrew PDF: sizing diagrams…");
-  log.append("\n[Step 3] 9x_pdf_aspect_sizer.py");
+  log.append("\n[Step 3] aspect sizer (optional)");
 
-  const sizerScript = "~/.claude/scripts/9x_pdf_aspect_sizer.py";
+  const sizerScript = settings.aspectSizerPath?.trim() || DEFAULT_ASPECT_SIZER;
   const readyMdWsl = `${buildWsl}/note.ready.md`;
 
-  // Feed the preprocessed markdown (Excalidraw already resolved) to the sizer
-  const sizerCmd = `python3 '${sizerScript}' '${preprocessedMdWsl}' --diagrams-dir '${diagramsWsl}' --out '${readyMdWsl}' --verbose 2>&1`;
-  const sizerResult = await runWsl(distro, sizerCmd);
-  log.append(`  output: ${sizerResult.stdout.trim()}`);
-  if (sizerResult.stderr) log.append(`  stderr: ${sizerResult.stderr.trim()}`);
-
-  if (sizerResult.code !== 0) {
-    log.flush();
-    throw new Error(
-      `aspect_sizer failed (exit ${sizerResult.code}):\n${log.tailStderr(sizerResult.stderr)}`
-    );
+  const sizerPresent = await runWsl(distro, `test -f '${sizerScript}' && echo present || echo absent`);
+  if (sizerPresent.stdout.includes("present")) {
+    const sizerCmd = `python3 '${sizerScript}' '${preprocessedMdWsl}' --diagrams-dir '${diagramsWsl}' --out '${readyMdWsl}' --verbose 2>&1`;
+    const sizerResult = await runWsl(distro, sizerCmd);
+    log.append(`  output: ${sizerResult.stdout.trim()}`);
+    if (sizerResult.stderr) log.append(`  stderr: ${sizerResult.stderr.trim()}`);
+    if (sizerResult.code !== 0) {
+      // Present but broken IS worth failing on: that is a real error, not an absent feature.
+      log.flush();
+      throw new Error(
+        `aspect_sizer is present at ${sizerScript} but failed (exit ${sizerResult.code}):\n` +
+        `${log.tailStderr(sizerResult.stderr)}`
+      );
+    }
+  } else {
+    log.append(
+      `  UNMEASURED: no aspect sizer at ${sizerScript} — diagrams will use LaTeX default ` +
+      `sizing instead of aspect-derived widths. This is an optional enhancement, not a ` +
+      `requirement; set "Aspect sizer path" in settings if you have one.`);
+    const carried = await runWsl(distro, `cp '${preprocessedMdWsl}' '${readyMdWsl}'`);
+    if (carried.code !== 0) {
+      log.flush();
+      throw new Error(`could not carry preprocessed markdown forward: ${carried.stderr}`);
+    }
   }
 
   // ── Step 3.5: mermaid.ink fallback for remaining ```mermaid blocks ──────────
@@ -773,16 +834,28 @@ async function buildPdf(
     ? `--template='${s.latexTemplatePath}'`
     : "";  // omit when not using external template — inline -V flags cover it
 
-  // Include the print-ready LaTeX header (provides no-split floats, needspace,
-  // NavyBlue hyperref, widow/orphan penalties, booktabs, caption styles).
-  // Priority: (1) user-provided s.latexHeaderPath, (2) faerie2 canonical path,
-  // (3) empty — inline -V flags remain the baseline fallback.
-  const FALLBACK_HEADER = "~/gitrepos/faerie2/forensics/publication-renders/print-ready-header.tex";
-  const headerTex = s.latexHeaderPath || FALLBACK_HEADER;
-  const headerWsl = winToWsl(headerTex);
+  // Include the print-ready LaTeX header — this is the file that makes the output look
+  // typeset rather than merely converted: floats pinned [H] so a diagram never drifts pages
+  // away from its paragraph, needspace so a heading cannot orphan at a page foot, NavyBlue
+  // hyperref colorlinks, widow/orphan penalties, booktabs rules, and caption styling.
+  //
+  // IT NOW SHIPS WITH THE PLUGIN (assets/print-ready-header.tex). It used to fall back to
+  // `~/gitrepos/faerie2/forensics/publication-renders/print-ready-header.tex`, a path in a
+  // repo two rebrands gone. `fs.existsSync` returned false, the argument was silently dropped,
+  // and every export lost all of the above while reporting success — the failure mode this
+  // whole modernization pass keeps finding: a green that means "the feature is not here".
+  //
+  // Priority: (1) user path, (2) the shipped asset, (3) "__disabled__" turns it off entirely.
+  const shippedHeader = pluginAssetPath(app, "print-ready-header.tex");
+  const headerTex = s.latexHeaderPath === "__disabled__" ? "" : (s.latexHeaderPath || shippedHeader);
   const headerArg = (() => {
-    try { return fs.existsSync(headerTex) ? `--include-in-header='${headerWsl}'` : ""; }
-    catch { return ""; }
+    if (!headerTex) return "";
+    try {
+      if (fs.existsSync(headerTex)) return `--include-in-header='${winToWsl(headerTex)}'`;
+      log.append(`  UNMEASURED: LaTeX header not found at ${headerTex} — exporting without it. ` +
+                 `Float pinning, needspace and caption styling will be absent.`);
+      return "";
+    } catch { return ""; }
   })();
 
   const pandocCmd = [
@@ -1186,12 +1259,12 @@ class CompassCrewPdfSettingTab extends PluginSettingTab {
         "Path to a .tex file injected via pandoc --include-in-header. " +
         "Provides: no-split tables/figures (float [H]), needspace for headings, " +
         "NavyBlue hyperref colorlinks, widow/orphan penalties, booktabs, caption styles. " +
-        "Leave blank to auto-detect faerie2/forensics/publication-renders/print-ready-header.tex, " +
-        "or enter a custom path. Set to 'none' to disable."
+        "Leave blank to use the header shipped with the plugin " +
+        "(assets/print-ready-header.tex), or enter a custom path. Set to 'none' to disable."
       )
       .addText((text) =>
         text
-          .setPlaceholder("(auto: faerie2 print-ready-header.tex)")
+          .setPlaceholder("(shipped: assets/print-ready-header.tex)")
           .setValue(this.plugin.settings.latexHeaderPath)
           .onChange(async (value) => {
             this.plugin.settings.latexHeaderPath = value.trim() === "none" ? "__disabled__" : value.trim();

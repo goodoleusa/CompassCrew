@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 """
-Unified PDF Toolkit CLI - A comprehensive PDF processing tool.
+PDF Toolkit CLI — the PLUGIN-ONLY half of CompassCrew's PDF surface.
+
+╔══════════════════════════════════════════════════════════════════════════════════════════╗
+║ READ THIS BEFORE ADDING A VERB (boundary set 2026-08-22)                                  ║
+╠══════════════════════════════════════════════════════════════════════════════════════════╣
+║ The canonical PDF capability in this ecosystem is `scripts/corpus_pdf_lite.py`, vendored  ║
+║ BYTE-IDENTICAL from `reckon-lite/tools/corpus_pdf_lite.py`. That file is the litified     ║
+║ UNION of what used to be three separate PDF paths (an MCP-only `pdf_toolkit.py`, a bash   ║
+║ export script with a hard-coded vault path, and a report-private third path), and it is   ║
+║ stdlib-only at import with every PDF library import function-local — which is exactly     ║
+║ what lets it be vendored into a repo that may have none of them installed.                ║
+║                                                                                           ║
+║ THE SPLIT, so nobody has to guess which file owns a verb:                                 ║
+║                                                                                           ║
+║   corpus_pdf_lite.py  OWNS   deps · doctor · info · extract · tables · ocr · gen · check  ║
+║   this file           OWNS   merge · split · to-images                                    ║
+║                                                                                           ║
+║ The overlapping verbs here now DELEGATE to the lite tool rather than running this file's  ║
+║ own implementation. They are kept as names, not as second implementations: a copy no      ║
+║ mechanism compares is a fork that has not diverged yet, and the drift ledger at the top   ║
+║ of `reckon-lite/tools/revenant_vendor_sync_lite.py` records what that costs when the two  ║
+║ copies are crypto- or extraction-shaped.                                                  ║
+║                                                                                           ║
+║ `merge`, `split` and `to-images` are NOT in the lite tool. They stay here, implemented    ║
+║ locally, and are named above so this is a documented boundary rather than a silent gap.   ║
+║ Deleting them to "consolidate" would be an overwrite, not a union — it would remove       ║
+║ three working capabilities and raise no error.                                            ║
+║                                                                                           ║
+║ Over MCP the same surface is `reckon_pdf` (verb-dispatched, TIER: pro).                   ║
+╚══════════════════════════════════════════════════════════════════════════════════════════╝
 
 Provides a unified interface for all PDF operations:
 - extract: Text extraction with multiple backend support
@@ -23,6 +52,7 @@ Usage:
 
 import argparse
 import os
+import subprocess
 import sys
 from datetime import datetime
 
@@ -583,6 +613,56 @@ def cmd_info(args):
     return 0
 
 
+
+# ── CHUNK: delegation to the canonical lite tool ─────────────────────────────────────────
+
+#: verb here -> verb in corpus_pdf_lite.py. See the boundary block in the module docstring.
+_LITE_VERBS = {
+    'extract': 'extract',
+    'ocr': 'ocr',
+    'info': 'info',
+    'md-to-pdf': 'gen',
+}
+
+#: Vendored byte-identical from reckon-lite/tools/. If this drifts, the two copies disagree
+#: silently — re-copy rather than patch, and re-check the sha against the reckon-lite original.
+_LITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'corpus_pdf_lite.py')
+
+
+def _delegate_to_lite(args):
+    """Run the lite tool for a delegated verb. Returns its exit code, or None if not delegated.
+
+    Deliberately a SUBPROCESS rather than an import: corpus_pdf_lite.py is vendored to stay
+    byte-identical with reckon-lite, and importing it would tempt the next hand to reach into
+    its internals and start a private fork inside this file.
+    """
+    lite_verb = _LITE_VERBS.get(args.command)
+    if lite_verb is None:
+        return None
+    if not os.path.exists(_LITE):
+        print(f"UNMEASURED: {args.command} delegates to {_LITE}, which is missing. The vendored "
+              f"copy should sit beside this file; re-vendor it from "
+              f"reckon-lite/tools/corpus_pdf_lite.py.", file=sys.stderr)
+        return 2
+    src = getattr(args, 'input', None)
+    dst = getattr(args, 'output', None)
+    if not src:
+        print(f"UNMEASURED: {args.command} needs an input path to delegate.", file=sys.stderr)
+        return 2
+    cmd = [sys.executable, _LITE, lite_verb]
+    if lite_verb == 'gen':
+        # gen takes TWO positionals (md, out) — the only delegated verb that does.
+        if not dst:
+            print("UNMEASURED: md-to-pdf needs an output path.", file=sys.stderr)
+            return 2
+        cmd += [str(src), str(dst)]
+    else:
+        cmd.append(str(src))
+        if dst and lite_verb in ('extract', 'ocr'):
+            cmd += ['--out', str(dst)]
+    return subprocess.call(cmd)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Unified PDF Toolkit - Comprehensive PDF processing',
@@ -663,18 +743,28 @@ Examples:
         parser.print_help()
         return 1
     
-    # Execute command
+    # ── Delegation to the canonical lite tool ────────────────────────────────────────────
+    # These verbs exist in `corpus_pdf_lite.py`, which is vendored byte-identical from
+    # reckon-lite and is the ONE home for them. Delegating keeps the CLI name working for
+    # existing callers without keeping a second implementation alive behind it.
+    delegated = _delegate_to_lite(args)
+    if delegated is not None:
+        return delegated
+
+    # ── Verbs this file genuinely owns ───────────────────────────────────────────────────
     commands = {
-        'extract': cmd_extract,
-        'ocr': cmd_ocr,
         'merge': cmd_merge,
         'split': cmd_split,
         'to-images': cmd_to_images,
-        'md-to-pdf': cmd_md_to_pdf,
-        'info': cmd_info,
     }
-    
-    return commands[args.command](args)
+    handler = commands.get(args.command)
+    if handler is None:
+        # UNMEASURED with the obstacle named: a verb that is neither delegated nor local is a
+        # wiring bug, and reporting it as "unknown command" would hide which half broke.
+        print(f"{args.command!r} is neither delegated to corpus_pdf_lite.py nor implemented "
+              f"here. This is a dispatch-table gap, not an unknown verb.", file=sys.stderr)
+        return 2
+    return handler(args)
 
 
 if __name__ == '__main__':
