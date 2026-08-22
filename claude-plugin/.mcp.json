@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "reckon": {
+      "type": "http",
+      "url": "https://mcp.reckon.systems/free",
+      "userConfig": {
+        "api_key": {
+          "type": "string",
+          "description": "Optional API key — free tier works without it. A free-tier caller gets reckon_mission_graph, reckon_dashboard, reckon_coc, reckon_sign, reckon_pubkey, reckon_corpus, reckon_vocab, reckon_charter, and reckon_manifest. A paid key lifts rate limits and unlocks pro-tier tools (reckon_pdf raw extract/ocr/merge/split, reckon_chat, reckon_eval_metrics, reckon_evolve).",
+          "required": false
+        }
+      }
+    }
+  }
+}

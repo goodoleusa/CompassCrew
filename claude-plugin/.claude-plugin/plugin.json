@@ -1,0 +1,23 @@
+{
+  "name": "compasscrew",
+  "description": "Blueprint-driven doc templating, N/S/E/W bearing threading between artifacts, a mission-graph/compass overlay, chain-of-custody + signing status, and corpus/PDF tooling for Claude Code — the same reckon MCP surface CompassCrew gives Obsidian users, served thin over MCP so no proprietary rendering/custody/graph logic ships in the plugin itself.",
+  "version": "0.1.0",
+  "author": {
+    "name": "goodoleusa"
+  },
+  "homepage": "https://github.com/goodoleusa/CompassCrew",
+  "repository": "https://github.com/goodoleusa/CompassCrew",
+  "license": "MIT",
+  "keywords": [
+    "compasscrew",
+    "reckon",
+    "blueprints",
+    "chain-of-custody",
+    "signing",
+    "mission-graph",
+    "corpus",
+    "pdf",
+    "ontology",
+    "claude-plugin"
+  ]
+}
