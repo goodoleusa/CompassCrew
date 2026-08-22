@@ -3,7 +3,7 @@
  * an AI artifact and POSTs to the MCP server for COC capture.
  *
  * Vocabulary lock (task #37): folder = `Human/` (vault root), noun =
- * "annotation". MCP contract is `reckon_collab` verb=record_annotation
+ * "annotation". MCP contract is `compasscrew_collab` verb=record_annotation
  * (content + address).
  */
 import { App, Modal, Notice, Plugin } from "obsidian";
@@ -77,8 +77,8 @@ class AnnotationModal extends Modal {
 
 async function postAnnotation(baseUrl: string, headers: Record<string, string>, body: any): Promise<{ ok: boolean; status: number }> {
   const base = baseUrl.replace(/\/+$/, "");
-  // Canonical contract: reckon_collab verb=record_annotation (content + address).
-  const res = await fetch(`${base}/tools/reckon_collab`, {
+  // Canonical contract: compasscrew_collab verb=record_annotation (content + address).
+  const res = await fetch(`${base}/tools/compasscrew_collab`, {
     method: "POST", headers, body: JSON.stringify(body),
   });
   return { ok: res.ok, status: res.status };
@@ -95,7 +95,7 @@ async function maybeOfferMigration(plugin: Plugin) {
   (plugin as any)._annotationMigrationPromptShown = true;
 
   const notice = new Notice(
-    "Reckon: legacy 00-SHARED/Marginalia/ found. Click to migrate to Human/.",
+    "CompassCrew: legacy 00-SHARED/Marginalia/ found. Click to migrate to Human/.",
     0,
   );
   // @ts-ignore obsidian's Notice exposes noticeEl
@@ -144,8 +144,8 @@ export function registerAnnotations(
   maybeOfferMigration(plugin);
 
   plugin.addCommand({
-    id: "reckon-drop-annotation",
-    name: "Reckon: drop annotation (attach to current note)",
+    id: "compasscrew-drop-annotation",
+    name: "CompassCrew: drop annotation (attach to current note)",
     callback: () => {
       const file = plugin.app.workspace.getActiveFile();
       const defaultRef = file ? file.path : "";
@@ -200,10 +200,10 @@ export function registerAnnotations(
 
   // Back-compat command id (so existing user keybindings keep working).
   plugin.addCommand({
-    id: "reckon-add-margin-note",
-    name: "Reckon: add margin note (deprecated alias)",
+    id: "compasscrew-add-margin-note",
+    name: "CompassCrew: add margin note (deprecated alias)",
     callback: () => {
-      (plugin as any).app.commands.executeCommandById(`${plugin.manifest.id}:reckon-drop-annotation`);
+      (plugin as any).app.commands.executeCommandById(`${plugin.manifest.id}:compasscrew-drop-annotation`);
     },
   });
 }

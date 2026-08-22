@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Reckon v2.0.0 — visual language stylesheet
+   CompassCrew v2.0.0 — visual language stylesheet
    Sections:
      1. Trail-ref bearings (N/S/E/W) — colored link styles
      2. Visual-language callouts — droplet, charter, anchor, waggle, honey,
@@ -187,10 +187,10 @@ body.faerie-compass-overlay-active {
 .faerie-chat-buttons { display: flex; gap: 8px; margin-top: 6px; }
 
 /* --------------------------------------------------------------------------
-   5. PDF export — preserved from reckon-pdf v1
+   5. PDF export — preserved from compasscrew-pdf v1
    -------------------------------------------------------------------------- */
-.reckon-pdf-modal h2 { font-family: var(--font-text); }
-.reckon-pdf-modal .log-box {
+.compasscrew-pdf-modal h2 { font-family: var(--font-text); }
+.compasscrew-pdf-modal .log-box {
   background-color: var(--background-secondary);
   padding: 8px;
   font-family: var(--font-monospace);

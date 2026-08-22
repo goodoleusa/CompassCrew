@@ -166,7 +166,7 @@ A droplet is *the thing you remember*. The mess landed and dissolved; this is wh
 
 ## 🐾 Trail — the path through
 
-A **trail** is the agent's dead-reckoning journey through the mission graph. Trails are made of trail-refs (typed, peekable links) and waypoints (places the agent stopped to write).
+A **trail** is the agent's dead-compasscrewing journey through the mission graph. Trails are made of trail-refs (typed, peekable links) and waypoints (places the agent stopped to write).
 
 - **Emoji:** 🐾
 - **Primitive shape:** polyline with chevron at each pivot

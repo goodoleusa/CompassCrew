@@ -1,6 +1,6 @@
 # Spawn Bundle — Hive v2.0.0 Verification Phase
 
-**Hand this entire file to main as the spawn context.** Main can then dispatch the 4-agent multi-bearing team to verify and complete the plugin. All work happens against the live `faerie-vault` (`/mnt/d/0local/gitrepos/faerie-vault/`) so the user can interact with the plugin in their actual vault, not a synthetic one.
+**Hand this entire file to main as the spawn context.** Main can then dispatch the 4-agent multi-bearing team to verify and complete the plugin. All work happens against the live `faerie-vault` (`~/gitrepos/faerie-vault/`) so the user can interact with the plugin in their actual vault, not a synthetic one.
 
 ---
 
@@ -8,7 +8,7 @@
 
 `mission: hive-plugin-verification-and-bringup`
 
-Take the freshly scaffolded Hive v2.0.0 plugin at `/mnt/d/0local/gitrepos/faerie-hive-plugin/` from "compiles" to "user can open Obsidian and use it in faerie-vault." Verify each feature against the real vault. Patch the stubs. Test the SpiderFoot scan end-to-end.
+Take the freshly scaffolded Hive v2.0.0 plugin at `~/gitrepos/faerie-hive-plugin/` from "compiles" to "user can open Obsidian and use it in faerie-vault." Verify each feature against the real vault. Patch the stubs. Test the SpiderFoot scan end-to-end.
 
 ## Why multi-bearing
 
@@ -25,10 +25,10 @@ Spawn all four archetypes (NAVIGATOR + MAKER + BRIDGE + DEEP-DIVER) in parallel,
 ## Bundle context (read first)
 
 ### Plugin location
-`/mnt/d/0local/gitrepos/faerie-hive-plugin/` — single git repo, one commit, remote configured to `git@github.com:Persistech/faerie-hive-plugin.git` (NOT pushed).
+`~/gitrepos/faerie-hive-plugin/` — single git repo, one commit, remote configured to `git@github.com:Persistech/faerie-hive-plugin.git` (NOT pushed).
 
 ### Target vault
-`/mnt/d/0local/gitrepos/faerie-vault/` — user's REAL Obsidian vault. Symlink the built plugin into `<vault>/.obsidian/plugins/hive/`.
+`~/gitrepos/faerie-vault/` — user's REAL Obsidian vault. Symlink the built plugin into `<vault>/.obsidian/plugins/hive/`.
 
 ### Canonical NSEW Ontology (locked, do not redefine)
 Single source of truth: `src/bearings.ts`. All modules import from there.
@@ -83,12 +83,12 @@ If any are missing, plugin degrades gracefully (Notice on failure).
 **Role:** Get plugin from source to enabled-in-Obsidian.
 **Bundle:**
 ```
-cd /mnt/d/0local/gitrepos/faerie-hive-plugin
+cd ~/gitrepos/faerie-hive-plugin
 npm install
 npm run build      # should produce main.js
 ls -la main.js     # verify file exists, ~50KB ish (no nunjucks dep)
 # Symlink into faerie-vault (REAL vault)
-VAULT=/mnt/d/0local/gitrepos/faerie-vault
+VAULT=~/gitrepos/faerie-vault
 mkdir -p "$VAULT/.obsidian/plugins"
 ln -sfn "$(pwd)" "$VAULT/.obsidian/plugins/hive"
 # Enable in Obsidian's data: edit "$VAULT/.obsidian/community-plugins.json"
@@ -140,7 +140,7 @@ without error:
 **Bundle:**
 ```
 # SpiderFoot end-to-end
-cd /mnt/d/0local/gitrepos/faerie2/.openhands/skills/spiderfoot
+cd ~/gitrepos/faerie2/.openhands/skills/spiderfoot
 bash install_launch.sh        # Get SpiderFoot installed via uv
 # Pick a safe target: e.g. example.com
 # Run the plugin command faerie-spiderfoot-scan with target=example.com
@@ -173,7 +173,7 @@ bash install_launch.sh        # Get SpiderFoot installed via uv
 **Bundle:**
 ```
 # Ontology audit
-cd /mnt/d/0local/gitrepos/faerie-hive-plugin
+cd ~/gitrepos/faerie-hive-plugin
 # Find every place that mentions N/S/E/W bearings
 grep -rn -E '"N"|"S"|"E"|"W"|north|south|east|west|unblock|conclude|parallel|baseline' src/ main.ts Blueprints/
 # For each match, verify it imports BEARING_* from src/bearings.ts, OR is a
@@ -227,11 +227,11 @@ After all 4 agents return, main reads the 4 manifests, synthesizes into a sessio
 ```
 /spawn --mission hive-plugin-verification-and-bringup --bearings NSEW --wave W1 \
        --bundle docs/SPAWN-BUNDLE.md \
-       --vault /mnt/d/0local/gitrepos/faerie-vault \
-       --plugin-repo /mnt/d/0local/gitrepos/faerie-hive-plugin
+       --vault ~/gitrepos/faerie-vault \
+       --plugin-repo ~/gitrepos/faerie-hive-plugin
 ```
 
-Each agent gets a copy of this bundle and their specific bearing section as their primary context. They write manifests to `/mnt/d/0local/gitrepos/faerie-hive-plugin/forensics/ephemeral/<date>/<task_id>/`.
+Each agent gets a copy of this bundle and their specific bearing section as their primary context. They write manifests to `~/gitrepos/faerie-hive-plugin/forensics/ephemeral/<date>/<task_id>/`.
 
 ## Why the plugin is ready for spawn
 

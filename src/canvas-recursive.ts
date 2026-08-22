@@ -11,7 +11,7 @@ import * as path from "path";
  * three thin affordances on top:
  *
  *   1. Status-tag UI — colour-code Excalidraw shapes by publish status
- *      using the same vocabulary as `reckon-inbox` (draft / reviewing /
+ *      using the same vocabulary as `compasscrew-inbox` (draft / reviewing /
  *      annotating / ready-to-publish / published).
  *   2. Card-template overlay — drop a shape, get a template preset
  *      (Decker / Parchment / Bubble) baked into its strokeColor +
@@ -28,9 +28,9 @@ import * as path from "path";
  * stays self-contained so it can be excised if it ever bloats.
  */
 
-// ─── Status palette — matches `reckon-inbox` + VaultPreviewPane.jsx ──
+// ─── Status palette — matches `compasscrew-inbox` + VaultPreviewPane.jsx ──
 // Default palette colors live here; vocabulary + bearing colors are
-// loaded from `_meta/reckon.config.json` at plugin boot (one-place
+// loaded from `_meta/compasscrew.config.json` at plugin boot (one-place
 // truth). If the config is missing or malformed, we fall back to the
 // hardcoded defaults so the plugin never crashes — but the source of
 // authority is the vault config.
@@ -42,7 +42,7 @@ const STATUS_PALETTE_FALLBACK: Record<string, { stroke: string; fill: string; em
   "published":        { stroke: "#7C3AED", fill: "#EDE9FE", emoji: "✅", label: "Published" },
 };
 
-// Bearing colors fallback — mirrors `_meta/reckon.config.json`.
+// Bearing colors fallback — mirrors `_meta/compasscrew.config.json`.
 const BEARING_COLORS_FALLBACK: Record<string, { label: string; color: string; archetype: string }> = {
   "N": { label: "unblock",  color: "#D14A8B", archetype: "NAVIGATOR" },
   "S": { label: "ship",     color: "#0E7C8A", archetype: "MAKER" },
@@ -50,23 +50,23 @@ const BEARING_COLORS_FALLBACK: Record<string, { label: string; color: string; ar
   "W": { label: "baseline", color: "#C9A84C", archetype: "DEEP_DIVER" },
 };
 
-// Live values populated by loadReckonConfig(); exported so callers
+// Live values populated by loadCompassCrewConfig(); exported so callers
 // always read the current config-backed values, not the fallbacks.
 export let STATUS_PALETTE: Record<string, { stroke: string; fill: string; emoji: string; label: string }> = { ...STATUS_PALETTE_FALLBACK };
 export let STATUS_VOCAB: string[] = Object.keys(STATUS_PALETTE_FALLBACK);
 export let BEARING_COLORS: Record<string, { label: string; color: string; archetype: string }> = { ...BEARING_COLORS_FALLBACK };
 
 /**
- * Load _meta/reckon.config.json relative to the vault root.
+ * Load _meta/compasscrew.config.json relative to the vault root.
  * Safe to call multiple times. Falls back silently to defaults on any
  * error so the plugin never breaks on a missing or malformed config.
  */
-export function loadReckonConfig(app: App): void {
+export function loadCompassCrewConfig(app: App): void {
   try {
     const vaultRoot = (app.vault.adapter as any).basePath
       ?? (app.vault.adapter as any).getBasePath?.();
     if (!vaultRoot) return;
-    const cfgPath = path.join(vaultRoot, "_meta", "reckon.config.json");
+    const cfgPath = path.join(vaultRoot, "_meta", "compasscrew.config.json");
     if (!fs.existsSync(cfgPath)) return;
     const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
 
@@ -174,9 +174,9 @@ async function applyTemplateToSelected(app: App, tmpl: string): Promise<void> {
  * charter dashboard can render a preview without re-parsing the file).
  *
  * This intentionally writes through the OS filesystem (not the
- * Obsidian vault adapter) because charters live in the reckon repo's
+ * Obsidian vault adapter) because charters live in the compasscrew repo's
  * forensics tree, NOT inside the vault. The path is resolved relative
- * to env var RECKON_REPO_ROOT, falling back to a sibling-repo guess.
+ * to env var COMPASSCREW_REPO_ROOT, falling back to a sibling-repo guess.
  */
 async function commitCanvasToCharter(app: App): Promise<void> {
   const file = app.workspace.getActiveFile();
@@ -186,8 +186,8 @@ async function commitCanvasToCharter(app: App): Promise<void> {
   }
   const fm = app.metadataCache.getFileCache(file)?.frontmatter ?? {};
   const slug = (fm.charter_slug || file.basename.replace(/\.excalidraw$/, "")).toString().toLowerCase().replace(/[^a-z0-9-]/g, "-");
-  const repoRoot = process.env.RECKON_REPO_ROOT
-    || path.resolve((app.vault.adapter as any).basePath || ".", "..", "gitrepos", "reckon");
+  const repoRoot = process.env.COMPASSCREW_REPO_ROOT
+    || path.resolve((app.vault.adapter as any).basePath || ".", "..", "gitrepos", "compasscrew");
   const chartersDir = path.join(repoRoot, "forensics", "charters", "active");
 
   try {
@@ -241,10 +241,10 @@ async function commitCanvasToCharter(app: App): Promise<void> {
 export function registerCanvasRecursive(plugin: Plugin): void {
   const app = plugin.app;
 
-  // Load the one-place-truth config (_meta/reckon.config.json) so the
+  // Load the one-place-truth config (_meta/compasscrew.config.json) so the
   // status palette + bearing colors reflect the user's edits. Falls
   // back silently to the hardcoded defaults on any error.
-  loadReckonConfig(app);
+  loadCompassCrewConfig(app);
 
   // Status commands — one per bucket.
   for (const status of Object.keys(STATUS_PALETTE)) {

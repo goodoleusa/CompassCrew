@@ -31,8 +31,8 @@ class BearingPickerModal extends Modal {
 
 export function registerTrailRefs(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-highlight-with-bearing",
-    name: "Reckon: highlight selection with bearing (trail-ref)",
+    id: "compasscrew-highlight-with-bearing",
+    name: "CompassCrew: highlight selection with bearing (trail-ref)",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "H" }],
     editorCallback: (editor: Editor, _view: MarkdownView) => {
       const sel = editor.getSelection();
@@ -50,7 +50,7 @@ export function registerTrailRefs(plugin: Plugin) {
         // in the Breadcrumbs trail view (up/next/same/down) — see
         // breadcrumbs-threading.ts for the bearing→field map.
         const file = plugin.app.workspace.getActiveFile();
-        const addBc = (plugin as any).reckonAddBreadcrumb;
+        const addBc = (plugin as any).compasscrewAddBreadcrumb;
         if (file && destPath !== "#" && typeof addBc === "function") {
           try { await addBc(file, b, destPath); } catch { /* ignore */ }
         }
@@ -60,8 +60,8 @@ export function registerTrailRefs(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-copy-trail-ref",
-    name: "Reckon: copy trail-ref to clipboard",
+    id: "compasscrew-copy-trail-ref",
+    name: "CompassCrew: copy trail-ref to clipboard",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "C" }],
     editorCallback: async (editor: Editor) => {
       const sel = editor.getSelection();
@@ -74,13 +74,13 @@ export function registerTrailRefs(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-toggle-all-trail-refs",
-    name: "Reckon: toggle all trail-refs (show/hide)",
+    id: "compasscrew-toggle-all-trail-refs",
+    name: "CompassCrew: toggle all trail-refs (show/hide)",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "S" }],
     callback: () => {
-      document.body.classList.toggle("reckon-trail-refs-collapsed");
+      document.body.classList.toggle("compasscrew-trail-refs-collapsed");
       new Notice(
-        document.body.classList.contains("reckon-trail-refs-collapsed")
+        document.body.classList.contains("compasscrew-trail-refs-collapsed")
           ? "Trail-refs collapsed."
           : "Trail-refs expanded."
       );
@@ -98,6 +98,6 @@ export function registerTrailRefs(plugin: Plugin) {
     const t = (a.getAttribute("title") || "").trim();
     if (!["N", "S", "E", "W"].includes(t)) return;
     evt.preventDefault();
-    a.classList.toggle("reckon-collapsed");
+    a.classList.toggle("compasscrew-collapsed");
   });
 }

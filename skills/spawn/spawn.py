@@ -40,7 +40,7 @@ BUDGET_TEAMS = {
 }
 
 def read_formulas():
-    path = Path("/mnt/d/0local/.claude/swarmy-formulas.json")
+    path = Path.home() / ".claude" / "swarmy-formulas.json"
     try:
         with open(path) as f:
             return json.load(f)
@@ -48,7 +48,7 @@ def read_formulas():
         return {}
 
 def read_altimeter():
-    path = Path("/mnt/d/0local/.claude/altimeter.json")
+    path = Path.home() / ".claude" / "altimeter.json"
     try:
         with open(path) as f:
             return json.load(f)
@@ -88,20 +88,20 @@ def read_bundle(label):
     parts = []
 
     # Global HONEY
-    honey = Path("/mnt/d/0LOCAL/.claude/HONEY.md")
+    honey = Path("~/.claude/HONEY.md")
     if honey.exists():
         with open(honey) as f:
             parts.append(f"# Global Principles\n\n{f.read()[:1000]}\n")
 
     # NECTAR tail-50
-    nectar = Path("/mnt/d/0LOCAL/.claude/NECTAR.md")
+    nectar = Path("~/.claude/NECTAR.md")
     if nectar.exists():
         with open(nectar) as f:
             lines = f.readlines()
             parts.append(f"# Recent Findings (NECTAR tail-50)\n\n{''.join(lines[-50:])}\n")
 
     # Bundle template
-    template = Path("/mnt/d/0local/gitrepos/faerie2/.claude/scripts/0x_spawn_bundle_template.md")
+    template = Path("~/gitrepos/faerie2/.claude/scripts/0x_spawn_bundle_template.md")
     if template.exists():
         with open(template) as f:
             parts.append(f"# Bundle Structure (Self-Describing)\n\n{f.read()[:2000]}\n")

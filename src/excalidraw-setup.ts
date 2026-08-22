@@ -20,7 +20,7 @@ import { BEARINGS, BEARING_COLOR, BEARING_LABEL } from "./bearings";
  *     (parents/children/friends) as draggable shapes, so the user can
  *     RE-DRAW a proposed graph topology before committing it back to
  *     frontmatter. Sketch → review → commit.
- *  4. Install Reckon-curated professional fonts (Inter, IBM Plex Sans,
+ *  4. Install CompassCrew-curated professional fonts (Inter, IBM Plex Sans,
  *     JetBrains Mono) into Excalidraw's font directory and select them
  *     as defaults.
  */
@@ -35,7 +35,7 @@ interface ExcalidrawProSettings {
 }
 
 /** Professional preset — smooth, bold, sans-serif, readable. */
-const RECKON_EXCALIDRAW_PRESET: ExcalidrawProSettings = {
+const COMPASSCREW_EXCALIDRAW_PRESET: ExcalidrawProSettings = {
   defaultFontFamily: 2,          // Helvetica (clean sans) — overridden by local fonts below if installed
   defaultStrokeStyle: "solid",
   defaultRoughness: 0,           // ARCHITECT — perfectly smooth lines, no hand-drawn jitter
@@ -45,7 +45,7 @@ const RECKON_EXCALIDRAW_PRESET: ExcalidrawProSettings = {
 };
 
 /** Fonts to install — all open-license, professional sans + mono. */
-const RECKON_FONTS = [
+const COMPASSCREW_FONTS = [
   {
     name: "Inter",
     url: "https://rsms.me/inter/font-files/Inter-Bold.woff2",
@@ -116,8 +116,8 @@ function findExcalidrawScriptsDir(app: App): string {
 
 function findEaScriptsRepo(): string | null {
   const candidates = [
-    "/mnt/d/0local/gitrepos/excalidraw-scripts/ea-scripts",
-    "/mnt/d/0LOCAL/gitrepos/excalidraw-scripts/ea-scripts",
+    "~/gitrepos/excalidraw-scripts/ea-scripts",
+    "~/gitrepos/excalidraw-scripts/ea-scripts",
   ];
   for (const p of candidates) if (fs.existsSync(p)) return p;
   return null;
@@ -125,8 +125,8 @@ function findEaScriptsRepo(): string | null {
 
 export function registerExcalidrawSetup(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-excalidraw-apply-pro-preset",
-    name: "Reckon: apply professional Excalidraw preset (smooth, bold, sans)",
+    id: "compasscrew-excalidraw-apply-pro-preset",
+    name: "CompassCrew: apply professional Excalidraw preset (smooth, bold, sans)",
     callback: async () => {
       const anyApp = plugin.app as any;
       const ex = anyApp.plugins?.plugins?.["obsidian-excalidraw-plugin"];
@@ -137,11 +137,11 @@ export function registerExcalidrawSetup(plugin: Plugin) {
       try {
         const s = ex.settings ?? {};
         // Apply preset keys (we use the documented Excalidraw setting names)
-        s.defaultFontFamily = RECKON_EXCALIDRAW_PRESET.defaultFontFamily;
-        s.defaultRoughness = RECKON_EXCALIDRAW_PRESET.defaultRoughness;
-        s.defaultStrokeWidth = RECKON_EXCALIDRAW_PRESET.defaultStrokeWidth;
-        s.defaultFontSize = RECKON_EXCALIDRAW_PRESET.defaultFontSize;
-        s.curvedArrows = RECKON_EXCALIDRAW_PRESET.curvedArrows;
+        s.defaultFontFamily = COMPASSCREW_EXCALIDRAW_PRESET.defaultFontFamily;
+        s.defaultRoughness = COMPASSCREW_EXCALIDRAW_PRESET.defaultRoughness;
+        s.defaultStrokeWidth = COMPASSCREW_EXCALIDRAW_PRESET.defaultStrokeWidth;
+        s.defaultFontSize = COMPASSCREW_EXCALIDRAW_PRESET.defaultFontSize;
+        s.curvedArrows = COMPASSCREW_EXCALIDRAW_PRESET.curvedArrows;
         s.previewMatchObsidianTheme = true;
         ex.settings = s;
         await ex.saveSettings?.();
@@ -156,8 +156,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-excalidraw-install-fonts",
-    name: "Reckon: install professional Excalidraw fonts (Inter, IBM Plex, JetBrains Mono)",
+    id: "compasscrew-excalidraw-install-fonts",
+    name: "CompassCrew: install professional Excalidraw fonts (Inter, IBM Plex, JetBrains Mono)",
     callback: async () => {
       const anyApp = plugin.app as any;
       const ex = anyApp.plugins?.plugins?.["obsidian-excalidraw-plugin"];
@@ -165,7 +165,7 @@ export function registerExcalidrawSetup(plugin: Plugin) {
       const dest = path.join(vaultRoot(plugin.app), fontPath);
       fs.mkdirSync(dest, { recursive: true });
       let ok = 0, fail = 0;
-      for (const f of RECKON_FONTS) {
+      for (const f of COMPASSCREW_FONTS) {
         const out = path.join(dest, f.filename);
         if (fs.existsSync(out)) { ok++; continue; }
         try {
@@ -175,7 +175,7 @@ export function registerExcalidrawSetup(plugin: Plugin) {
           fs.writeFileSync(out, buf);
           ok++;
         } catch (e) {
-          console.warn("[reckon] font download failed", f.filename, e);
+          console.warn("[compasscrew] font download failed", f.filename, e);
           fail++;
         }
       }
@@ -184,8 +184,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-excalidraw-install-scripts",
-    name: "Reckon: install curated Excalidraw scripts library",
+    id: "compasscrew-excalidraw-install-scripts",
+    name: "CompassCrew: install curated Excalidraw scripts library",
     callback: async () => {
       const repo = findEaScriptsRepo();
       if (!repo) {
@@ -216,8 +216,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
    * note's frontmatter.
    */
   plugin.addCommand({
-    id: "reckon-draft-excalibrain",
-    name: "Reckon: draft ExcaliBrain (sketch next mission-graph version)",
+    id: "compasscrew-draft-excalibrain",
+    name: "CompassCrew: draft ExcaliBrain (sketch next mission-graph version)",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) { new Notice("Open a note first."); return; }
@@ -272,13 +272,13 @@ export function registerExcalidrawSetup(plugin: Plugin) {
       const body = [
         "---",
         "excalidraw-plugin: parsed",
-        "tags: [excalidraw, reckon-draft, excalibrain-draft]",
+        "tags: [excalidraw, compasscrew-draft, excalibrain-draft]",
         `draft_for: "${file.path}"`,
         `created: ${new Date().toISOString()}`,
         "---",
         "",
         "> [!brood] Draft ExcaliBrain — sketch your next topology",
-        "> Rearrange, add, delete, then run **Reckon: commit ExcaliBrain draft** to write changes back to `" + file.path + "` frontmatter.",
+        "> Rearrange, add, delete, then run **CompassCrew: commit ExcaliBrain draft** to write changes back to `" + file.path + "` frontmatter.",
         "> Legend:",
         ...BEARINGS.map((b) => `> - <span style=\"color:${BEARING_COLOR[b]}\">${BEARING_LABEL[b]}</span>`),
         "",
@@ -292,7 +292,7 @@ export function registerExcalidrawSetup(plugin: Plugin) {
         "",
         "## Drawing",
         "```json",
-        JSON.stringify({ type: "excalidraw", version: 2, source: "reckon-vault-plugin", elements: nodes, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
+        JSON.stringify({ type: "excalidraw", version: 2, source: "compasscrew-vault-plugin", elements: nodes, appState: { gridSize: 20, viewBackgroundColor: "#FAF8F2" } }, null, 2),
         "```",
         "%%",
       ].join("\n");
@@ -308,8 +308,8 @@ export function registerExcalidrawSetup(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-commit-excalibrain-draft",
-    name: "Reckon: commit ExcaliBrain draft → frontmatter",
+    id: "compasscrew-commit-excalibrain-draft",
+    name: "CompassCrew: commit ExcaliBrain draft → frontmatter",
     callback: async () => {
       const file = plugin.app.workspace.getActiveFile();
       if (!file) return;

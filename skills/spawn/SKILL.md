@@ -80,9 +80,9 @@ Override with `--team agent1,agent2,agent3,agent4`.
 
 1. **Run spawn-direct.py to get directives:**
    ```bash
-   python3 /mnt/d/0LOCAL/.claude/skills/spawn/spawn-direct.py "<intent>" --mission <mission_name> --wave <1|2|3> --team <agent1,agent2,agent3,agent4>
+   python3 ~/.claude/skills/spawn/spawn-direct.py "<intent>" --mission <mission_name> --wave <1|2|3> --team <agent1,agent2,agent3,agent4>
    ```
-   Example: `python3 /mnt/d/0LOCAL/.claude/skills/spawn/spawn-direct.py "Fix the spawn execution bug" --mission mission-spawn-fix --wave 1 --team python-pro,code-reviewer,ai-engineer,security-auditor`
+   Example: `python3 ~/.claude/skills/spawn/spawn-direct.py "Fix the spawn execution bug" --mission mission-spawn-fix --wave 1 --team python-pro,code-reviewer,ai-engineer,security-auditor`
 
 2. **Parse each JSON line from stdout** — each line is one directive with fields:
    - `subagent_type` (string, e.g., "python-pro")
@@ -122,7 +122,7 @@ Override with `--team agent1,agent2,agent3,agent4`.
 
 If user calls `/spawn "Analyze token metrics" --investigation-label token-analysis`, here is what you do:
 
-1. Bash: `python3 /mnt/d/0LOCAL/.claude/skills/spawn/spawn-direct.py "Analyze token metrics" --mission token-analysis --wave 1 --team data-analyst,research-analyst,code-reviewer,knowledge-synthesizer`
+1. Bash: `python3 ~/.claude/skills/spawn/spawn-direct.py "Analyze token metrics" --mission token-analysis --wave 1 --team data-analyst,research-analyst,code-reviewer,knowledge-synthesizer`
 2. Parse the 4 JSON lines returned → 4 directives
 3. Call Agent() 4 times (in parallel, same message):
    ```
@@ -137,4 +137,4 @@ If user calls `/spawn "Analyze token metrics" --investigation-label token-analys
 
 ---
 
-**Full procedure:** Read `/mnt/d/0LOCAL/.claude/skills/spawn/BODY.md`
+**Full procedure:** Read `~/.claude/skills/spawn/BODY.md`

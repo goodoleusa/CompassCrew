@@ -4,11 +4,11 @@
  * Source: https://github.com/blacksmithgu/obsidian-dataview (MIT)
  * License: MIT (see THIRD_PARTY_NOTICES.md)
  *
- * Why vendor a subset: today's reckon vault uses dataview blocks for
+ * Why vendor a subset: today's compasscrew vault uses dataview blocks for
  * publication indexes, charter rollups, and manifest lists. The full
  * dataview plugin is a substantial dependency tree. We re-implement only
  * the query shapes actually present in vault templates, so a user can
- * "just install reckon-vault-plugin" and see correct results.
+ * "just install compasscrew-vault-plugin" and see correct results.
  *
  * Supported query forms:
  *   ```dataview
@@ -309,13 +309,13 @@ function fmtCell(v: unknown): string {
 // ─── Rendering ─────────────────────────────────────────────────────────────
 
 function renderError(el: HTMLElement, msg: string) {
-  const box = el.createEl("div", { cls: "reckon-mini-dataview-error" });
+  const box = el.createEl("div", { cls: "compasscrew-mini-dataview-error" });
   box.style.cssText = "padding:6px 8px;border:1px solid #C73E1D;border-radius:4px;color:#C73E1D;font-family:var(--font-monospace);";
   box.setText(msg);
 }
 
 function renderTable(el: HTMLElement, q: ParsedQuery, rows: QueryRow[]) {
-  const table = el.createEl("table", { cls: "reckon-mini-dataview-table" });
+  const table = el.createEl("table", { cls: "compasscrew-mini-dataview-table" });
   const thead = table.createEl("thead");
   const trH = thead.createEl("tr");
   trH.createEl("th", { text: "File" });
@@ -344,7 +344,7 @@ function renderList(el: HTMLElement, rows: QueryRow[]) {
     p.style.cssText = "color:var(--text-muted);font-style:italic;";
     return;
   }
-  const ul = el.createEl("ul", { cls: "reckon-mini-dataview-list" });
+  const ul = el.createEl("ul", { cls: "compasscrew-mini-dataview-list" });
   for (const row of rows) {
     const li = ul.createEl("li");
     const a = li.createEl("a", { cls: "internal-link", text: row.file.basename });

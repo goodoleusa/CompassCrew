@@ -5,7 +5,7 @@ const ONE_HOUR = 60 * 60 * 1000;
 /**
  * Decorates the file explorer:
  *  - 🐝 icon next to files whose frontmatter has agent_type (AI-authored)
- *  - .reckon-honey-glow class on files modified <1h ago
+ *  - .compasscrew-honey-glow class on files modified <1h ago
  *
  * Uses Obsidian's metadataCache for frontmatter, and DOM observation on the
  * file-explorer leaf for icon injection.
@@ -28,10 +28,10 @@ export function registerFileDecorator(plugin: Plugin) {
         // Bee icon for AI-authored notes
         const cache = plugin.app.metadataCache.getFileCache(file);
         const isAi = !!cache?.frontmatter?.agent_type;
-        const existing = el.querySelector(".reckon-bee-icon");
+        const existing = el.querySelector(".compasscrew-bee-icon");
         if (isAi && !existing) {
           const icon = document.createElement("span");
-          icon.className = "reckon-bee-icon";
+          icon.className = "compasscrew-bee-icon";
           icon.textContent = "🐝";
           icon.style.marginLeft = "4px";
           el.appendChild(icon);
@@ -41,7 +41,7 @@ export function registerFileDecorator(plugin: Plugin) {
 
         // Honey glow for fresh files
         const fresh = (now - file.stat.mtime) < ONE_HOUR;
-        el.classList.toggle("reckon-honey-glow", fresh);
+        el.classList.toggle("compasscrew-honey-glow", fresh);
       });
     }
   };

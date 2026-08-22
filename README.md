@@ -1,8 +1,8 @@
-# Reckon — Steer Your AI Fleet From Your Vault
+# CompassCrew — Steer Your AI Fleet From Your Vault
 
 > You're not giving your vault to AI. You're giving AI a chair at your table.
 
-Reckon is an Obsidian plugin that gives you **mission control for AI** — right inside your vault. Draw your system on a canvas, spawn agent crews to work it, drill into anything, and steer with a click. One plugin. Zero magic.
+CompassCrew is an Obsidian plugin that gives you **mission control for AI** — right inside your vault. Draw your system on a canvas, spawn agent crews to work it, drill into anything, and steer with a click. One plugin. Zero magic.
 
 **You prompt once. The fleet executes. You see everything.**
 
@@ -95,12 +95,12 @@ Every AI artifact and every human annotation is hashed and tracked. Two parallel
 ## Quick Clone-and-Go
 
 ```bash
-git clone https://github.com/goodoleusa/reckon-vault-plugin /path/to/your-vault/.obsidian/plugins/reckon
+git clone https://github.com/goodoleusa/compasscrew-vault-plugin /path/to/your-vault/.obsidian/plugins/compasscrew
 ```
 
 1. Open Obsidian
-2. Settings → Community plugins → disable Restrict mode → enable **Reckon**
-3. Run **Reckon: doctor** (command palette) → installs companion plugins
+2. Settings → Community plugins → disable Restrict mode → enable **CompassCrew**
+3. Run **CompassCrew: doctor** (command palette) → installs companion plugins
 
 That's it. The plugin ships pre-built. No npm, no Node, no compilation.
 
@@ -117,25 +117,25 @@ That's it. The plugin ships pre-built. No npm, no Node, no compilation.
 
 ## All Commands
 
-Open command palette (⌘+P / Ctrl+P), type `reckon`:
+Open command palette (⌘+P / Ctrl+P), type `compasscrew`:
 
 | Command | What it does |
 |---------|-------------|
-| **Reckon: doctor** | Check your setup, install what's missing |
-| **Reckon: pollinate** | Draw any folder as a canvas |
-| **Reckon: draft excalibrain** | Open current note's canvas |
-| **Reckon: commit excalibrain draft** | Save canvas to frontmatter |
-| **Reckon: scan and propose bearings** | AI suggests who connects to who |
-| **Reckon: auto-layout** | Snap canvas to clean layered layout |
-| **Reckon: compass overlay** | See bearing graph for current note |
-| **Reckon: suggest threads** | Auto-detect note relationships |
-| **Reckon: grab MCP token** | One-click OAuth for AI features |
-| **Reckon: install canonical configs** | Linter + Breadcrumbs + visual CSS |
-| **Reckon: lint current file** | Vendored linter |
-| **Reckon: lint entire vault** | Vendored linter |
-| **Reckon: export as PDF** | Pandoc or native print |
-| **Reckon: breadcrumbs tutorial** | In-vault threading guide |
-| **Reckon: rotate MCP token** | Token management |
+| **CompassCrew: doctor** | Check your setup, install what's missing |
+| **CompassCrew: pollinate** | Draw any folder as a canvas |
+| **CompassCrew: draft excalibrain** | Open current note's canvas |
+| **CompassCrew: commit excalibrain draft** | Save canvas to frontmatter |
+| **CompassCrew: scan and propose bearings** | AI suggests who connects to who |
+| **CompassCrew: auto-layout** | Snap canvas to clean layered layout |
+| **CompassCrew: compass overlay** | See bearing graph for current note |
+| **CompassCrew: suggest threads** | Auto-detect note relationships |
+| **CompassCrew: grab MCP token** | One-click OAuth for AI features |
+| **CompassCrew: install canonical configs** | Linter + Breadcrumbs + visual CSS |
+| **CompassCrew: lint current file** | Vendored linter |
+| **CompassCrew: lint entire vault** | Vendored linter |
+| **CompassCrew: export as PDF** | Pandoc or native print |
+| **CompassCrew: breadcrumbs tutorial** | In-vault threading guide |
+| **CompassCrew: rotate MCP token** | Token management |
 
 ---
 

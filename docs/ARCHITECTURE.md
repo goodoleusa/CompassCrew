@@ -128,7 +128,7 @@ Hive's network surface is exactly one thing: an MCP server. Everything else is l
 | `faerie_spawn_agent` | optional — spawn an agent from in-vault |
 | `faerie_get_manifest_index` | check in-flight agents before spawning |
 
-**Auth model:** bearer token (200-char base64url) stored in `<vault>/.swarmy-token` (gitignored, `chmod 600`). Token obtained via GitHub OAuth at `https://swarmy.retrofuture.tech`. Server validates token + the user's GitHub username is in `GITHUB_ALLOWED_USERS`. Rotation via `faerie: rotate MCP token` command.
+**Auth model:** bearer token (200-char base64url) stored in `<vault>/.swarmy-token` (gitignored, `chmod 600`). Token obtained via GitHub OAuth at `https://your-mcp-server.example.com`. Server validates token + the user's GitHub username is in `GITHUB_ALLOWED_USERS`. Rotation via `faerie: rotate MCP token` command.
 
 **The boundary is the *only* network surface.** No telemetry. No usage pings. No third-party CDNs. The plugin ships with zero runtime npm dependencies — all rendering, parsing, and templating is in-tree.
 

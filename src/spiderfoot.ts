@@ -15,8 +15,8 @@ const execAsync = promisify(exec);
  * SpiderFoot integration.
  *
  * Flow:
- *  1. User runs "Reckon: SpiderFoot scan target".
- *  2. Plugin invokes the reckon SpiderFoot skill via WSL/bash, which uses
+ *  1. User runs "CompassCrew: SpiderFoot scan target".
+ *  2. Plugin invokes the compasscrew SpiderFoot skill via WSL/bash, which uses
  *     a uv/poetry-managed venv to keep the local install stable (the install
  *     is famously finicky — pinning python + spiderfoot version via
  *     `install_launch.sh` in the skill folder solves it).
@@ -33,14 +33,14 @@ const execAsync = promisify(exec);
  */
 
 export interface SpiderfootSettings {
-  reckonRepoRoot: string;          // absolute; e.g. /mnt/d/0local/gitrepos/faerie2
+  compasscrewRepoRoot: string;          // absolute; e.g. ~/gitrepos/faerie2
   skillRelPath: string;            // e.g. .openhands/skills/spiderfoot
   pythonRunner: "uv" | "poetry" | "system";
   outputBase: string;              // vault-relative; e.g. 02-OSINT
 }
 
 export const DEFAULT_SPIDERFOOT_SETTINGS: SpiderfootSettings = {
-  reckonRepoRoot: "/mnt/d/0local/gitrepos/faerie2",
+  compasscrewRepoRoot: "~/gitrepos/faerie2",
   skillRelPath: ".openhands/skills/spiderfoot",
   pythonRunner: "uv",
   outputBase: "02-OSINT",
@@ -105,11 +105,11 @@ function readCsvColumn(csvPath: string, columnName: string, limit = 50): string[
 
 export function registerSpiderfoot(plugin: Plugin, getSettings: () => SpiderfootSettings) {
   plugin.addCommand({
-    id: "reckon-spiderfoot-install",
-    name: "Reckon: SpiderFoot install / repair (uv venv)",
+    id: "compasscrew-spiderfoot-install",
+    name: "CompassCrew: SpiderFoot install / repair (uv venv)",
     callback: async () => {
       const s = getSettings();
-      const skill = path.join(s.reckonRepoRoot, s.skillRelPath);
+      const skill = path.join(s.compasscrewRepoRoot, s.skillRelPath);
       const installer = path.join(skill, "install_launch.sh");
       if (!fs.existsSync(installer)) {
         new Notice(`Installer not found: ${installer}`); return;
@@ -131,15 +131,15 @@ export function registerSpiderfoot(plugin: Plugin, getSettings: () => Spiderfoot
   });
 
   plugin.addCommand({
-    id: "reckon-spiderfoot-scan",
-    name: "Reckon: SpiderFoot scan target",
+    id: "compasscrew-spiderfoot-scan",
+    name: "CompassCrew: SpiderFoot scan target",
     callback: () => {
       new TargetModal(plugin.app, async (target) => {
         const s = getSettings();
-        const skill = path.join(s.reckonRepoRoot, s.skillRelPath);
+        const skill = path.join(s.compasscrewRepoRoot, s.skillRelPath);
         const date = new Date().toISOString().slice(0, 10);
         const runId = `sf-${Date.now()}`;
-        const outDir = path.join(s.reckonRepoRoot, "forensics", "osint-runs", date, runId);
+        const outDir = path.join(s.compasscrewRepoRoot, "forensics", "osint-runs", date, runId);
         fs.mkdirSync(outDir, { recursive: true });
 
         const py = s.pythonRunner === "uv"
@@ -219,7 +219,7 @@ export function registerSpiderfoot(plugin: Plugin, getSettings: () => Spiderfoot
         const tfile = plugin.app.vault.getAbstractFileByPath(rel);
         if (tfile instanceof TFile) {
           await plugin.app.workspace.getLeaf(true).openFile(tfile);
-          (plugin.app as any).commands.executeCommandById("reckon:reckon-apply-blueprint");
+          (plugin.app as any).commands.executeCommandById("compasscrew:compasscrew-apply-blueprint");
         }
         new Notice(`SpiderFoot scan complete: ${eventsTotal} events. Report: ${rel}`, 12000);
       }).open();

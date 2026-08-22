@@ -28,12 +28,12 @@ const CANONICAL_CONFIGS: Array<{
   destFile: string;
 }> = [
   {
-    source: "00-SHARED/Snippets/linter-settings-reckon.json",
+    source: "00-SHARED/Snippets/linter-settings-compasscrew.json",
     destPluginId: "obsidian-linter",
     destFile: "data.json",
   },
   {
-    source: "00-SHARED/Snippets/breadcrumbs-config-reckon.json",
+    source: "00-SHARED/Snippets/breadcrumbs-config-compasscrew.json",
     destPluginId: "breadcrumbs",
     destFile: "data.json",
   },
@@ -79,7 +79,7 @@ class DoctorReportModal extends Modal {
   onOpen() {
     const { contentEl, report } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Reckon Doctor — Plugin Health" });
+    contentEl.createEl("h2", { text: "CompassCrew Doctor — Plugin Health" });
     if (report.missing.length) {
       contentEl.createEl("h3", { text: "Missing (please install)" });
       const ul = contentEl.createEl("ul");
@@ -107,8 +107,8 @@ class DoctorReportModal extends Modal {
 
 export function registerDepOrchestrator(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-doctor",
-    name: "Reckon: doctor (check plugin dependencies)",
+    id: "compasscrew-doctor",
+    name: "CompassCrew: doctor (check plugin dependencies)",
     callback: () => {
       const dir = pluginsDir(plugin.app);
       let installed: string[] = [];
@@ -123,14 +123,14 @@ export function registerDepOrchestrator(plugin: Plugin) {
       const present = REQUIRED_PLUGINS.filter((p) => installed.includes(p));
       new DoctorReportModal(plugin.app, { missing, forbidden, present }).open();
       if (forbidden.length) {
-        new Notice(`⚠ Forbidden plugins detected: ${forbidden.join(", ")}. Reckon uses QuickAdd + Nunjucks, NOT Templater.`, 12000);
+        new Notice(`⚠ Forbidden plugins detected: ${forbidden.join(", ")}. CompassCrew uses QuickAdd + Nunjucks, NOT Templater.`, 12000);
       }
     },
   });
 
   plugin.addCommand({
-    id: "reckon-install-canonical-configs",
-    name: "Reckon: install canonical configs",
+    id: "compasscrew-install-canonical-configs",
+    name: "CompassCrew: install canonical configs",
     callback: () => {
       const root = vaultRoot(plugin.app);
       const reports: string[] = [];
@@ -158,7 +158,7 @@ export function registerDepOrchestrator(plugin: Plugin) {
         reports.push(`OK   ${cfg.destPluginId} (merged)`);
       }
 
-      // CSS snippets — enable all reckon-*.css in .obsidian/appearance.json
+      // CSS snippets — enable all compasscrew-*.css in .obsidian/appearance.json
       const snippetsDstDir = snippetsDir(plugin.app);
       const appearancePath = path.join(vaultRoot(plugin.app), ".obsidian", "appearance.json");
       try {
@@ -167,7 +167,7 @@ export function registerDepOrchestrator(plugin: Plugin) {
         let added = 0;
         if (fs.existsSync(snippetsDstDir)) {
           for (const f of fs.readdirSync(snippetsDstDir)) {
-            if (f.startsWith("reckon-") && f.endsWith(".css")) {
+            if (f.startsWith("compasscrew-") && f.endsWith(".css")) {
               const name = f.slice(0, -4); // strip .css
               if (!enabled.includes(name)) { enabled.push(name); added++; }
             }

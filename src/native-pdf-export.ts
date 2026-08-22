@@ -11,8 +11,8 @@
  * "Save as PDF" in their OS's print dialog and gets a PDF of the current
  * note rendered with vault styling. No subprocess calls. No extra deps.
  *
- * Command:  `Reckon: export current note as PDF (native print dialog)`
- * Id:       `reckon-pdf-export-current-note`
+ * Command:  `CompassCrew: export current note as PDF (native print dialog)`
+ * Id:       `compasscrew-pdf-export-current-note`
  *
  * Implementation notes:
  *   - We inject a transient <style> tag that scopes "print mode" CSS
@@ -26,7 +26,7 @@
 
 import { MarkdownView, Notice, Plugin } from "obsidian";
 
-const PRINT_STYLE_ID = "reckon-native-pdf-print-styles";
+const PRINT_STYLE_ID = "compasscrew-native-pdf-print-styles";
 
 /**
  * Inject the print stylesheet. Returns a teardown function to remove it.
@@ -57,8 +57,8 @@ function injectPrintStyles(): () => void {
       .view-header,
       .view-actions,
       .mod-side-dock,
-      .reckon-chat-panel,
-      .reckon-live-panel { display: none !important; }
+      .compasscrew-chat-panel,
+      .compasscrew-live-panel { display: none !important; }
 
       /* The active markdown leaf becomes the entire printable surface */
       .workspace-leaf.mod-active,
@@ -124,8 +124,8 @@ async function ensureReadingView(view: MarkdownView): Promise<() => Promise<void
 
 export function registerNativePdfExport(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-pdf-export-current-note",
-    name: "Reckon: export current note as PDF (native print dialog)",
+    id: "compasscrew-pdf-export-current-note",
+    name: "CompassCrew: export current note as PDF (native print dialog)",
     checkCallback: (checking: boolean) => {
       const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
       if (!view) return false;

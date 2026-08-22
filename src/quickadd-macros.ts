@@ -6,7 +6,7 @@ import * as path from "path";
  * Writes a set of QuickAdd-native JS macros into the vault so users can wire
  * them to QuickAdd's "User Script" choices. We do NOT modify QuickAdd's
  * data.json directly — the user adds the choices manually after running
- * "Reckon: install QuickAdd macros". This keeps Templater out of the loop
+ * "CompassCrew: install QuickAdd macros". This keeps Templater out of the loop
  * entirely (QuickAdd's macros use plain async params/quickAddApi).
  */
 
@@ -16,8 +16,8 @@ function vaultRoot(app: App): string {
 
 const MACROS: Array<{ name: string; body: string }> = [
   {
-    name: "reckon-new-charter.js",
-    body: `// Reckon: New charter — wizard prompts 3 slots, writes basic-template, applies charter.njk blueprint.
+    name: "compasscrew-new-charter.js",
+    body: `// CompassCrew: New charter — wizard prompts 3 slots, writes basic-template, applies charter.njk blueprint.
 module.exports = async (params) => {
   const { quickAddApi, app } = params;
   const slot1 = await quickAddApi.inputPrompt("Charter slot 1 (title)");
@@ -47,14 +47,14 @@ module.exports = async (params) => {
   ].join("\\n");
   const file = await app.vault.create(filename, body);
   await app.workspace.getLeaf(true).openFile(file);
-  // Apply blueprint via Reckon command
-  app.commands.executeCommandById("reckon:reckon-apply-blueprint");
+  // Apply blueprint via CompassCrew command
+  app.commands.executeCommandById("compasscrew:compasscrew-apply-blueprint");
 };
 `,
   },
   {
-    name: "reckon-new-manifest.js",
-    body: `// Reckon: New manifest — requires charter_ref from dropdown.
+    name: "compasscrew-new-manifest.js",
+    body: `// CompassCrew: New manifest — requires charter_ref from dropdown.
 module.exports = async (params) => {
   const { quickAddApi, app } = params;
   const charters = app.vault.getMarkdownFiles().filter(f => f.path.includes("forensics/charters/"));
@@ -89,18 +89,18 @@ module.exports = async (params) => {
 `,
   },
   {
-    name: "reckon-promote-anchor.js",
-    body: `// Reckon: Promote anchor — reckon_consolidate tier=anchor_promote with current file.
+    name: "compasscrew-promote-anchor.js",
+    body: `// CompassCrew: Promote anchor — compasscrew_consolidate tier=anchor_promote with current file.
 module.exports = async (params) => {
   const { app } = params;
   const file = app.workspace.getActiveFile();
   if (!file) return;
-  const reckon = app.plugins.plugins["reckon"];
-  if (!reckon || !reckon.settings) { new Notice("Reckon plugin not loaded."); return; }
-  const url = reckon.settings.mcpUrl.replace(/\\/+$/, "") + "/tools/reckon_consolidate";
+  const compasscrew = app.plugins.plugins["compasscrew"];
+  if (!compasscrew || !compasscrew.settings) { new Notice("CompassCrew plugin not loaded."); return; }
+  const url = compasscrew.settings.mcpUrl.replace(/\\/+$/, "") + "/tools/compasscrew_consolidate";
   const fs = require("fs"); const pathmod = require("path");
   let token = null;
-  try { token = fs.readFileSync(pathmod.join(app.vault.adapter.basePath, reckon.settings.tokenPath || ".swarmy-token"), "utf8").trim(); } catch {}
+  try { token = fs.readFileSync(pathmod.join(app.vault.adapter.basePath, compasscrew.settings.tokenPath || ".swarmy-token"), "utf8").trim(); } catch {}
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = "Bearer " + token;
   try {
@@ -111,8 +111,8 @@ module.exports = async (params) => {
 `,
   },
   {
-    name: "reckon-cap-honey.js",
-    body: `// Reckon: Cap honey droplet — crystallizes current note → forensics/honey/{date}/
+    name: "compasscrew-cap-honey.js",
+    body: `// CompassCrew: Cap honey droplet — crystallizes current note → forensics/honey/{date}/
 module.exports = async (params) => {
   const { app } = params;
   const file = app.workspace.getActiveFile();
@@ -142,8 +142,8 @@ module.exports = async (params) => {
 
 export function registerQuickAddMacros(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-install-quickadd-macros",
-    name: "Reckon: install QuickAdd macros",
+    id: "compasscrew-install-quickadd-macros",
+    name: "CompassCrew: install QuickAdd macros",
     callback: () => {
       const root = vaultRoot(plugin.app);
       const dir = path.join(root, "00-SHARED", "QuickAdd-Macros");

@@ -3,7 +3,7 @@
  * agents, and commands into the user's ~/.claude/ directory.
  *
  * The plugin ships these as READ-ONLY reference. Nothing auto-installs.
- * The user runs "Reckon: install canonical skills" to copy from
+ * The user runs "CompassCrew: install canonical skills" to copy from
  * <plugin-dir>/skills/ → ~/.claude/skills/, etc.
  */
 import { App, Notice, Plugin } from "obsidian";
@@ -43,8 +43,8 @@ function copyDirRecursive(src: string, dst: string): number {
 
 export function registerCanonicalInstaller(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-install-canonical-skills",
-    name: "Reckon: install canonical skills (copies plugin/skills → ~/.claude/skills)",
+    id: "compasscrew-install-canonical-skills",
+    name: "CompassCrew: install canonical skills (copies plugin/skills → ~/.claude/skills)",
     callback: () => {
       const srcRoot = path.join(pluginDirAbs(plugin), "skills");
       const dstRoot = path.join(claudeHome(), "skills");
@@ -63,8 +63,8 @@ export function registerCanonicalInstaller(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-install-canonical-eval-command",
-    name: "Reckon: install canonical /eval command (→ ~/.claude/commands/eval.md)",
+    id: "compasscrew-install-canonical-eval-command",
+    name: "CompassCrew: install canonical /eval command (→ ~/.claude/commands/eval.md)",
     callback: () => {
       const src = path.join(pluginDirAbs(plugin), "commands-canonical", "eval.md");
       const dst = path.join(claudeHome(), "commands", "eval.md");
@@ -80,8 +80,8 @@ export function registerCanonicalInstaller(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-install-canonical-agents",
-    name: "Reckon: install canonical agents (→ ~/.claude/agents/)",
+    id: "compasscrew-install-canonical-agents",
+    name: "CompassCrew: install canonical agents (→ ~/.claude/agents/)",
     callback: () => {
       const srcRoot = path.join(pluginDirAbs(plugin), "agents");
       const dstRoot = path.join(claudeHome(), "agents");

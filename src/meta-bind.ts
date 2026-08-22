@@ -16,7 +16,7 @@
  *
  * Why vendor this rather than depend on Meta Bind: the user reported
  * Meta Bind buttons are how they "actually fire scripts and do stuff"
- * inside the vault. If a user clones reckon-vault-plugin onto a fresh
+ * inside the vault. If a user clones compasscrew-vault-plugin onto a fresh
  * vault, they shouldn't be blocked on a second-plugin install just to
  * make their published button-driven dashboards work.
  *
@@ -103,7 +103,7 @@ function renderInput(app: App, sourcePath: string, decl: InputDecl, host: HTMLEl
     host.setText(`(meta-bind: cannot resolve ${sourcePath})`);
     return;
   }
-  const span = host.createEl("span", { cls: "reckon-meta-bind-input" });
+  const span = host.createEl("span", { cls: "compasscrew-meta-bind-input" });
   span.style.cssText = "display:inline-flex;align-items:center;gap:6px;";
 
   const current = app.metadataCache.getFileCache(file)?.frontmatter?.[decl.field];
@@ -140,7 +140,7 @@ function renderInput(app: App, sourcePath: string, decl: InputDecl, host: HTMLEl
 }
 
 function renderButton(plugin: Plugin, sourcePath: string, decl: ButtonDecl, host: HTMLElement) {
-  const btn = host.createEl("button", { text: decl.label, cls: "reckon-meta-bind-button" });
+  const btn = host.createEl("button", { text: decl.label, cls: "compasscrew-meta-bind-button" });
   btn.style.cssText = "padding:4px 10px;border-radius:4px;cursor:pointer;";
   btn.onclick = async () => {
     if (decl.binding.kind === "command") {
@@ -151,7 +151,7 @@ function renderButton(plugin: Plugin, sourcePath: string, decl: ButtonDecl, host
       }
     } else if (decl.binding.kind === "mcp") {
       try {
-        const settings = (plugin.app as any).plugins?.plugins?.["reckon"]?.reckonSettings ?? {};
+        const settings = (plugin.app as any).plugins?.plugins?.["compasscrew"]?.compasscrewSettings ?? {};
         const mcpUrl: string = settings.mcpUrl || "http://localhost:8765";
         const tokenPath: string = settings.tokenPath || ".swarmy-token";
         const fs = require("fs") as typeof import("fs");
@@ -173,7 +173,7 @@ function renderButton(plugin: Plugin, sourcePath: string, decl: ButtonDecl, host
       }
     } else {
       // auto: try to match label to a command id (lowercase, replace spaces).
-      const guess = "reckon:" + decl.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const guess = "compasscrew:" + decl.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       try {
         (plugin.app as any).commands?.executeCommandById?.(guess);
         new Notice(`Meta-bind: tried ${guess}`, 2000);
@@ -193,12 +193,12 @@ export function registerMetaBind(plugin: Plugin) {
     for (const line of lines) {
       const decl = parseDecl(line);
       if (!decl) {
-        const err = el.createEl("div", { cls: "reckon-meta-bind-error" });
+        const err = el.createEl("div", { cls: "compasscrew-meta-bind-error" });
         err.style.cssText = "color:#C73E1D;font-family:var(--font-monospace);padding:4px;";
         err.setText(`[meta-bind] unparseable: ${line}`);
         continue;
       }
-      const host = el.createEl("div", { cls: "reckon-meta-bind-row" });
+      const host = el.createEl("div", { cls: "compasscrew-meta-bind-row" });
       host.style.cssText = "margin:4px 0;";
       if (decl.kind === "input") renderInput(plugin.app, ctx.sourcePath, decl, host);
       else                       renderButton(plugin, ctx.sourcePath, decl, host);
@@ -215,7 +215,7 @@ export function registerMetaBind(plugin: Plugin) {
       const decl = parseDecl(txt);
       if (!decl) return;
       const host = document.createElement("span");
-      host.className = "reckon-meta-bind-inline";
+      host.className = "compasscrew-meta-bind-inline";
       if (decl.kind === "input") renderInput(plugin.app, ctx.sourcePath, decl, host);
       else                       renderButton(plugin, ctx.sourcePath, decl, host);
       node.replaceWith(host);
@@ -259,7 +259,7 @@ export function registerMetaBind(plugin: Plugin) {
       const fn = new Function("dv", source);
       fn(dv);
     } catch (e) {
-      const err = el.createEl("div", { cls: "reckon-dvjs-error" });
+      const err = el.createEl("div", { cls: "compasscrew-dvjs-error" });
       err.style.cssText = "color:#C73E1D;font-family:var(--font-monospace);padding:4px;";
       err.setText(`[dataviewjs] error: ${(e as Error).message}`);
     }

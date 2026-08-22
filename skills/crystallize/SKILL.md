@@ -70,7 +70,7 @@ Agent tool:
     1. Budget-check: HONEY.md (≤200L), active agent cards (≤80L), CLAUDE.md (≤30L)
     2. Scan TWO candidate pools (unified):
        a) NECTAR.md — patterns/methods appearing 3+ times across sessions/dates
-       b) Native memory: /mnt/d/0LOCAL/.claude/projects/*/memory/feedback_*.md
+       b) Native memory: ~/.claude/projects/*/memory/feedback_*.md
           - Parse frontmatter: originSessionId, recurrence_count, promoted_to_honey
           - HONEY candidate if: recurrence_count >= 3 OR originSessionId spans 3+ distinct sessions
           - SKIP files already stamped promoted_to_honey (already absorbed)
@@ -137,7 +137,7 @@ Agent tool:
       Preserve body content unchanged — only update frontmatter.
       Source native file stays as pointer; HONEY carries the integrated form.
     - Append hash-chained COC entry to
-      /mnt/d/0LOCAL/.claude/hooks/state/native-to-honey-coc.jsonl:
+      ~/.claude/hooks/state/native-to-honey-coc.jsonl:
       {ts, source_path, source_sig, honey_section, recurrence_at_promotion,
        session_id, prev_entry_hash, entry_hash}
 

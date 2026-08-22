@@ -2,7 +2,7 @@ import { App, ItemView, Plugin, WorkspaceLeaf } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
 
-export const VIEW_TYPE_RECKON_LIVE = "reckon-live";
+export const VIEW_TYPE_COMPASSCREW_LIVE = "compasscrew-live";
 
 /**
  * DEMO_BEARER — public no-signup fallback token.
@@ -12,9 +12,9 @@ export const VIEW_TYPE_RECKON_LIVE = "reckon-live";
  * The MCP server recognises this exact string in validate_token() and returns
  * tier="demo" with user_id="public-demo" (no tokens.json lookup).
  *
- * Demo callers can access read-only tools (reckon_prompt verb=list/get/view,
+ * Demo callers can access read-only tools (compasscrew_prompt verb=list/get/view,
  * manifest_list, mission_graph, etc.) but are denied write/spawn tools with
- * a {error_type:"tier_gate"} response that the reckon plugin renders as an
+ * a {error_type:"tier_gate"} response that the compasscrew plugin renders as an
  * upgrade prompt instead of a raw error.
  *
  * See: deploy/mcp-server/auth.py DEMO_BEARER constant (must stay in sync).
@@ -24,18 +24,18 @@ export const VIEW_TYPE_RECKON_LIVE = "reckon-live";
 export const DEMO_BEARER = "demo:public-readonly:v1";
 
 /**
- * RECKON_WEB_HOST — base URL for the Reckon web host (signup / auth / token grab).
+ * COMPASSCREW_WEB_HOST — base URL for the CompassCrew web host (signup / auth / token grab).
  *
- * Source of truth is the RECKON_MCP_URL env var. The literal default is the
- * live reckon host (DNS + valid cert verified 2026-06-02; the legacy
- * swarmy.retrofuture.tech host TLS is no longer served).
+ * Source of truth is the COMPASSCREW_MCP_URL env var. There is no hosted default —
+ * bring your own MCP server and point this at it (or run one locally on
+ * `http://localhost:8765`, the settings default).
  */
-export const RECKON_WEB_HOST =
-  (typeof process !== "undefined" && process.env && process.env.RECKON_MCP_URL
-    ? process.env.RECKON_MCP_URL.replace(/\/+$/, "")
-    : "https://reckon.retrofuture.tech");
+export const COMPASSCREW_WEB_HOST =
+  (typeof process !== "undefined" && process.env && process.env.COMPASSCREW_MCP_URL
+    ? process.env.COMPASSCREW_MCP_URL.replace(/\/+$/, "")
+    : "https://your-mcp-server.example.com");
 
-export const RECKON_SIGNUP_URL = `${RECKON_WEB_HOST}/signup`;
+export const COMPASSCREW_SIGNUP_URL = `${COMPASSCREW_WEB_HOST}/signup`;
 
 export interface McpBridgeSettings {
   mcpUrl: string;
@@ -81,7 +81,7 @@ async function callMcp(s: McpBridgeSettings, token: string, tool: string, args: 
   // Surface tier-gate responses as a special error type so the UI can show
   // an upgrade prompt instead of a raw error message.
   if (data && data.error_type === "tier_gate") {
-    const upgradeUrl = data.upgrade_url || RECKON_SIGNUP_URL;
+    const upgradeUrl = data.upgrade_url || COMPASSCREW_SIGNUP_URL;
     throw Object.assign(
       new Error(`${tool}: sign-in required — ${upgradeUrl}`),
       { isTierGate: true, upgradeUrl }
@@ -90,13 +90,13 @@ async function callMcp(s: McpBridgeSettings, token: string, tool: string, args: 
   return data;
 }
 
-export class ReckonLiveView extends ItemView {
+export class CompassCrewLiveView extends ItemView {
   private timer: number | null = null;
   constructor(leaf: WorkspaceLeaf, private getSettings: () => McpBridgeSettings) {
     super(leaf);
   }
-  getViewType() { return VIEW_TYPE_RECKON_LIVE; }
-  getDisplayText() { return "Reckon Live"; }
+  getViewType() { return VIEW_TYPE_COMPASSCREW_LIVE; }
+  getDisplayText() { return "CompassCrew Live"; }
   getIcon() { return "compass"; }
 
   async onOpen() {
@@ -111,34 +111,34 @@ export class ReckonLiveView extends ItemView {
   async render() {
     const root = this.containerEl.children[1] as HTMLElement;
     root.empty();
-    root.addClass("reckon-live-pane");
-    root.createEl("h2", { text: "Reckon Live" });
-    const status = root.createEl("div", { cls: "reckon-live-status", text: "Connecting…" });
+    root.addClass("compasscrew-live-pane");
+    root.createEl("h2", { text: "CompassCrew Live" });
+    const status = root.createEl("div", { cls: "compasscrew-live-status", text: "Connecting…" });
     const settings = this.getSettings();
     const token = readToken(this.app, settings); // always non-null (DEMO_BEARER fallback)
     const isDemo = token === DEMO_BEARER;
 
     const sections = [
-      { name: "Dashboard", tool: "reckon_dashboard", args: { verb: "status" } },
-      { name: "Metrics", tool: "reckon_metrics", args: {} },
-      { name: "Charters", tool: "reckon_charter", args: { verb: "list" } },
+      { name: "Dashboard", tool: "compasscrew_dashboard", args: { verb: "status" } },
+      { name: "Metrics", tool: "compasscrew_metrics", args: {} },
+      { name: "Charters", tool: "compasscrew_charter", args: { verb: "list" } },
     ];
 
     // Show demo mode banner so users know they're in read-only mode.
     if (isDemo) {
-      const banner = root.createEl("div", { cls: "reckon-demo-banner" });
+      const banner = root.createEl("div", { cls: "compasscrew-demo-banner" });
       banner.style.cssText = "background:#1a1a2e;border:1px solid #f0a500;border-radius:4px;padding:6px 10px;margin-bottom:8px;font-size:0.85em;";
-      banner.innerHTML = `<span style="color:#f0a500;">Demo mode</span> — read-only. <a href="${RECKON_SIGNUP_URL}" style="color:#f0a500;">Sign in</a> for full access.`;
+      banner.innerHTML = `<span style="color:#f0a500;">Demo mode</span> — read-only. <a href="${COMPASSCREW_SIGNUP_URL}" style="color:#f0a500;">Sign in</a> for full access.`;
     }
 
     for (const sec of sections) {
       const h = root.createEl("h3", { text: sec.name });
-      const box = root.createEl("pre", { cls: "reckon-live-section" });
+      const box = root.createEl("pre", { cls: "compasscrew-live-section" });
       try {
         const data = await callMcp(settings, token, sec.tool, (sec as any).args ?? {});
         box.setText(typeof data === "string" ? data : JSON.stringify(data, null, 2));
         // Charters as clickable list
-        if (sec.tool === "reckon_charter" && Array.isArray((data as any)?.charters)) {
+        if (sec.tool === "compasscrew_charter" && Array.isArray((data as any)?.charters)) {
           box.empty();
           for (const c of (data as any).charters) {
             const a = box.createEl("a", { text: c.title || c.path });
@@ -153,7 +153,7 @@ export class ReckonLiveView extends ItemView {
       } catch (e) {
         const err = e as any;
         if (err.isTierGate) {
-          box.setText(`Sign in for full access → ${err.upgradeUrl || RECKON_SIGNUP_URL}`);
+          box.setText(`Sign in for full access → ${err.upgradeUrl || COMPASSCREW_SIGNUP_URL}`);
         } else {
           box.setText("⚠ " + err.message);
         }
@@ -165,16 +165,16 @@ export class ReckonLiveView extends ItemView {
 }
 
 export function registerMcpBridge(plugin: Plugin, getSettings: () => McpBridgeSettings) {
-  plugin.registerView(VIEW_TYPE_RECKON_LIVE, (leaf) => new ReckonLiveView(leaf, getSettings));
+  plugin.registerView(VIEW_TYPE_COMPASSCREW_LIVE, (leaf) => new CompassCrewLiveView(leaf, getSettings));
   plugin.addCommand({
-    id: "reckon-open-live-pane",
-    name: "Reckon: open Live pane",
+    id: "compasscrew-open-live-pane",
+    name: "CompassCrew: open Live pane",
     callback: async () => {
       const { workspace } = plugin.app;
-      let leaf = workspace.getLeavesOfType(VIEW_TYPE_RECKON_LIVE)[0];
+      let leaf = workspace.getLeavesOfType(VIEW_TYPE_COMPASSCREW_LIVE)[0];
       if (!leaf) {
         leaf = workspace.getRightLeaf(false)!;
-        await leaf.setViewState({ type: VIEW_TYPE_RECKON_LIVE, active: true });
+        await leaf.setViewState({ type: VIEW_TYPE_COMPASSCREW_LIVE, active: true });
       }
       workspace.revealLeaf(leaf);
     },

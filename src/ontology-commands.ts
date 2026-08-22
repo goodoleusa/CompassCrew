@@ -40,8 +40,8 @@ class PresetPicker extends FuzzySuggestModal<{ name: string; absPath: string }> 
 
 export function registerOntologyCommands(plugin: Plugin) {
   plugin.addCommand({
-    id: "reckon-switch-ontology-preset",
-    name: "Reckon: switch ontology preset",
+    id: "compasscrew-switch-ontology-preset",
+    name: "CompassCrew: switch ontology preset",
     callback: () => {
       const presets = listPresets(plugin);
       if (!presets.length) { new Notice("No presets found in plugin's presets/ folder."); return; }
@@ -59,8 +59,8 @@ export function registerOntologyCommands(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-export-ontology",
-    name: "Reckon: export current ontology",
+    id: "compasscrew-export-ontology",
+    name: "CompassCrew: export current ontology",
     callback: () => {
       const o: Ontology = getActiveOntology();
       const date = new Date().toISOString().slice(0, 10);
@@ -73,15 +73,15 @@ export function registerOntologyCommands(plugin: Plugin) {
   });
 
   plugin.addCommand({
-    id: "reckon-ontology-doctor",
-    name: "Reckon: ontology doctor",
+    id: "compasscrew-ontology-doctor",
+    name: "CompassCrew: ontology doctor",
     callback: () => {
       const report = ontologyDoctor(getActiveOntology());
       if (report.ok) {
         new Notice(`Ontology "${report.ontology.name}" is healthy. ✓`, 5000);
       } else {
         new Notice(`Ontology issues:\n- ${report.issues.join("\n- ")}`, 12000);
-        console.warn("[reckon] ontology doctor:", report.issues);
+        console.warn("[compasscrew] ontology doctor:", report.issues);
       }
     },
   });

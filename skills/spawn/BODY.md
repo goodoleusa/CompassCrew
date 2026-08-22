@@ -84,9 +84,9 @@
 ## Context Injection
 
 `/spawn` automatically:
-1. Reads `/mnt/d/0LOCAL/.claude/HONEY.md` (global facts)
+1. Reads `~/.claude/HONEY.md` (global facts)
 2. Reads project `.claude/HONEY.md` (repo-scoped facts)
-3. Tails `/mnt/d/0LOCAL/.claude/NECTAR.md` (recent findings, HIGH items)
+3. Tails `~/.claude/NECTAR.md` (recent findings, HIGH items)
 4. Reads `forensics/manifests/{YYYY-MM-DD}/` (recent agent outcomes)
 5. Extracts `investigation_label` context (discovery hints from prior agents)
 6. Renders bundle via `0x_spawn_template.py`

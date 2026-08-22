@@ -1,14 +1,14 @@
 {
-  "name": "reckon-vault-plugin",
+  "name": "compass-crew",
   "version": "2.0.0",
-  "description": "Reckon — Faerie Obsidian Orchestrator. The vault-side counterpart to the Faerie reckon-mind. Zero runtime dependencies.",
+  "description": "CompassCrew — mission control for AI agent crews inside Obsidian: recursive canvas, bearings-based navigation, and an MCP bridge for steering agents from your vault. Zero runtime dependencies.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["obsidian", "faerie", "reckon", "blueprint", "mcp", "compass", "excalibrain"],
+  "keywords": ["obsidian", "agents", "compass-crew", "blueprint", "mcp", "compass", "excalibrain"],
   "author": "goodoleusa",
   "license": "MIT",
   "devDependencies": {

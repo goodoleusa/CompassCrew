@@ -1,7 +1,7 @@
 /**
  * micro-njk — a tiny Nunjucks-flavored template renderer.
  *
- * Supports a curated subset of Nunjucks syntax sufficient for the Reckon
+ * Supports a curated subset of Nunjucks syntax sufficient for the CompassCrew
  * blueprint library:
  *   - {{ var }}              variable interpolation (with dotted paths)
  *   - {{ var | default(x) }} pipe filters: default, upper, lower, length,

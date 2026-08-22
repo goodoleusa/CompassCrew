@@ -90,7 +90,7 @@ Click **Install recommended**. The doctor uses Obsidian's BRAT-style community-p
 Skip this step if you only want local features. Add it later via the same command.
 
 1. Run **`faerie: grab MCP token`** (plugin ≥ v2.1) → opens GitHub OAuth in your browser. Approve. The plugin auto-saves to `<vault>/.swarmy-token`.
-2. Or manually: visit `https://swarmy.retrofuture.tech`, sign in with GitHub, copy the token, then:
+2. Or manually: visit `https://your-mcp-server.example.com`, sign in with GitHub, copy the token, then:
 
 ```bash
 echo "your-token-here" > /path/to/vault/.swarmy-token

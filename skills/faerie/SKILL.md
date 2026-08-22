@@ -23,7 +23,7 @@ cat ~/.claude/hooks/state/faerie-brief.json
 # ⚠️ hypothesis_state.json is ABANDONED — never read it, always wrong
 
 # 3. REAL TOKENS (NEW — 1 call, always — enables accurate f(0) decision-making)
-python3 /mnt/d/0LOCAL/gitrepos/faerie2/scripts/0x_f0_token_reader.py $PRESEND_ESTIMATE
+python3 ~/gitrepos/faerie2/scripts/0x_f0_token_reader.py $PRESEND_ESTIMATE
 # → {f0_current, agent_input_tokens, agent_output_tokens, measurements_count}
 # → Use f0_current (measured from API responses) in spawn decisions
 # → If f0_current > 0.05, recommend --budget mode or defer spawn
