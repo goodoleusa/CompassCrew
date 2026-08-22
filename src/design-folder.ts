@@ -60,14 +60,24 @@ function ensureExcalidrawAvailable(app: App): boolean {
  *      Status: WORKING (seed scene + open canvas).
  *
  *   2. `compasscrew: scan and propose bearings`
- *      Folder scan → POSTs to MCP `compasscrew_mission` verb=propose_bearings. Server
- *      runs an offline heuristic (mutual outlinks → E, directed
- *      outlinks → N/S pairs, hub note → W anchor) and filters out
- *      bearings already declared in recent manifests. The reply opens
- *      in a review modal — user accepts/rejects each; accepted ones
- *      write to frontmatter.
+ *      Folder scan → LOCAL heuristic (mutual outlinks → E, directed outlinks → N/S pairs,
+ *      hub note → W anchor). The proposals open in a review modal — the user accepts or
+ *      rejects each; accepted ones write to frontmatter.
  *
- *      Status: WORKING (2026-05-19) — MCP server tool live.
+ *      Status: WORKING, LOCAL (2026-08-22).
+ *
+ *      HISTORY, because the previous status line here was false and worth not repeating: this
+ *      posted to MCP `<brand>_mission` verb=propose_bearings and claimed "MCP server tool live".
+ *      The reckon `reckon_mission` dispatcher accepts exactly three verbs — `graph`, `add`,
+ *      `complete` (runtime/mcp-server/tools/mission.py) — and has no `propose_bearings`. The
+ *      call therefore returned `{ok:false, error:"unknown verb"}` with HTTP 200, which this
+ *      code read as a successful response with zero proposals and reported as
+ *      "proposed 0 bearings". A green that means "the feature does not exist".
+ *
+ *      Every input the heuristic needs (basenames, excerpts, sibling outlinks) is already
+ *      gathered locally by `scanFolder`, so there was never anything for a server to add. It
+ *      runs here now: no network, no token, no tier gate, and no way to report success for a
+ *      verb nobody implements.
  *
  *   3. `compasscrew: auto-layout from frontmatter`
  *      Reads active Excalidraw note → re-positions bearing-rectangles
@@ -232,6 +242,59 @@ interface BearingProposal {
   rationale: string;
 }
 
+/**
+ * The bearing heuristic, run locally over the folder scan. Pure and synchronous so it is
+ * directly testable without an Obsidian app or a server — see `scripts/smoke/`.
+ *
+ *   MUTUAL link  (A→B and B→A)  → E, "same" — peers that reference each other.
+ *   ONE-WAY link (A→B only)     → A gets N ("up") toward B; B gets S ("down") toward A.
+ *                                 A note that cites another is downstream of it.
+ *   HUB          (most inbound) → W, the folder's anchor, proposed for every other note.
+ *
+ * A note is never proposed a bearing to itself, and each (note, bearing, target) triple is
+ * emitted at most once.
+ */
+export function proposeBearings(notes: FolderNote[]): BearingProposal[] {
+  const names = new Set(notes.map((n) => n.file.basename));
+  const links = new Map<string, Set<string>>();
+  for (const n of notes) links.set(n.file.basename, new Set(n.outLinks.filter((l) => names.has(l) && l !== n.file.basename)));
+
+  const inbound = new Map<string, number>();
+  for (const targets of links.values()) for (const t of targets) inbound.set(t, (inbound.get(t) ?? 0) + 1);
+
+  const out: BearingProposal[] = [];
+  const seen = new Set<string>();
+  const emit = (note: string, bearing: Bearing, target: string, rationale: string) => {
+    if (note === target) return;
+    const key = `${note}|${bearing}|${target}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ note, bearing, target, rationale });
+  };
+
+  for (const [note, targets] of links) {
+    for (const target of targets) {
+      if (links.get(target)?.has(note)) emit(note, "E", target, "mutual wikilink — peers");
+      else {
+        emit(note, "N", target, "one-way wikilink — this note cites its source");
+        emit(target, "S", note, "cited by this note — downstream reader");
+      }
+    }
+  }
+
+  // The hub: the most-linked-to note in the folder, if anything links at all and it is not a tie
+  // at 1. A "hub" every note ties for is not a hub, and proposing one would be noise.
+  let hub: string | null = null, hubCount = 0, tied = false;
+  for (const [name, count] of inbound) {
+    if (count > hubCount) { hub = name; hubCount = count; tied = false; }
+    else if (count === hubCount) tied = true;
+  }
+  if (hub && hubCount > 1 && !tied) {
+    for (const n of notes) emit(n.file.basename, "W", hub, `folder anchor — ${hubCount} inbound links`);
+  }
+  return out;
+}
+
 class ProposalReviewModal extends Modal {
   constructor(app: App, private proposals: BearingProposal[], private onAccept: (accepted: BearingProposal[]) => void) {
     super(app);
@@ -269,48 +332,14 @@ async function scanAndProposeBearings(plugin: Plugin, folder?: TFolder) {
   const notes = await scanFolder(plugin.app, tgt);
   if (notes.length === 0) { new Notice(`No notes in ${tgt.path}.`); return; }
 
-  // POST to MCP compasscrew_mission verb=propose_bearings. Server runs an offline heuristic
-  // (mutual outlinks → E, directed outlinks → N/S pairs, hub note → W
-  // anchor) and filters out bearings already declared in recent manifests.
-  // See compasscrew/deploy/mcp-server/tools/mission.py::compasscrew_mission (verb=propose_bearings).
-  const settings: any = ((plugin.app as any).plugins?.plugins?.["compasscrew"]?.compasscrewSettings) || {};
-  const mcpUrl: string = settings.mcpUrl || "http://localhost:8765";
-  const tokenPath: string = settings.tokenPath || ".swarmy-token";
-  let token: string | null = null;
-  try { token = fs.readFileSync(path.join(vaultRoot(plugin.app), tokenPath), "utf8").trim(); } catch { token = null; }
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
-  const payload = {
-    verb: "propose_bearings",
-    folder: tgt.path,
-    notes: notes.map((n) => ({ basename: n.file.basename, excerpt: n.excerpt, outLinks: n.outLinks })),
-  };
-
-  let proposals: BearingProposal[] = [];
-  try {
-    const r = await fetch(mcpUrl.replace(/\/+$/, "") + "/tools/compasscrew_mission", {
-      method: "POST", headers, body: JSON.stringify(payload),
-    });
-    if (r.ok) {
-      const data: any = await r.json();
-      const raw = (data?.proposals ?? data?.result?.proposals ?? []) as any[];
-      proposals = raw
-        .filter((p) => p && p.note && p.bearing && p.target)
-        .map((p) => ({
-          note: String(p.note),
-          bearing: String(p.bearing).toUpperCase() as Bearing,
-          target: String(p.target),
-          rationale: String(p.rationale ?? ""),
-        }))
-        .filter((p) => (BEARINGS as readonly string[]).includes(p.bearing));
-      new Notice(`CompassCrew proposed ${proposals.length} bearings for ${tgt.name}.`, 5000);
-    } else {
-      new Notice(`MCP propose_bearings failed: HTTP ${r.status}`, 6000);
-    }
-  } catch (e) {
-    new Notice(`MCP unreachable: ${(e as Error).message}. Modal will show empty.`, 6000);
-  }
+  const proposals = proposeBearings(notes);
+  new Notice(
+    proposals.length > 0
+      ? `CompassCrew proposed ${proposals.length} bearings for ${tgt.name}.`
+      : `No bearings proposed for ${tgt.name}: ${notes.length} note(s) scanned, no wikilinks ` +
+        `between siblings to infer from. Nothing was wrong — there was nothing to measure.`,
+    6000,
+  );
 
   new ProposalReviewModal(plugin.app, proposals, async (accepted) => {
     let n = 0;

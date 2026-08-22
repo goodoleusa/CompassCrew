@@ -224,7 +224,7 @@ async function runWsl(
       ...opts,
       maxBuffer: 10 * 1024 * 1024,
     });
-    return { stdout: stdout || "", stderr: stderr || "", code: 0 };
+    return { stdout: String(stdout ?? ""), stderr: String(stderr ?? ""), code: 0 };
   } catch (err: unknown) {
     const e = err as { stdout?: string; stderr?: string; code?: number };
     return {
@@ -763,7 +763,12 @@ async function buildPdf(
   new Notice("CompassCrew PDF: running pandoc…");
   log.append("\n[Step 4] pandoc → xelatex → PDF");
 
-  const s = applyPreset(this.settings ?? DEFAULT_SETTINGS);
+  // `settings` is buildPdf's own parameter. This line previously read `this.settings`, inside a
+  // plain (non-method) function where `this` is undefined under ES modules — so the preset was
+  // silently never applied and every export used DEFAULT_SETTINGS regardless of what the user
+  // configured. tsc flagged it as an implicit-any `this`; the real defect was the fallback
+  // quietly making a broken read look like a valid one.
+  const s = applyPreset(settings ?? DEFAULT_SETTINGS);
   const templateArg = s.useExternalLatexTemplate && s.latexTemplatePath
     ? `--template='${s.latexTemplatePath}'`
     : "";  // omit when not using external template — inline -V flags cover it

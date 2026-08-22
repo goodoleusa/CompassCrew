@@ -101,8 +101,8 @@ function previewFromManifest(m: any): ManifestPreview {
 // dataview tables, our own custom UI). The "Editor" source is registered
 // by default; we add "compasscrew" so any element with data-hover-link-source
 // = "compasscrew" gets popups.
-function registerPeekOnHover(plugin: Plugin & { settings: LatticeworkSettings }) {
-  if (!plugin.settings.latticework_peek_on_hover) return;
+function registerPeekOnHover(plugin: LatticeworkHost) {
+  if (!plugin.latticeworkSettings().latticework_peek_on_hover) return;
 
   // The hover-link-source registration is how plugins opt into the
   // built-in page-preview UX.
@@ -129,10 +129,10 @@ function registerPeekOnHover(plugin: Plugin & { settings: LatticeworkSettings })
 //
 // Falls back to the bare link if the manifest is missing or unparseable.
 function registerInlineTextReferences(
-  plugin: Plugin & { settings: LatticeworkSettings },
+  plugin: LatticeworkHost,
 ) {
   plugin.registerMarkdownPostProcessor(async (el, ctx: MarkdownPostProcessorContext) => {
-    if (!plugin.settings.latticework_inline_dashboard_line) return;
+    if (!plugin.latticeworkSettings().latticework_inline_dashboard_line) return;
 
     const links = el.querySelectorAll("a.internal-link");
     for (const a of Array.from(links) as HTMLAnchorElement[]) {
@@ -145,7 +145,7 @@ function registerInlineTextReferences(
 
       // Skip the fetch if collapsed-by-default is on — render the chip
       // form without loading manifest content (cheap pass).
-      if (plugin.settings.latticework_collapsed_by_default) {
+      if (plugin.latticeworkSettings().latticework_collapsed_by_default) {
         a.addClass("latticework-collapsed");
         continue;
       }
@@ -189,10 +189,10 @@ function registerInlineTextReferences(
 // margin annotation. We use Obsidian's HoverPopover for the floating
 // rendering rather than CSS-only tooltips so the text can be markdown.
 function registerMarginaliaTooltips(
-  plugin: Plugin & { settings: LatticeworkSettings },
+  plugin: LatticeworkHost,
 ) {
   plugin.registerMarkdownPostProcessor((el, _ctx) => {
-    if (!plugin.settings.latticework_marginalia_tooltips) return;
+    if (!plugin.latticeworkSettings().latticework_marginalia_tooltips) return;
 
     // Marginalia is opt-in per chip — only render if the chip carries
     // a [data-rationale] attribute (set by other compasscrew renderers that
@@ -229,7 +229,7 @@ function registerMarginaliaTooltips(
 // Implemented via a CSS class on document.body that the chip styles react
 // to. CSS classes are added in styles.css (the plugin's stylesheet).
 function registerCollapseExpandCommands(
-  plugin: Plugin & { settings: LatticeworkSettings },
+  plugin: LatticeworkHost,
 ) {
   plugin.addCommand({
     id: "latticework-collapse-all",
@@ -263,9 +263,17 @@ function registerCollapseExpandCommands(
   });
 }
 
+/**
+ * Latticework reads its four toggles through an accessor, not off a `plugin.settings` property.
+ * The property form relied on the host plugin exposing CompassCrew settings under the SAME name
+ * its PDF base class uses for PDF settings — one name, two shapes, resolved by whichever file
+ * you happened to be reading. The accessor makes the dependency explicit and typed.
+ */
+export type LatticeworkHost = Plugin & { latticeworkSettings: () => LatticeworkSettings };
+
 // ─── Public entry point ───────────────────────────────────────────────────
 export function registerLatticework(
-  plugin: Plugin & { settings: LatticeworkSettings },
+  plugin: LatticeworkHost,
 ) {
   // Each cut is independently toggleable; safe to call even if the
   // corresponding setting is off (each guards on its own flag).

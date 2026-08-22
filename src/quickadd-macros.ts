@@ -90,17 +90,17 @@ module.exports = async (params) => {
   },
   {
     name: "compasscrew-promote-anchor.js",
-    body: `// CompassCrew: Promote anchor — compasscrew_consolidate tier=anchor_promote with current file.
+    body: `// CompassCrew: Promote anchor — reckon_consolidate tier=anchor_promote with current file.
 module.exports = async (params) => {
   const { app } = params;
   const file = app.workspace.getActiveFile();
   if (!file) return;
   const compasscrew = app.plugins.plugins["compasscrew"];
-  if (!compasscrew || !compasscrew.settings) { new Notice("CompassCrew plugin not loaded."); return; }
-  const url = compasscrew.settings.mcpUrl.replace(/\\/+$/, "") + "/tools/compasscrew_consolidate";
+  if (!compasscrew || !compasscrew.compasscrewSettings) { new Notice("CompassCrew plugin not loaded."); return; }
+  const url = compasscrew.compasscrewSettings.mcpUrl.replace(/\\/+$/, "") + "/tools/reckon_consolidate";
   const fs = require("fs"); const pathmod = require("path");
   let token = null;
-  try { token = fs.readFileSync(pathmod.join(app.vault.adapter.basePath, compasscrew.settings.tokenPath || ".swarmy-token"), "utf8").trim(); } catch {}
+  try { token = fs.readFileSync(pathmod.join(app.vault.adapter.basePath, compasscrew.compasscrewSettings.tokenPath || ".compasscrew-token"), "utf8").trim(); } catch {}
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = "Bearer " + token;
   try {

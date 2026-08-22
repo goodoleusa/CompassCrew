@@ -43,6 +43,8 @@ import { registerOntologyCommands } from "./src/ontology-commands";
 import { registerCanonicalInstaller } from "./src/canonical-installer";
 import { registerCsvPreview } from "./src/csv-preview";
 import { registerTokenGrabber, getTokenFingerprint } from "./src/token-grabber";
+import { registerCocVerify } from "./src/coc-verify";
+import { registerCocIdentity } from "./src/coc-identity";
 import { registerNativePdfExport } from "./src/native-pdf-export";
 import { miniDataviewProcessor } from "./src/vendor/mini-dataview";
 import { getRelations, renderRelations } from "./src/vendor/breadcrumbs-resolver";
@@ -124,7 +126,7 @@ export default class CompassCrewPlugin extends CompassCrewPdfPlugin {
     registerBlueprintEngine(this, getCompassCrewSettings);
     registerBreadcrumbsThreading(this, () => this.compasscrewSettings.emitBreadcrumbsAliases);
     registerTrailRefs(this);
-    registerLatticework(this);
+    registerLatticework(Object.assign(this, { latticeworkSettings: () => this.compasscrewSettings }));
     // Inject Latticework CSS so chip styles render without requiring
     // operators to edit their own snippets.css.
     const lwStyle = document.createElement("style");
@@ -154,7 +156,9 @@ export default class CompassCrewPlugin extends CompassCrewPdfPlugin {
     registerOntologyCommands(this);
     registerCanonicalInstaller(this);
     registerCsvPreview(this);
-    registerTokenGrabber(this);
+    registerTokenGrabber(this, getCompassCrewSettings);
+    registerCocVerify(this, getCompassCrewSettings);
+    registerCocIdentity(this, getCompassCrewSettings);
     registerMermaidCompass(this);
     registerNativePdfExport(this);
     registerLinter(this, getCompassCrewSettings, () => this.saveCompassCrewSettings());
@@ -265,9 +269,11 @@ export default class CompassCrewPlugin extends CompassCrewPdfPlugin {
     await this.saveData(data);
   }
 
-  // Convenience getter so QuickAdd macros can fish out MCP url from
-  // `app.plugins.plugins["compasscrew"].settings`.
-  get settings(): CompassCrewSettings { return this.compasscrewSettings; }
+  // NOTE: there is deliberately no `settings` member here. This class extends
+  // CompassCrewPdfPlugin, which already declares `settings: CompassCrewPdfSettings`; the old
+  // `get settings()` returned the CompassCrew settings under that same name, so `this.settings`
+  // meant two different shapes depending on which half of the class you were reading. Every
+  // external consumer (QuickAdd macros, meta-bind) now reads `compasscrewSettings` by name.
 }
 
 class CompassCrewSettingTab extends PluginSettingTab {
@@ -344,20 +350,20 @@ class CompassCrewSettingTab extends PluginSettingTab {
     // MCP token grab UI.
     containerEl.createEl("h3", { text: "MCP Token" });
     const fpEl = containerEl.createEl("div", { cls: "compasscrew-token-fingerprint", text: "Loading token fingerprint…" });
-    getTokenFingerprint(this.app).then((fp) => {
+    getTokenFingerprint(this.app, this.plugin.compasscrewSettings.tokenPath).then((fp) => {
       if (!fp) { fpEl.setText("No token saved."); return; }
       const when = fp.lastModified ? new Date(fp.lastModified).toISOString().slice(0, 10) : "?";
       fpEl.setText(`Token: ${fp.short}… sha8=${fp.sha8} (rotated ${when})`);
     });
     new Setting(containerEl)
       .setName("Grab token from compasscrew")
-      .setDesc("Opens your configured MCP web host and writes .swarmy-token / .swarmy-user-key on callback.")
+      .setDesc("Opens your configured MCP web host and writes the bearer token on callback. A private signing key is never accepted, transmitted, or stored — see 'CompassCrew: create signing identity'.")
       .addButton((b) => b.setButtonText("🐝 Grab token from compasscrew").onClick(() => {
         (this.app as any).commands.executeCommandById("compasscrew:compasscrew-token-grab");
       }));
     new Setting(containerEl)
       .setName("Rotate token")
-      .setDesc("Calls swarmy_token_rotate via the configured MCP URL.")
+      .setDesc("Calls reckon_token verb=rotate via the configured MCP URL.")
       .addButton((b) => b.setButtonText("Rotate token").onClick(() => {
         (this.app as any).commands.executeCommandById("compasscrew:compasscrew-token-rotate");
       }));

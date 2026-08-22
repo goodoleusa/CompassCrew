@@ -1,6 +1,7 @@
 import { ItemView, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
+import { TOOL, TierGateError, callReckonTool, resolveToken } from "./reckon-contract";
 
 export const VIEW_TYPE_COMPASSCREW_CHARTERS = "compasscrew-charters";
 
@@ -9,7 +10,7 @@ export const VIEW_TYPE_COMPASSCREW_CHARTERS = "compasscrew-charters";
  *
  * Status: SCAFFOLD (2026-05-19) — view registered, MCP wiring in place,
  * UI structure rendered, charter list populated. The edit form posts to
- * compasscrew_charter verb=update but the field-level form template is the
+ * reckon_charter verb=update but the field-level form template is the
  * next iteration's polish.
  *
  * Purpose (user request 2026-05-19): make charters the entry-point of a
@@ -17,11 +18,11 @@ export const VIEW_TYPE_COMPASSCREW_CHARTERS = "compasscrew-charters";
  * via a structured template (which itself sets the session in motion),
  * "new charter" button for declaring fresh missions.
  *
- * MCP tools called (all via compasscrew_charter verb-dispatcher):
- *   - compasscrew_charter verb=list (status=active|shipped)   list view
- *   - compasscrew_charter verb=get (charter_id)               fetch one for edit form
- *   - compasscrew_charter verb=update (id, fm, body)          save edits
- *   - compasscrew_charter verb=declare (id, addr...)          new charter
+ * MCP tools called (all via reckon_charter verb-dispatcher):
+ *   - reckon_charter verb=list (status=active|shipped)   list view
+ *   - reckon_charter verb=get (charter_id)               fetch one for edit form
+ *   - reckon_charter verb=update (id, fm, body)          save edits
+ *   - reckon_charter verb=declare (id, addr...)          new charter
  *
  * Styles: see styles.css section 6 (.compasscrew-charter-pane, -card, -form).
  *
@@ -30,7 +31,7 @@ export const VIEW_TYPE_COMPASSCREW_CHARTERS = "compasscrew-charters";
  *     njk to know which slots exist).
  *   - Inline COC tail showing this charter's mutation history.
  *   - "Set session in motion" button: posts the just-saved charter as the
- *     active mission to compasscrew_agent verb=spawn / compasscrew_data verb=bundle.
+ *     active mission to reckon_agent verb=spawn / reckon_data verb=bundle.
  */
 
 interface CharterSummary {
@@ -54,23 +55,24 @@ export class CompassCrewChartersView extends ItemView {
   getDisplayText() { return "CompassCrew Charters"; }
   getIcon() { return "scroll-text"; }
 
-  private headers(): Record<string, string> {
-    const h: Record<string, string> = { "Content-Type": "application/json" };
-    try {
-      const vault = (this.app.vault.adapter as any).basePath as string;
-      const tok = fs.readFileSync(path.join(vault, this.getTokenPath()), "utf8").trim();
-      if (tok) h["Authorization"] = `Bearer ${tok}`;
-    } catch { /* no token; tools that are free-tier still respond */ }
-    return h;
+  private token(): string {
+    const vault = (this.app.vault.adapter as any).basePath as string;
+    return resolveToken(fs, path.join, vault, this.getTokenPath()).token;
   }
 
+  /**
+   * Returns null on ANY failure, which is why the failure is logged with its cause first: a
+   * silent null made a 404 from a wrong tool name look identical to an empty charter list, and
+   * that is precisely how three rebrands' worth of dead tool names went unnoticed here.
+   */
   private async callTool<T = any>(name: string, body: any = {}): Promise<T | null> {
-    const url = this.getMcpUrl().replace(/\/+$/, "") + "/tools/" + name;
     try {
-      const r = await fetch(url, { method: "POST", headers: this.headers(), body: JSON.stringify(body) });
-      if (!r.ok) return null;
-      return await r.json();
-    } catch { return null; }
+      return await callReckonTool<T>({ mcpUrl: this.getMcpUrl(), token: this.token(), tool: name, args: body });
+    } catch (e) {
+      console.warn(`[CompassCrew] ${name} failed:`,
+        e instanceof TierGateError ? `tier gate — ${e.upgradeUrl}` : (e as Error).message);
+      return null;
+    }
   }
 
   async onOpen() {
@@ -94,7 +96,7 @@ export class CompassCrewChartersView extends ItemView {
     // List
     const list = this.root.createDiv({ cls: "compasscrew-charter-list" });
     list.createEl("h3", { text: "Active" });
-    const data: any = await this.callTool("compasscrew_charter", { verb: "list", status: "active" });
+    const data: any = await this.callTool("reckon_charter", { verb: "list", status: "active" });
     const charters: CharterSummary[] = (data?.charters ?? data?.result?.charters ?? []) as CharterSummary[];
     this.active = charters;
     if (charters.length === 0) {
@@ -109,7 +111,7 @@ export class CompassCrewChartersView extends ItemView {
 
     // Past
     list.createEl("h3", { text: "Past (shipped + retired)" });
-    const past: any = await this.callTool("compasscrew_charter", { verb: "list", status: "shipped" });
+    const past: any = await this.callTool("reckon_charter", { verb: "list", status: "shipped" });
     const pastCh: CharterSummary[] = (past?.charters ?? past?.result?.charters ?? []) as CharterSummary[];
     for (const c of pastCh) {
       const card = list.createDiv({ cls: "compasscrew-charter-card" });
@@ -119,9 +121,9 @@ export class CompassCrewChartersView extends ItemView {
     }
   }
 
-  /** Open structured edit form for an existing charter. Calls compasscrew_charter verb=get → form → verb=update. */
+  /** Open structured edit form for an existing charter. Calls reckon_charter verb=get → form → verb=update. */
   private async openEditForm(charter_id: string) {
-    const data: any = await this.callTool("compasscrew_charter", { verb: "get", charter_id });
+    const data: any = await this.callTool("reckon_charter", { verb: "get", charter_id });
     if (!data?.ok) { new Notice(`Could not load charter ${charter_id}`); return; }
     const fm = data.frontmatter || {};
     const body = data.body || "";
@@ -160,7 +162,7 @@ export class CompassCrewChartersView extends ItemView {
       const newFm: Record<string, any> = {};
       for (const [k] of fields) newFm[k] = (inputs[k] as any).value;
       const newBody = (bodyEl as any).value;
-      const res: any = await this.callTool("compasscrew_charter", {
+      const res: any = await this.callTool("reckon_charter", {
         verb: "update", charter_id, frontmatter: newFm, body: newBody,
       });
       if (res?.ok) {
@@ -173,13 +175,13 @@ export class CompassCrewChartersView extends ItemView {
 
     const setInMotionBtn = form.createEl("button", { text: "Set session in motion → spawn from this charter" });
     setInMotionBtn.onclick = async () => {
-      // TODO (next agent): call compasscrew_agent verb=spawn with this charter's address.
+      // TODO (next agent): call reckon_agent verb=spawn with this charter's address.
       // For now, surface the intended payload to confirm wiring.
-      new Notice(`(Scaffold) Would spawn mission from charter ${charter_id}. Wire compasscrew_agent verb=spawn next.`, 8000);
+      new Notice(`(Scaffold) Would spawn mission from charter ${charter_id}. Wire reckon_agent verb=spawn next.`, 8000);
     };
   }
 
-  /** Declare a new charter via compasscrew_charter verb=declare. Minimal form. */
+  /** Declare a new charter via reckon_charter verb=declare. Minimal form. */
   private async openCreateForm() {
     this.root.empty();
     this.root.createEl("h2", { text: "Declare new charter" });
@@ -206,7 +208,7 @@ export class CompassCrewChartersView extends ItemView {
       if (!charter_id || intent_address.length < 3) {
         new Notice("Need charter_id + intent_address with ≥3 slots."); return;
       }
-      const res: any = await this.callTool("compasscrew_charter", {
+      const res: any = await this.callTool("reckon_charter", {
         verb: "declare", charter_id, intent_address, phase: phaseEl.value || "1-of-1", eta: etaEl.value,
       });
       if (res?.ok) {

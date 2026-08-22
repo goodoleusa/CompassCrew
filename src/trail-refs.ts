@@ -34,7 +34,7 @@ export function registerTrailRefs(plugin: Plugin) {
     id: "compasscrew-highlight-with-bearing",
     name: "CompassCrew: highlight selection with bearing (trail-ref)",
     hotkeys: [{ modifiers: ["Mod", "Shift"], key: "H" }],
-    editorCallback: (editor: Editor, _view: MarkdownView) => {
+    editorCallback: (editor: Editor) => {
       const sel = editor.getSelection();
       if (!sel) {
         new Notice("Select text first to create a trail-ref.");

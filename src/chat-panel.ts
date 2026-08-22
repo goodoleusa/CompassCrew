@@ -1,6 +1,7 @@
 import { ItemView, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
+import { TOOL, callReckonTool } from "./reckon-contract";
 
 export const VIEW_TYPE_COMPASSCREW_CHAT = "compasscrew-chat";
 
@@ -9,10 +10,10 @@ export const VIEW_TYPE_COMPASSCREW_CHAT = "compasscrew-chat";
  *
  * Mode: "Plugin-only CompassCrew" — the user can run an entire light session
  * without ever leaving Obsidian. The chat panel POSTs messages to the MCP
- * `compasscrew_chat` tool, streams the response (rendered as markdown), and
+ * `reckon_chat` tool, streams the response (rendered as markdown), and
  * provides an EXPLICIT "Push to vault" button that promotes the current
  * conversation into a session report + commits the touched files (via the
- * `compasscrew_system` verb=session_finalize MCP tool).
+ * `reckon_system` verb=session_finalize MCP tool).
  *
  * Nothing leaves the vault automatically. Every push is human-initiated.
  */
@@ -79,21 +80,14 @@ export class CompassCrewChatView extends ItemView {
     this.input.value = "";
     this.renderLog();
 
-    const url = this.getMcpUrl().replace(/\/+$/, "") + "/tools/compasscrew_chat";
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    const tok = this.token();
-    if (tok) headers["Authorization"] = `Bearer ${tok}`;
     try {
-      // compasscrew_chat is single-shot (no server-side conversation persistence);
-      // send the latest user turn as `message`.
-      const r = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ message: text }),
+      // reckon_chat is single-shot (no server-side conversation persistence);
+      // send the latest user turn as `message`. TIER: pro — a free/demo caller gets a
+      // TierGateError, which is a different fact from an unreachable server and says so.
+      const data = await callReckonTool<Record<string, unknown>>({
+        mcpUrl: this.getMcpUrl(), token: this.token() ?? "", tool: TOOL.CHAT, args: { message: text },
       });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      const reply = (data as any).response || (data as any).reply || (data as any).text || JSON.stringify(data);
+      const reply = (data.response || data.reply || data.text || JSON.stringify(data)) as string;
       this.messages.push({ role: "assistant", text: reply });
       this.renderLog();
     } catch (e) {
@@ -104,28 +98,17 @@ export class CompassCrewChatView extends ItemView {
   }
 
   private async pushSession() {
-    const url = this.getMcpUrl().replace(/\/+$/, "") + "/tools/compasscrew_system";
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    const tok = this.token();
-    if (tok) headers["Authorization"] = `Bearer ${tok}`;
     try {
       const transcript = this.messages.map((m) => `${m.role}: ${m.text}`).join("\n\n");
-      const r = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          verb: "session_finalize",
-          session_id: `plugin-${Date.now()}`,
-          transcript_text: transcript,
-        }),
+      await callReckonTool({
+        mcpUrl: this.getMcpUrl(), token: this.token() ?? "", tool: TOOL.SYSTEM,
+        args: { verb: "session_finalize", session_id: `plugin-${Date.now()}`, transcript_text: transcript },
       });
-      if (r.ok) {
-        new Notice("Session pushed → forensics/ session report created.");
-      } else {
-        new Notice("Push failed: " + r.status, 6000);
-      }
+      new Notice("Session pushed → forensics/ session report created.");
     } catch (e) {
-      new Notice("MCP unreachable: " + (e as Error).message, 6000);
+      // callReckonTool throws on non-2xx and on a tier gate, so anything reaching here is a
+      // real failure with a real cause — never a silently-swallowed bad status.
+      new Notice("Session push failed: " + (e as Error).message, 6000);
     }
   }
 }

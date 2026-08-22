@@ -3,13 +3,14 @@
  * an AI artifact and POSTs to the MCP server for COC capture.
  *
  * Vocabulary lock (task #37): folder = `Human/` (vault root), noun =
- * "annotation". MCP contract is `compasscrew_collab` verb=record_annotation
+ * "annotation". MCP contract is `reckon_collab` verb=record_annotation
  * (content + address).
  */
 import { App, Modal, Notice, Plugin } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
+import { TOOL, callReckonTool } from "./reckon-contract";
 
 export interface AnnotationSettings {
   mcpUrl: string;        // e.g. http://localhost:8765
@@ -76,12 +77,15 @@ class AnnotationModal extends Modal {
 }
 
 async function postAnnotation(baseUrl: string, headers: Record<string, string>, body: any): Promise<{ ok: boolean; status: number }> {
-  const base = baseUrl.replace(/\/+$/, "");
-  // Canonical contract: compasscrew_collab verb=record_annotation (content + address).
-  const res = await fetch(`${base}/tools/compasscrew_collab`, {
-    method: "POST", headers, body: JSON.stringify(body),
-  });
-  return { ok: res.ok, status: res.status };
+  // Canonical contract: reckon_collab verb=record_annotation (content + address, both required
+  // — the server rejects the call with error_type="validation" if either is empty).
+  const token = (headers["Authorization"] || "").replace(/^Bearer\s+/i, "");
+  try {
+    await callReckonTool({ mcpUrl: baseUrl, token, tool: TOOL.COLLAB, args: body });
+    return { ok: true, status: 200 };
+  } catch (e) {
+    return { ok: false, status: (e as { status?: number }).status ?? 0 };
+  }
 }
 
 async function maybeOfferMigration(plugin: Plugin) {
