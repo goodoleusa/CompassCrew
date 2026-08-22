@@ -1,49 +1,58 @@
 ---
-description: "Blueprint-driven document templating — apply a named blueprint to render structured markdown into a note or doc. NOT YET WIRED: the reckon MCP server has no blueprint-rendering tool today. Read this before attempting to render a blueprint locally."
+description: "Blueprint-driven document templating — list, render, or apply a named blueprint to render structured markdown into a note or doc, and merge it into an existing document via BLUEPRINT-BEGIN/END markers. Backed by the reckon MCP server's reckon_blueprint tool (free tier). Use when the user wants to generate a note from a template, apply a blueprint to a doc, or re-run a blueprint against something they've been editing."
 ---
 
-# blueprints — NOT YET WIRED (read this first)
+# blueprints — list, render, apply
 
-**There is no `reckon_blueprint` (or equivalent) tool on the live reckon MCP server.** Verified
-against the live tool registry (`runtime/mcp-server/tools/REGISTRY.json`, 76 tools, generated
-2026-07-28) and every `tools/*.py` module on 2026-08-22 — no blueprint verb exists anywhere in
-the registered surface. The only blueprint-rendering code that exists at all is:
+This skill is a thin client over the `reckon` MCP server's blueprint surface. There is no
+template content and no rendering/merge logic in this plugin — the 85+ `.njk` blueprint
+templates and the Nunjucks-subset renderer live server-side in
+`runtime/mcp-server/tools/blueprint.py` (a from-scratch port of the same engine the CompassCrew
+Obsidian plugin runs client-side, `src/blueprint-engine.ts` + `src/vendor/micro-njk.ts`). Every
+render, list, and merge in this skill is one `reckon_blueprint` call — never improvise a template
+locally.
 
-1. `blueprint-engine.ts` in the Obsidian CompassCrew client — a vendored micro-Nunjucks renderer
-   plus 85 `.njk` templates, running **client-side inside the Obsidian plugin**.
-2. `blueprint_resolver.py` and related hook scripts under `archive/` in the reckon monorepo —
-   dead code, not registered on any FastMCP instance, not running anywhere.
+## Tool calls
 
-## What this skill does NOT do
+All calls go through the `reckon` MCP server already configured in this plugin's `.mcp.json`
+(`https://mcp.reckon.systems/free`, no credential required).
 
-Do not port `blueprint-engine.ts`'s renderer, its merge-marker logic (`BLUEPRINT-BEGIN`/`END`
-sections), or the `.njk` template library into this plugin to "get something working." That
-would ship real product IP (the blueprint library and the render/merge engine) as client-side
-code in a distributed plugin — exactly what the operator's secret-sauce directive forbids. It
-would also silently diverge from whatever the server-side renderer eventually does, the same
-failure mode that made the Obsidian client call three generations of wrong tool names before
-`reckon-contract.ts` existed to stop it.
-
-## What to do when a user asks for blueprint templating
-
-Tell them plainly: blueprint tooling isn't available from this MCP server yet. Point them at
-this repo's `docs/CLAUDE-PLUGIN-DESIGN.md` §3 if they want the tracked follow-up. Do not
-improvise a local template, and do not silently skip the request — say what's missing.
-
-## Proposed contract (for whoever builds `reckon_blueprint` — not implemented, not called)
-
-This shape is a proposal only, written so this skill can be updated to call it the moment it
-exists. It is not a promise about the server's actual future interface.
-
+**List available blueprints:**
 ```
-reckon_blueprint  verb=list                                    # -> {blueprints: [{id, title, description}]}
-reckon_blueprint  verb=render  blueprint_id=...  context={...}  # -> {rendered: "<markdown>"}
-reckon_blueprint  verb=apply   blueprint_id=...  context={...}  existing_doc="..."
-                                                                 # -> {merged: "<markdown>"}
-                                                                 # (server does the BEGIN/END marker
-                                                                 # merge that mergeRendered() in
-                                                                 # blueprint-engine.ts does locally today)
+reckon_blueprint  verb=list
+# -> {ok, blueprints: [{id, title, description}], count}
 ```
+Show the user `title` (and `description` when non-empty) rather than the raw `id` when presenting
+choices; use `id` as `blueprint_id` in the calls below.
 
-Once `reckon_blueprint` is real and registered, rewrite this file's frontmatter description to
-drop "NOT YET WIRED" and add the same free/pro tier note the other skills carry.
+**Render a blueprint to markdown (no file write):**
+```
+reckon_blueprint  verb=render  blueprint_id="Honey-Crystal"  context_json="{\"crystal_of_cluster\":\"...\"}"
+# -> {ok, rendered: "<markdown>", section: "Honey-Crystal"}
+```
+`context_json` is a JSON **object** string — the fields a blueprint's `{{ }}` placeholders
+reference. Build it from whatever the user gave you (frontmatter values, a file's basename, the
+current date, etc.); unset fields fall back to each template's own `| default(...)` values, so it
+is fine to pass a partial context.
+
+**Apply a blueprint into an existing note (marker-scoped merge):**
+```
+reckon_blueprint  verb=apply  blueprint_id="Honey-Crystal"  context_json="{...}"  existing_doc="<current file contents>"
+# -> {ok, merged: "<full document>", rendered: "<just this blueprint's markdown>", section: "Honey-Crystal"}
+```
+`apply` splices `rendered` into `existing_doc` between
+`<!-- BLUEPRINT-BEGIN:<section> --> ... <!-- BLUEPRINT-END:<section> -->` markers, replacing only
+that block — everything else in `existing_doc` (a week of hand-written prose, other blueprints'
+sections) is returned untouched. If the markers aren't present yet, the block is appended at the
+end. Re-running `apply` with a changed `context_json` against the previous `merged` output is the
+supported "re-render this blueprint, keep my edits" workflow — always pass the most recent
+`merged` value back in as `existing_doc`, not the original file, or you'll lose the previous
+apply's placement. Write `merged` back to the file yourself; this tool never touches disk.
+
+## Errors
+
+`{ok: false, error: "unknown blueprint_id: ..."}` — the id doesn't match anything from `verb=list`
+(also returned for a traversal-shaped id like `../etc/passwd`, which the server rejects outright).
+`{ok: false, error: "context_json must be valid JSON: ..."}` — fix the JSON, don't retry blind.
+A `tier_gate` response means the endpoint changed policy — tell the user plainly, same as any
+other gated `reckon_*` call; `reckon_blueprint` itself ships free-tier as of this writing.

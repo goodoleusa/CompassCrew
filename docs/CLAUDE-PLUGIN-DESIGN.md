@@ -37,7 +37,7 @@ tool's own module.
 
 | CompassCrew (Obsidian) feature | Claude Code surface | Backing MCP tool | Tier | Status |
 |---|---|---|---|---|
-| Blueprint apply/render (`blueprint-engine.ts`, vendored Nunjucks, 85 templates) | `skills/blueprints/` | **none exists** | — | **GAP — see §3** |
+| Blueprint apply/render (`blueprint-engine.ts`, vendored Nunjucks, 85 templates) | `skills/blueprints/` | `reckon_blueprint` (list\|render\|apply) | free | wired — see §3 |
 | Breadcrumbs threading (N/S/E/W frontmatter links) | `skills/compass/`, `/compass-graph` | `reckon_mission_graph` (snapshot\|walk\|trace\|stats), `reckon_manifest` (verb=add, bearing field) | free | wired |
 | Compass overlay / relationship graph (`compass-overlay.ts`, mermaid + ExcaliBrain) | `agents/cartographer.md`, `/compass-graph` | `reckon_mission_graph`, `reckon_dashboard` (verb=mission_control) | free | wired |
 | Chain-of-custody / signing status (`coc-identity.ts`, `coc-verify.ts`, `token-grabber.ts`) | `skills/custody/`, `/custody-status` | `reckon_coc` (tail\|for_charter\|for_session\|verify\|append_human), `reckon_sign` (sign\|verify\|fingerprint), `reckon_pubkey` (register\|revoke\|verify), `reckon_coc_v2_block_get`/`proof_get` | free | wired |
@@ -71,31 +71,52 @@ tool's own module.
   `corpus.py`, `pdf_toolkit.py`.
 - Signing key custody logic, PQ/ed25519 derivation — `auth.py` and the signing tool bodies.
 
-## 3. VPS-side gap: no `reckon_blueprint` tool
+## 3. `reckon_blueprint` — now real (was: VPS-side gap)
 
-Grepped the live registry and every `tools/*.py` module — there is no blueprint-rendering MCP
-tool. `blueprint_resolver.py` and related hook scripts exist only under `archive/` in the reckon
-monorepo (dead code, not registered on any FastMCP instance). The 85 Nunjucks blueprints
-themselves live in this repo's `Blueprints/` and `templates/` dirs and are currently rendered
-**client-side in the Obsidian plugin** (`blueprint-engine.ts`, vendored micro-Nunjucks).
+This section originally documented a gap: no blueprint-rendering MCP tool existed, and
+`claude-plugin/skills/blueprints/SKILL.md` was written against a **proposed** contract with the
+tool explicitly not called. That gap is now closed.
 
-Per the task's explicit instruction, this is **not** stubbed by porting that renderer into the
-Claude Code plugin — that would be exactly the client-side secret-sauce leak the constraint
-forbids (the blueprint library and merge/stamp logic are real product IP). Instead:
+`runtime/mcp-server/tools/blueprint.py` (in the `reckon` repo) is a from-scratch Python port of
+`blueprint-engine.ts` + `vendor/micro-njk.ts`: the same Nunjucks-subset tokenizer, filter set,
+`{% if/else/endif %}` and `{% for/endfor %}` handling, and the same `BLUEPRINT-BEGIN:<section>` /
+`BLUEPRINT-END:<section>` marker-splice merge. The 86 top-level `.njk` files from this repo's
+`Blueprints/` directory were copied to `runtime/mcp-server/blueprints/` in the reckon repo (the
+`partials/` subdirectory was intentionally not copied — the current renderer has no
+`{% include %}`, so the client engine never loaded those files either; its `listBlueprints()`
+only reads top-level directory entries).
 
-- `claude-plugin/skills/blueprints/SKILL.md` is written against a **proposed** contract and
-  clearly marked not-yet-wired: `reckon_blueprint` with verbs `list | render | apply`, roughly:
-  - `list` → `{blueprints: [{id, title, description}]}`
-  - `render(blueprint_id, context)` → `{rendered: "<markdown>"}`
-  - `apply(blueprint_id, context, existing_doc)` → `{merged: "<markdown>"}` (server does the
-    `BLUEPRINT-BEGIN/END` marker merge that `mergeRendered()` currently does locally)
-- The skill tells Claude to say so plainly ("blueprint tooling isn't available from this MCP
-  server yet") rather than improvising a local render, if the tool 404s.
-- **Follow-up work, not done here:** stand up `runtime/mcp-server/tools/blueprint.py` on the
-  VPS, register `reckon_blueprint` in the FastMCP instance + `REGISTRY.json`, move the 85
-  `.njk` templates (or a curated subset) server-side, port the merge-marker logic from
-  `blueprint-engine.ts`'s `mergeRendered()`. Until that lands, blueprint parity is the one
-  feature this plugin cannot deliver.
+Registered as `reckon_blueprint`, **free tier**, verb-dispatched exactly as proposed:
+
+```
+reckon_blueprint  verb=list                                              # -> {ok, blueprints: [{id, title, description}], count}
+reckon_blueprint  verb=render  blueprint_id=...  context_json="{...}"    # -> {ok, rendered, section}
+reckon_blueprint  verb=apply   blueprint_id=...  context_json="{...}"  existing_doc="..."
+                                                                          # -> {ok, merged, rendered, section}
+```
+
+(Context and existing_doc travel as JSON-encoded strings rather than nested tool-call objects —
+matching the `manifest_json`/`context_json`-style parameter convention already used by
+`reckon_vocab`'s `w4w_derive` and similar tools in this MCP server, not a divergence from the
+proposal above.)
+
+**Verified for parity, not just "it runs":** every one of the 86 templates was rendered through
+both the new Python port and the actual TS `vendor/micro-njk.ts` (compiled with `tsc` and run
+under `node`) against the same empty context, plus a populated-context case against a real
+blueprint (`Honey-Crystal`) with a `{% for %}` loop and an `{% if %}` branch — byte-identical
+output on every template. Two real divergences turned up and were fixed in the port (not
+pre-existing in the TS original): Python's `str(True)` → `"True"` vs JS's `String(true)` →
+`"true"` (fixed with a JS-semantics string-coercion helper used everywhere a value is
+stringified), and Python raising `TypeError` on an over-arity filter call that a
+quote-escaping edge case in one template (`Pollen-Lead.njk`) produces, where JS silently ignores
+extra positional arguments (fixed by making every filter tolerant of extra args, matching JS).
+The regression suite that runs this comparison lives at
+`reckon/scripts/shoots/suites/reckon-blueprint-tool.py` — rerun it after any change to either
+`blueprint.py` or `vendor/micro-njk.ts` to catch the next drift immediately instead of in
+production.
+
+`claude-plugin/skills/blueprints/SKILL.md` has been rewritten to describe the real contract (the
+"NOT YET WIRED" stub language and disclaimer are gone).
 
 ## 4. Free-tier boundary
 
@@ -137,12 +158,63 @@ Done (scaffolded, wired to real free-tier tools, no local secret logic):
 - `skills/ontology/SKILL.md` — vocab propose/ratify/derive
 - `commands/custody-status.md`, `commands/compass-graph.md`
 
-Explicitly stubbed with a named TODO, not faked:
-- `skills/blueprints/SKILL.md` — describes the intended `reckon_blueprint` contract, states
-  clearly that the tool does not exist on the server yet, and points back to §3 of this doc.
-  No template content, no renderer, ships in the plugin.
+- `skills/blueprints/SKILL.md` — list/render/apply against the now-real `reckon_blueprint` tool
+  (§3). No template content, no renderer, ships in the plugin — same non-negotiable as every
+  other skill here.
 
-## 6. Distribution
+Nothing left explicitly stubbed as of this pass — §3 was the one open gap.
+
+## 6. Should the Obsidian plugin migrate `blueprint-engine.ts` off local rendering?
+
+Now that `reckon_blueprint` exists, `src/blueprint-engine.ts` in *this* repo's Obsidian client
+could, in principle, delegate to it instead of running `vendor/micro-njk.ts` locally.
+Recommendation: **not by default — keep local rendering as the Obsidian plugin's permanent
+design, and treat server delegation as an optional mode, not a migration.**
+
+Reasoning, worked through rather than assumed:
+
+- **Offline is a load-bearing feature for this specific client, not an accident of how it was
+  first built.** An Obsidian vault is a local-first, filesystem-backed note store — people use it
+  specifically so their notes work on a plane, in a bunker, on a laptop with no signal. The
+  blueprint engine fires from `file-open` (auto-rerender-on-stale-template) and from commands a
+  user expects to work instantly with no spinner. Making every blueprint apply a network
+  round-trip would silently downgrade a currently-offline-capable feature to
+  online-required, for a plugin whose whole pitch is vault-native operation. That is a real
+  regression, not a neutral refactor.
+- **The Claude Code plugin has no equivalent offline constraint** — a Claude Code session is
+  already talking to a model over the network; adding one more HTTP call to
+  `mcp.reckon.systems/free` costs it nothing architecturally. That is exactly why §0's "one
+  deliberate divergence" already draws this same line for `coc-verify.ts`: a vault plugin
+  re-implementing something client-side for a legitimate offline reason is a different judgment
+  call than a *distributed, network-native* plugin doing the same thing to avoid a server round
+  trip. Blueprint rendering is the same shape of decision as custody verification was, and reaches
+  the same answer for the same reason.
+- **The secret-sauce directive's target is *distribution*, not *duplication*.** The operator
+  directive in §0 is about not shipping real IP inside a plugin bundle handed to third parties.
+  `blueprint-engine.ts` and the 85 `.njk` templates already ship inside the Obsidian plugin today
+  and have since before this task — that boat sailed at the Obsidian plugin's original design
+  time, independent of whether `reckon_blueprint` exists. Standing up the server-side tool does
+  not retroactively make the existing Obsidian-side copy a leak; it makes the copy *redundant en
+  route to a network call*, which is a maintenance-cost question, not a policy violation.
+- **Maintenance cost is real and should be tracked, not ignored.** Two implementations of the
+  same renderer can drift (see §3's parity-testing note — it already caught two real divergences
+  once, from a from-scratch port done carefully; an unmonitored drift over months is a different
+  risk profile). If `reckon_blueprint`'s Python renderer gains a filter or tag the TS one lacks
+  (or vice versa), the two clients would silently disagree about what the same blueprint against
+  the same context produces. Mitigation that doesn't require picking a side: keep
+  `scripts/shoots/suites/reckon-blueprint-tool.py`'s TS-vs-Python parity check running (e.g. in
+  CI, or manually before either renderer changes) so drift is caught immediately instead of
+  discovered by a user.
+
+Concrete recommendation: leave `blueprint-engine.ts` as the Obsidian plugin's default renderer
+unchanged. If online-mode convenience is ever wanted for the Obsidian client specifically (e.g. to
+guarantee identical output to the Claude Code plugin's renders, or to avoid maintaining the vendor
+copy at all), the right shape is an **opt-in setting** — "render via server when online, fall back
+to local `micro-njk` when offline" — never a hard cutover that removes the local path. That is a
+separate, later decision for whoever owns the Obsidian plugin's roadmap; nothing in this task
+requires making it now, and nothing here should be read as scheduling it.
+
+## 7. Distribution
 
 Follows the existing `reckon` marketplace pattern
 (`/home/user/reckon/.claude-plugin/marketplace.json`): once ready to publish, add an entry

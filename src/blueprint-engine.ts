@@ -1,3 +1,18 @@
+// NOTE (2026-08-22): a server-side port of this engine now exists —
+// `reckon` repo's `runtime/mcp-server/tools/blueprint.py`, exposed as the
+// `reckon_blueprint` MCP tool (verbs list|render|apply, free tier), built
+// for the Claude Code plugin at `claude-plugin/` in this repo which has no
+// legitimate way to ship template content or a renderer client-side. This
+// file stays the DEFAULT renderer for the Obsidian client on purpose —
+// offline vault operation is a real feature of this plugin, not an
+// accident of implementation history. See
+// `docs/CLAUDE-PLUGIN-DESIGN.md` §6 for the full reasoning and a
+// pointer to `scripts/shoots/suites/reckon-blueprint-tool.py` (in the
+// `reckon` repo) — the parity check that keeps this file and the Python
+// port from silently drifting apart. Delegating this file to the server
+// tool is a legitimate FUTURE opt-in mode, not something this note is
+// asking anyone to do now.
+
 import { App, Notice, Plugin, TFile, FuzzySuggestModal } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
