@@ -95,7 +95,7 @@ Every AI artifact and every human annotation is hashed and tracked. Two parallel
 ## Quick Clone-and-Go
 
 ```bash
-git clone https://github.com/goodoleusa/compasscrew-vault-plugin /path/to/your-vault/.obsidian/plugins/compasscrew
+git clone https://github.com/goodoleusa/reckon-vault-plugin /path/to/your-vault/.obsidian/plugins/compasscrew
 ```
 
 1. Open Obsidian
@@ -139,13 +139,13 @@ Open command palette (⌘+P / Ctrl+P), type `compasscrew`:
 
 ---
 
-## Docs
+## Go Deeper
 
-- [Draw → AI → System: The Recursive Canvas](docs/DRAW-AI-SYSTEM.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Concepts](docs/CONCEPTS.md)
-- [Comparison](docs/COMPARISON.md)
-- [Philosophy](docs/PHILOSOPHY.md)
+- [Draw → AI → System: The Recursive Canvas](docs/DRAW-AI-SYSTEM.md) — the core idea, in detail
+- [Architecture](docs/ARCHITECTURE.md) — how the canvas, bearings, and agent crews fit together
+- [Concepts](docs/CONCEPTS.md) · [Comparison](docs/COMPARISON.md) · [Philosophy](docs/PHILOSOPHY.md)
+- [`main.ts`](main.ts) — the plugin entry point, if you'd rather read code
+- [Install guide](INSTALL.md) and [tutorial](TUTORIAL.md) — full setup + shortcuts
 
 ---
 
