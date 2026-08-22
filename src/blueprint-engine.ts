@@ -43,7 +43,15 @@ function renderTemplate(tplPath: string, ctx: Record<string, unknown>): string {
 const BEGIN = (s: string) => `<!-- BLUEPRINT-BEGIN:${s} -->`;
 const END = (s: string) => `<!-- BLUEPRINT-END:${s} -->`;
 
-function mergeRendered(existing: string, section: string, rendered: string): string {
+/**
+ * Splice `rendered` into `existing` between this blueprint's markers, replacing whatever was
+ * there. Everything outside the markers is untouched — that is the whole value of the module:
+ * a blueprint you can RE-RUN against a note you have been writing in for a week.
+ *
+ * Exported for `test/blueprint.test.ts`, which round-trips it. An unexported behaviour is an
+ * untested behaviour, and this is the one people depend on without noticing.
+ */
+export function mergeRendered(existing: string, section: string, rendered: string): string {
   const begin = BEGIN(section);
   const end = END(section);
   const block = `${begin}\n${rendered}\n${end}`;
@@ -53,7 +61,7 @@ function mergeRendered(existing: string, section: string, rendered: string): str
   return (existing.trimEnd() + "\n\n" + block + "\n");
 }
 
-function blueprintSectionName(tplPath: string): string {
+export function blueprintSectionName(tplPath: string): string {
   return path.basename(tplPath, ".njk");
 }
 

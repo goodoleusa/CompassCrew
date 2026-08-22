@@ -51,7 +51,7 @@ Each is reported **separately**. A single merged "signed ✓" is a verdict nobod
 |---|---|---|
 | **VERBAL** | master-level, human | the OPERATOR is present (human 2FA) |
 | **SPAWN** | per-hand, cryptographic | WHICH hand — the salted spawn-key handshake |
-| **DURESS** | master-level, human | a coerced-operator signal (distinct derivation) |
+| **DURESS** | master-level, human | a coerced-operator signal |
 | **DEVICE** | device-level | which device the seed lives on |
 
 VERBAL ("is the operator present?") and SPAWN ("which hand?") are **orthogonal**. A banner must
@@ -62,10 +62,9 @@ render them as two rows.
 ## Signing is PQ-default
 
 `pq_sign` **ML-DSA-65** is the default signer across this ecosystem. Ed25519 is retained for
-SSH, Rekor, and the human COC chain. PQ has no native HD derivation, so PQ keys are
-**path-addressed** off the master: each node of the Russian-doll derivation (operator phrase →
-device → session → sub/instance) derives its `seed32` via `key_custody`, then uses the SEED32
-API that round-trips. **The seed never leaves the device. Sub-keys are DERIVED, never copied.**
+SSH and the human COC chain. PQ keys are hierarchically derived off a master secret that never
+leaves the device — sub-keys are DERIVED, never copied, and the derivation hierarchy is
+implementation detail that lives server-side, not in this client.
 
 CompassCrew registers an **ed25519** identity, because WebCrypto has no ML-DSA. It says so
 rather than implying PQ coverage it does not have.
@@ -76,7 +75,7 @@ rather than implying PQ coverage it does not have.
 
 ```
 reckon_coc  verb=tail          n=20                  # last N leaves off the live spine
-reckon_coc  verb=for_charter   charter_id="<id>"     # 4-layer evidence: entry_hash → Merkle → git → Rekor
+reckon_coc  verb=for_charter   charter_id="<id>"     # layered evidence: local hash chain → rollup → external anchor
 reckon_coc  verb=for_session   session_id="<id>"     # the shareable public receipt
 reckon_coc  verb=verify        artifact_path=… signature=… agent_type=…
 reckon_coc  verb=append_human  operation=… content_sha256=… content_bytes=… address=…
@@ -87,37 +86,21 @@ reckon_sign verb=fingerprint   agent_type=…
 
 ---
 
-## Verifying a chain — reachability, not adjacency
+## Verifying a chain
 
-**This is the correction most stale verifiers get wrong.**
+Chain verification is server-side logic (`reckon_coc verb=verify`) — this client never
+re-implements it locally. Historically, a naive client-side re-check assumed storage order was
+link order, which produced false positives against a sound chain; that class of bug is exactly
+why verification is not duplicated here. `CompassCrew: verify chain of custody` calls the
+server and reports back its verdict — PASS, FAIL, or UNMEASURED — rather than re-deriving one.
 
-Shards are STORAGE. The chain is ORDER. Sequence is recovered by REPLAYING LINKS, never by
-concatenating files in directory order. `verify_chain` used to test file adjacency — line *N*'s
-`prev_entry_hash` must equal line *N−1*'s `entry_hash` — which is a *stronger* claim than the
-chain ever made, and false by construction for any shard whose storage order is not its link
-order.
+Two things worth knowing as a caller, not as an implementer:
 
-Measured 2026-08-05 over 111 chain-bearing ledgers (3,900 leaves): the adjacency test reported
-**2,230 breaks**; resolving every parent against the union of all leaves as a SET reported
-**0 dangling**. The ledger was sound; the TEST was wrong. The repo-wide RED it produced blocked
-~275 attest-gaps — meaning a diligent adversarial review and a rubber stamp produced the
-identical outcome, the worst state an attest door can be in.
+- A leaf may verify under a superseded hash recipe rather than the current one; that is a
+  different fact from tampering, and the server's response names which recipe matched. Report
+  it plainly rather than collapsing it into a single ✓/✗.
+- Telemetry rows are not custody entries and are skipped rather than scored; an all-telemetry
+  input correctly reports UNMEASURED, not PASS.
 
-**This weakens nothing.** A parent that resolves NOWHERE is still a hole and still a hard FAIL —
-that is the check with teeth, and adjacency noise was drowning it. Out-of-order storage is
-reported under its own name, and forks are detected on purpose rather than as an accident.
-
-`CompassCrew: verify chain of custody` implements exactly this, plus:
-
-- **both hash recipes, NAMED** — `current` (excludes `entry_hash`/`signature`/`pq_signature`) and
-  `legacy-pq-in-body` (pre-2026-08-03). A leaf verifying under a superseded recipe is a different
-  fact from one verifying under the current one; collapsing them makes a recipe boundary
-  indistinguishable from tampering. Pre-2026-08-03 leaves are **kept, never "fixed"** — rewriting
-  them to today's recipe would forge new hashes over old bytes.
-- **the full historical alias set** — `prev_entry_hash`, `prev_chain_hash`, `prev_hash`,
-  `prev_phase_entry_sha`, `prev_entry_sha`, `parent_hash`, `previous_hash`. A partial alias list
-  once made 26 real custody entries invisible to every verifier while verification reported clean.
-- **telemetry rows skipped**, and an all-telemetry input reported UNMEASURED rather than PASS.
-- **signatures reported UNMEASURED with the reason named** — leaves stamp their own `sig_body`
-  scheme id, and an unknown scheme is UNVERIFIABLE, never "assume current". Trying shapes until
-  one verifies is how a forged leaf is made to verify. Verify signatures server-side.
+If you find yourself computing a hash or re-deriving a chain link by hand, stop — that logic
+lives on the server and is not part of this plugin's surface.

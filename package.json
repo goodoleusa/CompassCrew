@@ -7,8 +7,10 @@
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "smoke": "node scripts/smoke/coc_contract_smoke.mjs",
-    "verify": "npm run typecheck && npm run build && npm run smoke"
+    "verify": "npm run typecheck && npm run build && npm run test && npm run smoke"
   },
   "keywords": [
     "obsidian",
@@ -26,7 +28,9 @@
     "@types/node": "^20.0.0",
     "builtin-modules": "^3.3.0",
     "esbuild": "^0.20.0",
+    "fake-indexeddb": "^6.0.0",
     "obsidian": "latest",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
   }
 }

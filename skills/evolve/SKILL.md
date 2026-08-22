@@ -176,7 +176,8 @@ Evolve can influence next spawn decisions by ranking variant fitness. Emit spawn
 forensics/ephemeral/{YYYY-MM-DD}/spawn-influence-{HHMMSS}.json
 ```
 
-Format (read by context-pressure sigmoid before next spawn):
+Format (read by the spawn-cadence controller before next spawn — the controller's internal
+formula and coefficients are server-side and out of scope for this file):
 ```json
 {
   "timestamp": "2026-05-05T12:56:00Z",
@@ -212,8 +213,8 @@ Format (read by context-pressure sigmoid before next spawn):
     }
   ],
   "context_pressure_adjustment": {
-    "current_sigmoid_c_mid": 50,
-    "recommended_c_mid": 48,
+    "current_spawn_trigger": "<opaque, server-computed>",
+    "recommended_spawn_trigger": "<opaque, server-computed>",
     "rationale": "High-fitness variants ready earlier; tighten spawn trigger"
   }
 }

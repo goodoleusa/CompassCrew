@@ -28,10 +28,12 @@ variable, a URL, or a file, and `RECKON_SPAWN_TOKEN` / `RECKON_SPAWN_KEY` are re
 rather than silently ignored.
 
 TypeScript. esbuild. **Zero runtime dependencies.** Plain markdown on disk, git-tracked —
-uninstall it and your notes still work.
+uninstall it and your notes still work. The test harness mocks Obsidian but keeps WebCrypto and
+IndexedDB real, so the signing tests generate an actual keypair, assert the runtime *refuses* to
+export the private half, and verify real production custody leaves end-to-end over real HTTP.
 
 ```
-npm run verify      # tsc --noEmit + production build + 23-assertion smoke suite
+npm run verify   # tsc --noEmit · production build · 41 tests · 23-assertion contract smoke
 ```
 
 ---
@@ -107,7 +109,10 @@ Every note has a canvas showing its neighborhood. Every box on a canvas has its 
 Annotate while your crew works. Your edits sync in real time. Working alone? Queue annotations — they load as steering at the next session.
 
 ### 📋 Blueprints (85 templates)
-Charters, reports, dashboards, timelines, findings — auto-rendered from templates. Your content lives in the note; the structure renders around it. Your edits are sacred.
+Charters, reports, dashboards, timelines, findings — rendered between markers so a **re-render
+replaces only its own block**. Your prose above and below is untouched, and several blueprints
+coexist in one note. Powered by a ~200-line vendored Nunjucks subset: a real template engine with
+zero runtime dependencies. Every shipped blueprint is render-tested.
 
 ### 🧵 Smart Threading
 Auto-detects parents, siblings, children. One-click thread creation. Inline navigation pills at the top of every note. No YAML editing.
@@ -163,7 +168,12 @@ Open command palette (⌘+P / Ctrl+P), type `compasscrew`:
 | **CompassCrew: lint entire vault** | Vendored linter |
 | **CompassCrew: export as PDF** | Pandoc or native print |
 | **CompassCrew: breadcrumbs tutorial** | In-vault threading guide |
-| **CompassCrew: rotate MCP token** | Token management |
+| **CompassCrew: rotate MCP token** | `reckon_token verb=rotate`; the old token is invalidated |
+| **CompassCrew: create signing identity** | Ed25519 keypair, in-process, non-exportable |
+| **CompassCrew: register public key** | Publishes the PUBLIC half via `reckon_pubkey verb=register` |
+| **CompassCrew: signing + spawn identity status** | Signing key / spawn slot / legacy key, as three separate rows |
+| **CompassCrew: verify chain of custody** | Verifies a COC chain locally by reachability |
+| **CompassCrew: purge legacy plaintext signing key** | Deletes a pre-2.1.0 `.swarmy-user-key` |
 
 ---
 
