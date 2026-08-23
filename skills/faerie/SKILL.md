@@ -108,7 +108,9 @@ lock-eligible. Identify what changed in config_fingerprint, crystallize it.
 
 ## ⚖️ F(0) EQUILIBRIUM (passive vs active modes)
 
-Queen burden = `main_tokens / (main_tokens + agent_tokens + scaffold_tokens)`. Target ≤ 0.05 (95% work by swarm).
+Queen burden = the main orchestrator's share of total session token consumption (the exact
+denominator and target ratio are measured server-side, not specified here). Target: the vast
+majority of work done by the swarm, not the orchestrator.
 
 ### 🔍 Passive Mode (Default — observe and report)
 Faerie reads eval-history.jsonl tail-10 for composite score spikes ≥0.05 in any dimension. When mutation detected:

@@ -91,7 +91,7 @@ Agent tool:
     be LESS universal/impactful. HONEY entries are not FIFO — they earn their place.
 
     Phase 2.5: EVIDENCE VERIFICATION GATE (anti-fabrication, mandatory)
-    For ANY candidate with proposed confidence >= 0.75:
+    For ANY candidate with proposed confidence above a high-confidence threshold:
     - REQUIRE evidence_sources[] in the candidate manifest with >= 2 distinct manifest_path citations
     - For each cited manifest_path: VERIFY (a) the file exists, (b) it actually contains the
       claimed finding (not just topic-adjacent prose). Use grep/jq, not narrative reading.
@@ -199,7 +199,7 @@ Agent tool:
         mission: mission-consolidation-followthrough
         task_id: retire-{superseded_path}
         bearing: S
-        unblocked_by: <honey_method_id> reaching confidence >= 0.85
+        unblocked_by: <honey_method_id> reaching a higher confidence threshold
       This makes consolidation a first-class downstream of crystallization, not a separate manual job.
 
     Phase 6: DEMOTION ON COUNTER-EVIDENCE (HONEY garbage collection)

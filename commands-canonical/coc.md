@@ -51,7 +51,6 @@ Each is reported **separately**. A single merged "signed ✓" is a verdict nobod
 |---|---|---|
 | **VERBAL** | master-level, human | the OPERATOR is present (human 2FA) |
 | **SPAWN** | per-hand, cryptographic | WHICH hand — the salted spawn-key handshake |
-| **DURESS** | master-level, human | a coerced-operator signal |
 | **DEVICE** | device-level | which device the seed lives on |
 
 VERBAL ("is the operator present?") and SPAWN ("which hand?") are **orthogonal**. A banner must

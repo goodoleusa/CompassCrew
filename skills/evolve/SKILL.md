@@ -238,7 +238,7 @@ Return to main:
 
 ## Execution (runs async in background)
 
-**Who spawns it:** Main session, continuously during agent activity (triggered by context-pressure sigmoid spawn decisions).
+**Who spawns it:** Main session, continuously during agent activity (triggered by the context-pressure spawn controller's decisions).
 
 **How to invoke (from main):**
 ```python
@@ -295,7 +295,7 @@ Agent(
 **NOT for:**
 - Replacing crystallize (different pressure point — evolve is in-flight, crystallize is system consolidation)
 - Manual steering (agents should self-route; steering signals are advice only)
-- Direct spawn control (context-pressure sigmoid is primary; evolve emits fitness feedback to inform sigmoid, not override it)
+- Direct spawn control (the context-pressure spawn controller is primary; evolve emits fitness feedback to inform it, not override it)
 
 ---
 
